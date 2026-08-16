@@ -92,7 +92,11 @@ it('saves per-locale alt text and renders it in that language', function (): voi
         'sort_order' => 3,
     ])->assertRedirect();
 
-    expect($media->fresh()->alt)->toBe(['en' => 'A double room', 'de' => 'Ein Doppelzimmer'])
+    // Canonicalising, not toBe(): MySQL's native JSON type reorders object
+    // keys on round-trip while SQLite keeps the text verbatim, and the key
+    // order of a locale map carries no meaning. An order-sensitive
+    // assertion here passes on SQLite and fails on MySQL.
+    expect($media->fresh()->alt)->toEqualCanonicalizing(['en' => 'A double room', 'de' => 'Ein Doppelzimmer'])
         ->and($media->fresh()->sort_order)->toBe(3);
 
     $this->get('/en/rooms/double-room')->assertOk()->assertSee('alt="A double room"', false);
