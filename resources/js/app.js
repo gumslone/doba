@@ -1,6 +1,7 @@
 import 'trix';
 import initCalendars from './calendar';
 import initDisclosures from './disclosures';
+import initGrid from './grid';
 
 /*
  * Plain DOM, deliberately.
@@ -15,6 +16,7 @@ import initDisclosures from './disclosures';
 const boot = () => {
     initCalendars();
     initDisclosures();
+    initGrid();
 };
 
 if (document.readyState === 'loading') {

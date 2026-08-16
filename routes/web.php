@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\AdminAvailabilityController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminPageController;
@@ -84,6 +85,9 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('styles', [StyleController::class, 'edit'])->name('admin.styles');
         Route::put('styles', [StyleController::class, 'update'])->name('admin.styles.update');
+
+        Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
+        Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
 
         Route::get('extras', [AdminExtraController::class, 'index'])->name('admin.extras');
         Route::get('extras/create', [AdminExtraController::class, 'create'])->name('admin.extras.create');

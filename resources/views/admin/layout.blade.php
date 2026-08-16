@@ -17,6 +17,7 @@
         <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <nav class="flex items-center gap-5 text-sm font-medium">
                 <span class="font-semibold">Doba</span>
+                <a href="/admin/availability" @class(['underline' => request()->is('admin/availability*')])>{{ __('admin.availability') }}</a>
                 <a href="/admin/pages" @class(['underline' => request()->is('admin/pages*')])>{{ __('admin.pages') }}</a>
                 <a href="/admin/events" @class(['underline' => request()->is('admin/events*')])>{{ __('admin.events') }}</a>
                 <a href="/admin/extras" @class(['underline' => request()->is('admin/extras*')])>{{ __('admin.extras') }}</a>

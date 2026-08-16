@@ -23,7 +23,7 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 > Still to come: channel/OTA sync, the installation wizard, the public partner API and the full
 > Filament panel — all specified in
 > [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
-> The correctness-critical paths are covered by 175+ tests on both database
+> The correctness-critical paths are covered by 185+ tests on both database
 > engines, but the platform has not yet run a real hotel — treat it as
 > pre-release.
 
@@ -147,6 +147,15 @@ Everything below is implemented and covered by tests.
   The concurrency test proves exactly one of two racers wins.
 - **Holds & a state machine** where inventory is released by the status being
   *entered*, so no path can leak a unit; expired holds are swept every minute.
+- An **admin availability grid** (§12): room types as rows, the month's
+  dates as columns, each cell showing the *resolved* nightly price — the
+  one a guest is quoted, not just manual overrides — and how many rooms
+  are still free. Drag across cells to fill the bulk-edit panel, which
+  applies a price, min/max stay, allotment or stop-sell across a date
+  range and a weekday filter: "Saturdays in July, min-stay 3" is one
+  operation, not thirty-one. Fields left blank are left alone, and the
+  allotment can never be cut below what is already sold — the night is
+  named rather than the constraint throwing a driver error.
 - A public **two-month availability calendar** on the home and room pages:
   per-night prices, hatched closed dates, closed-to-arrival marks, a
   last-room dot, and range selection that applies the same N-vs-B
@@ -275,7 +284,8 @@ is the only thing that keeps the "portable" promise honest.
 ## Admin & editing
 
 An interim admin area lives at `/admin` (the full Filament panel replaces it
-later in phase 1). It edits **CMS pages**, **events**, **extras** and **photos** with
+later in phase 1). It edits **availability & rates**, **CMS pages**, **events**, **extras**
+and **photos** with
 per-language tabs and a [Trix](https://trix-editor.org) WYSIWYG editor — clearing a
 language's title unpublishes that language: its URL, `hreflang` entry and
 sitemap line all disappear together. The demo seeder creates
