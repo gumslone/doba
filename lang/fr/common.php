@@ -14,6 +14,7 @@ return [
     'check_out_until' => 'Départ avant :time',
     'our_rooms' => 'Nos chambres',
     'skip_to_content' => 'Aller au contenu',
+    'faq' => 'Questions fréquentes',
     'language' => 'Langue',
     'no_rooms_yet' => 'Aucune catégorie de chambre n’a encore été publiée.',
 ];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Faq;
 use App\Models\Page;
 use App\Models\RoomType;
 use App\Models\Setting;
@@ -25,6 +26,7 @@ class DatabaseSeeder extends Seeder
         $this->settings();
         $this->roomTypes();
         $this->pages();
+        $this->faqs();
 
         HotelSettings::flush();
     }
@@ -140,6 +142,52 @@ class DatabaseSeeder extends Seeder
                     'name' => $translation['name'],
                     'short_description' => $translation['short'],
                     'description' => '<p>'.$translation['short'].'</p>',
+                ]);
+            }
+        }
+    }
+
+    protected function faqs(): void
+    {
+        $faqs = [
+            [
+                'sort_order' => 1,
+                'translations' => [
+                    'en' => ['Is parking available?', 'Yes — free on-site parking for hotel guests, no reservation needed.'],
+                    'de' => ['Gibt es Parkplätze?', 'Ja — kostenlose hoteleigene Parkplätze für Gäste, keine Reservierung nötig.'],
+                    'fr' => ['Y a-t-il un parking ?', 'Oui — parking gratuit sur place pour les clients de l’hôtel, sans réservation.'],
+                    'nl' => ['Is er parkeergelegenheid?', 'Ja — gratis parkeren op eigen terrein voor hotelgasten, reserveren is niet nodig.'],
+                ],
+            ],
+            [
+                'sort_order' => 2,
+                'translations' => [
+                    'en' => ['Are pets welcome?', 'Dogs are welcome in selected rooms for a small nightly fee — please mention your dog when booking.'],
+                    'de' => ['Sind Haustiere erlaubt?', 'Hunde sind in ausgewählten Zimmern gegen eine kleine Gebühr pro Nacht willkommen — bitte bei der Buchung angeben.'],
+                    'fr' => ['Les animaux sont-ils acceptés ?', 'Les chiens sont les bienvenus dans certaines chambres moyennant un petit supplément par nuit — merci de le préciser à la réservation.'],
+                    'nl' => ['Zijn huisdieren welkom?', 'Honden zijn welkom in geselecteerde kamers tegen een kleine toeslag per nacht — vermeld uw hond bij het boeken.'],
+                ],
+            ],
+            [
+                'sort_order' => 3,
+                'translations' => [
+                    'en' => ['Can I check in late?', 'Yes — the front desk is staffed until 22:00, and self check-in is available after that if you let us know in advance.'],
+                    'de' => ['Ist ein später Check-in möglich?', 'Ja — die Rezeption ist bis 22:00 Uhr besetzt, danach ist Self-Check-in nach vorheriger Absprache möglich.'],
+                    'fr' => ['Puis-je arriver tard ?', 'Oui — la réception est ouverte jusqu’à 22 h ; au-delà, un enregistrement autonome est possible si vous nous prévenez à l’avance.'],
+                    'nl' => ['Kan ik laat inchecken?', 'Ja — de receptie is bezet tot 22:00 uur; daarna is zelf inchecken mogelijk als u ons vooraf informeert.'],
+                ],
+            ],
+        ];
+
+        foreach ($faqs as $data) {
+            $faq = Faq::updateOrCreate(['sort_order' => $data['sort_order']], [
+                'is_published' => true,
+            ]);
+
+            foreach ($data['translations'] as $locale => [$question, $answer]) {
+                $faq->translations()->updateOrCreate(['locale' => $locale], [
+                    'question' => $question,
+                    'answer' => $answer,
                 ]);
             }
         }

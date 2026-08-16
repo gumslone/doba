@@ -14,6 +14,7 @@ return [
     'check_out_until' => 'Uitchecken tot :time',
     'our_rooms' => 'Onze kamers',
     'skip_to_content' => 'Naar de inhoud',
+    'faq' => 'Veelgestelde vragen',
     'language' => 'Taal',
     'no_rooms_yet' => 'Er zijn nog geen kamertypes gepubliceerd.',
 ];

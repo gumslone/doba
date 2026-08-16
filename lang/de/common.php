@@ -14,6 +14,7 @@ return [
     'check_out_until' => 'Abreise bis :time',
     'our_rooms' => 'Unsere Zimmer',
     'skip_to_content' => 'Zum Inhalt springen',
+    'faq' => 'Häufige Fragen',
     'language' => 'Sprache',
     'no_rooms_yet' => 'Es wurden noch keine Zimmerkategorien veröffentlicht.',
 ];

@@ -14,6 +14,7 @@ return [
     'check_out_until' => 'Check-out until :time',
     'our_rooms' => 'Our rooms',
     'skip_to_content' => 'Skip to content',
+    'faq' => 'Frequently asked questions',
     'language' => 'Language',
     'no_rooms_yet' => 'No room types have been published yet.',
 ];

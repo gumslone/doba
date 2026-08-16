@@ -1,9 +1,17 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "doba/platform",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Direct-booking engine and multilingual website for independent hotels.",
+    "keywords": [
+        "hotel",
+        "booking",
+        "booking-engine",
+        "laravel",
+        "hospitality",
+        "seo",
+        "multilingual"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.2",

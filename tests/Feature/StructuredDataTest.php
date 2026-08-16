@@ -6,32 +6,6 @@ use App\Models\RoomType;
 use App\Models\Setting;
 use App\Support\Hotel\HotelSettings;
 
-/**
- * Pull every application/ld+json block out of a response and decode it.
- *
- * Decoding rather than string-matching is the point: invalid JSON in a
- * JSON-LD block is silently ignored by Google, so a test that greps for
- * "HotelRoom" passes on markup that no crawler can read.
- *
- * @return array<int,array<string,mixed>>
- */
-function jsonLdBlocks(string $html): array
-{
-    preg_match_all(
-        '#<script type="application/ld\+json">(.*?)</script>#s',
-        $html,
-        $matches
-    );
-
-    return array_map(static function (string $json): array {
-        $decoded = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-
-        expect($decoded)->toBeArray();
-
-        return $decoded;
-    }, $matches[1]);
-}
-
 beforeEach(function (): void {
     Setting::put('general', 'name', 'Hotel Alpenhof');
     Setting::put('contact', 'city', 'Rottach-Egern');

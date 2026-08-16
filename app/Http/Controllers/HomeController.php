@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Faq;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Routing\Localization;
@@ -22,6 +23,8 @@ class HomeController extends Controller
             ->limit(3)
             ->get();
 
+        $faqs = Faq::forCurrentLocale();
+
         $seo->title($hotel->get('seo.title') ?: $hotel->name)
             ->description($hotel->get('seo.description'))
             ->image($hotel->ogImage())
@@ -34,8 +37,15 @@ class HomeController extends Controller
                 Localization::hasRoute('booking.search') ? Localization::route('booking.search') : null
             ));
 
+        // The markup only ever describes questions that are visibly on the
+        // page — structured data for invisible content is a spam signal.
+        if (($faqSchema = JsonLd::faqs($faqs)) !== null) {
+            $seo->schema($faqSchema);
+        }
+
         return view('home', [
             'roomTypes' => $roomTypes,
+            'faqs' => $faqs,
         ]);
     }
 }

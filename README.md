@@ -1,5 +1,8 @@
 # Doba — direct-booking engine and website for independent hotels
 
+[![CI](https://github.com/gumslone/doba/actions/workflows/ci.yml/badge.svg)](https://github.com/gumslone/doba/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Doba** is an open-source hotel booking system built on Laravel: a public,
 multilingual, server-rendered website with a direct-booking engine, an
 availability calendar, rate and restriction rules, online payments, OTA/channel
@@ -53,6 +56,9 @@ Everything below is implemented and covered by tests.
   `BreadcrumbList`, `ItemList`, `WebSite`, `FAQPage`. Money is stored in integer
   minor units and converted at the boundary, so a €125 room is never published
   as `12500`.
+- **Editable, translated FAQs** rendered on the home page with matching
+  `FAQPage` markup — the structured data never describes questions the page
+  doesn't visibly show.
 - **XML sitemap** with per-URL `xhtml:link` alternates, written nightly by
   `php artisan doba:sitemap` and generated live as a fallback.
 - **`robots.txt` from the same flag as the meta robots tag** — a staging install
@@ -123,6 +129,10 @@ Useful URLs on the running site:
 
 ```bash
 php artisan doba:sitemap    # regenerate public/sitemap.xml (nightly in production)
+```
+
+```bash
+php artisan doba:images     # generate WebP srcset derivatives + backfill image dimensions
 ```
 
 ## Tests, style, static analysis

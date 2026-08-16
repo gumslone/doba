@@ -68,4 +68,21 @@
             </p>
         @endif
     </section>
+
+    @if ($faqs !== [])
+        {{-- The visible twin of the FAQPage JSON-LD the controller emits:
+             the markup must never describe questions the page doesn't show. --}}
+        <section class="mx-auto max-w-3xl px-4 pb-16">
+            <h2 class="text-2xl font-semibold tracking-tight">{{ __('common.faq') }}</h2>
+
+            <dl class="mt-6 divide-y divide-neutral-200">
+                @foreach ($faqs as $faq)
+                    <div class="py-4">
+                        <dt class="font-medium">{{ $faq['question'] }}</dt>
+                        <dd class="mt-1 text-neutral-600">{{ $faq['answer'] }}</dd>
+                    </div>
+                @endforeach
+            </dl>
+        </section>
+    @endif
 @endsection
