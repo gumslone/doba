@@ -2,150 +2,204 @@
 
 @section('content')
     @php
+        use App\Support\Media\ResponsiveImage;
         use App\Support\Money;
         use App\Support\Routing\Localization;
     @endphp
 
-    @if ($hero)
-        {{-- The LCP element on the whole site. Eager + fetchpriority=high
-             via the component; lazy-loading this one image is a measurable,
-             self-inflicted ranking loss. --}}
-        <x-responsive-image
-            :media="$hero"
-            :eager="true"
-            sizes="100vw"
-            class="aspect-[21/9] w-full object-cover" />
+    <section class="hero">
+        <div class="hero-bg">
+            @if ($hero)
+                {{-- The LCP element on the whole site: eager and high
+                     priority. Lazy-loading it is a self-inflicted ranking
+                     loss (§11). --}}
+                <img {!! collect(ResponsiveImage::attributes($hero, '100vw', eager: true))
+                    ->map(fn ($v, $k) => $k.'="'.e($v).'"')->implode(' ') !!}>
+            @else
+                @include('partials.hero-fallback')
+            @endif
+        </div>
+        <div class="hero-scrim"></div>
+
+        <div class="hero-inner"><div class="wrap">
+            @if ($stars = (int) $hotel->get('general.star_rating'))
+                <span class="hero-badge">
+                    <span class="stars">{{ str_repeat('★', min(5, $stars)) }}</span>
+                    @if ($since = $hotel->get('general.since'))
+                        <span>{{ __('common.family_run_since', ['year' => $since]) }}</span>
+                    @endif
+                </span>
+            @endif
+
+            {{-- Exactly one h1, carrying the words the page should rank for.
+                 The hotel name alone ranks for the hotel name — traffic the
+                 hotel already had. --}}
+            <h1>{{ $hotel->get('seo.h1') ?: $hotel->name }}</h1>
+
+            @if ($tagline = $hotel->get('general.tagline'))
+                <p class="hero-sub">{{ $tagline }}</p>
+            @endif
+        </div></div>
+    </section>
+
+    <div class="bookbar"><div class="wrap">
+        @include('booking._form', ['stay' => null])
+
+        <p class="bookbar-note">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 1l2.2 4.4 4.8.7-3.5 3.4.8 4.8L8 12l-4.3 2.3.8-4.8L1 6.1l4.8-.7z" fill="var(--doba-accent)"/>
+            </svg>
+            <span>{{ __('seo.direct_booking_note') }}</span>
+        </p>
+    </div></div>
+
+    @if ($usps !== [])
+        <section class="section">
+            <div class="wrap">
+                <div class="usps">
+                    @foreach ($usps as $usp)
+                        <div class="usp">
+                            @include('partials.icon', ['name' => $usp['icon'] ?? 'check'])
+                            <b>{{ $usp['title'] }}</b>
+                            <span>{{ $usp['subtitle'] ?? '' }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
     @endif
 
-    <section class="mx-auto max-w-6xl px-4 py-16">
-        {{-- Exactly one h1 per page, carrying the words the page should rank
-             for. The hotel name alone ranks for the hotel name, which is
-             traffic the hotel already had. --}}
-        <h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">
-            {{ $hotel->get('seo.h1') ?: $hotel->name }}
-        </h1>
+    <section class="section section--tint" id="rooms">
+        <div class="wrap">
+            <div class="section-head">
+                <div class="eyebrow">{{ __('common.rooms') }}</div>
+                <h2>{{ __('common.our_rooms') }}</h2>
+                <p class="lede">{{ __('common.rooms_lede') }}</p>
+            </div>
 
-        @if ($tagline = $hotel->get('general.tagline'))
-            <p class="mt-4 max-w-2xl text-lg text-neutral-600">{{ $tagline }}</p>
-        @endif
-
-        <p class="mt-6 text-sm text-neutral-500">
-            {{ __('common.check_in_from', ['time' => config('doba.checkin_from')]) }} ·
-            {{ __('common.check_out_until', ['time' => config('doba.checkout_until')]) }}
-        </p>
-
-        {{-- The booking funnel starts here: the whole point of the site. --}}
-        <div class="mt-8 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-            @include('booking._form', ['stay' => null])
+            @if ($roomTypes->isEmpty())
+                <p class="lede">{{ __('common.no_rooms_yet') }}</p>
+            @else
+                <div class="rooms">
+                    @foreach ($roomTypes as $roomType)
+                        @continue (! $roomType->slug())
+                        @include('rooms._card', ['roomType' => $roomType, 'eager' => false])
+                    @endforeach
+                </div>
+            @endif
         </div>
     </section>
 
-    <section class="mx-auto max-w-6xl px-4 pb-16">
-        <h2 class="text-2xl font-semibold tracking-tight">{{ __('common.our_rooms') }}</h2>
+    @if ($roomTypes->isNotEmpty())
+        <section class="section" id="calendar">
+            <div class="wrap">
+                <div class="section-head">
+                    <div class="eyebrow">{{ __('booking.availability') }}</div>
+                    <h2>{{ __('booking.calendar_title') }}</h2>
+                    <p class="lede">{{ __('booking.calendar_lede') }}</p>
+                </div>
 
-        @if ($roomTypes->isEmpty())
-            <p class="mt-4 text-neutral-600">{{ __('common.no_rooms_yet') }}</p>
-        @else
-            <ul class="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($roomTypes as $roomType)
-                    @continue (! $roomType->slug())
-                    <li class="overflow-hidden rounded-lg border border-neutral-200">
-                        <a href="{{ Localization::route('rooms.show', ['slug' => $roomType->slug()]) }}">
-                            <x-responsive-image
-                                :media="$roomType->coverImage()"
-                                :eager="$loop->first"
-                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 384px"
-                                class="aspect-[4/3] w-full object-cover" />
-
-                            <div class="p-4">
-                                <h3 class="font-medium">{{ $roomType->t('name') }}</h3>
-
-                                @if ($short = $roomType->t('short_description'))
-                                    <p class="mt-1 line-clamp-2 text-sm text-neutral-600">{{ $short }}</p>
-                                @endif
-
-                                @if ($roomType->default_rate)
-                                    <p class="mt-3 text-sm">
-                                        {{ __('common.from') }}
-                                        <strong>{{ Money::format($roomType->default_rate) }}</strong>
-                                        {{ __('common.per_night') }}
-                                    </p>
-                                @endif
-                            </div>
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
-
-            <p class="mt-8">
-                <a href="{{ Localization::route('rooms.index') }}" class="underline underline-offset-4">
-                    {{ __('common.our_rooms') }} →
-                </a>
-            </p>
-        @endif
-    </section>
+                @include('booking._calendar', ['roomTypes' => $roomTypes])
+            </div>
+        </section>
+    @endif
 
     @if ($galleryPhotos->isNotEmpty())
-        <section class="mx-auto max-w-6xl px-4 pb-16">
-            <h2 class="text-2xl font-semibold tracking-tight">{{ __('common.gallery') }}</h2>
+        <section class="section section--tint">
+            <div class="wrap">
+                <div class="section-head">
+                    <div class="eyebrow">{{ __('common.gallery') }}</div>
+                    <h2>{{ __('common.gallery_title') }}</h2>
+                </div>
 
-            <ul class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                @foreach ($galleryPhotos as $photo)
-                    <li>
-                        <x-responsive-image
-                            :media="$photo"
-                            sizes="(max-width: 640px) 50vw, 380px"
-                            class="aspect-[4/3] w-full rounded-lg object-cover" />
-                    </li>
-                @endforeach
-            </ul>
+                <div class="rooms">
+                    @foreach ($galleryPhotos as $photo)
+                        <div style="border-radius:var(--radius);overflow:hidden">
+                            <x-responsive-image :media="$photo" sizes="(max-width: 640px) 100vw, 380px"
+                                                class="aspect-[4/3] w-full object-cover" />
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </section>
     @endif
 
     @if ($events->isNotEmpty())
-        <section class="mx-auto max-w-6xl px-4 pb-16">
-            <h2 class="text-2xl font-semibold tracking-tight">{{ __('events.upcoming') }}</h2>
+        <section class="section">
+            <div class="wrap">
+                <div class="section-head">
+                    <div class="eyebrow">{{ __('events.title') }}</div>
+                    <h2>{{ __('events.upcoming') }}</h2>
+                </div>
 
-            <ul class="mt-6 grid gap-6 sm:grid-cols-3">
-                @foreach ($events as $event)
-                    <li class="rounded-lg border border-neutral-200 p-5">
-                        <p class="text-sm font-medium" style="color: var(--doba-primary)">
-                            {{ $event->starts_at->translatedFormat('D, j M · H:i') }}
-                        </p>
-                        <h3 class="mt-1 font-medium">
-                            <a href="{{ Localization::route('events.show', ['slug' => $event->slug()]) }}" class="hover:underline">
-                                {{ $event->t('title') }}
-                            </a>
-                        </h3>
-                        @if ($excerpt = $event->t('excerpt'))
-                            <p class="mt-2 line-clamp-2 text-sm text-neutral-600">{{ $excerpt }}</p>
-                        @endif
-                    </li>
-                @endforeach
-            </ul>
+                <div class="rooms">
+                    @foreach ($events as $event)
+                        <article class="room">
+                            <div class="room-body">
+                                <div class="eyebrow" style="margin-bottom:.3rem">
+                                    {{ $event->starts_at->translatedFormat('D, j M · H:i') }}
+                                </div>
+                                <h3>
+                                    <a href="{{ Localization::route('events.show', ['slug' => $event->slug()]) }}"
+                                       style="text-decoration:none">{{ $event->t('title') }}</a>
+                                </h3>
+                                @if ($excerpt = $event->t('excerpt'))
+                                    <p class="room-desc">{{ $excerpt }}</p>
+                                @endif
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
 
-            <p class="mt-6">
-                <a href="{{ Localization::route('events.index') }}" class="underline underline-offset-4">
-                    {{ __('events.all') }} →
-                </a>
-            </p>
+                <p style="margin-top:26px">
+                    <a class="btn btn--ghost" href="{{ Localization::route('events.index') }}">{{ __('events.all') }}</a>
+                </p>
+            </div>
+        </section>
+    @endif
+
+    @if ($amenities !== [])
+        <section class="section section--tint">
+            <div class="wrap">
+                <div class="section-head">
+                    <div class="eyebrow">{{ __('extras.includes') }}</div>
+                    <h2>{{ __('common.included_in_rate') }}</h2>
+                </div>
+
+                <div class="amen">
+                    @foreach ($amenities as $amenity)
+                        <div>
+                            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M2 8.6l3.6 3.6L14 3.8" stroke="currentColor" stroke-width="1.8"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            {{ $amenity }}
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </section>
     @endif
 
     @if ($faqs !== [])
         {{-- The visible twin of the FAQPage JSON-LD the controller emits:
              the markup must never describe questions the page doesn't show. --}}
-        <section class="mx-auto max-w-3xl px-4 pb-16">
-            <h2 class="text-2xl font-semibold tracking-tight">{{ __('common.faq') }}</h2>
+        <section class="section">
+            <div class="wrap">
+                <div class="section-head" style="text-align:center;margin-left:auto;margin-right:auto">
+                    <div class="eyebrow">{{ __('common.faq') }}</div>
+                    <h2>{{ __('common.good_to_know') }}</h2>
+                </div>
 
-            <dl class="mt-6 divide-y divide-neutral-200">
-                @foreach ($faqs as $faq)
-                    <div class="py-4">
-                        <dt class="font-medium">{{ $faq['question'] }}</dt>
-                        <dd class="mt-1 text-neutral-600">{{ $faq['answer'] }}</dd>
-                    </div>
-                @endforeach
-            </dl>
+                <div class="faq">
+                    @foreach ($faqs as $index => $faq)
+                        <details @if ($index === 0) open @endif>
+                            <summary>{{ $faq['question'] }}</summary>
+                            <div class="ans">{{ $faq['answer'] }}</div>
+                        </details>
+                    @endforeach
+                </div>
+            </div>
         </section>
     @endif
 @endsection

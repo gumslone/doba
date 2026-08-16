@@ -16,6 +16,44 @@ use Illuminate\Contracts\View\View;
 
 class HomeController extends Controller
 {
+    /**
+     * The four-up strip under the booking bar. Stored as a translatable
+     * setting; an install that has not set them simply gets no strip
+     * rather than four lorem-ipsum claims.
+     *
+     * @return array<int,array{icon:string,title:string,subtitle:string}>
+     */
+    protected function usps(HotelSettings $hotel): array
+    {
+        $usps = $hotel->get('general.usps');
+
+        if (! is_array($usps)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(static fn ($usp): ?array => is_array($usp) && ($usp['title'] ?? '') !== ''
+            ? [
+                'icon' => (string) ($usp['icon'] ?? 'check'),
+                'title' => (string) $usp['title'],
+                'subtitle' => (string) ($usp['subtitle'] ?? ''),
+            ]
+            : null, $usps)));
+    }
+
+    /**
+     * House-wide facilities for the "included in your rate" grid.
+     *
+     * @return array<int,string>
+     */
+    protected function houseAmenities(HotelSettings $hotel): array
+    {
+        $list = $hotel->get('amenities.list');
+
+        return is_array($list)
+            ? array_values(array_filter(array_map('strval', $list)))
+            : [];
+    }
+
     public function __invoke(Seo $seo, HotelSettings $hotel): View
     {
         $roomTypes = RoomType::query()
@@ -72,6 +110,11 @@ class HomeController extends Controller
             'events' => $events,
             'hero' => $hero,
             'galleryPhotos' => $gallery->media->reject(static fn ($photo): bool => $photo->is($hero))->take(6)->values(),
+            // Editable in the settings table so a hotelier can say what
+            // makes their house worth choosing, rather than inheriting
+            // whatever four claims the theme shipped with.
+            'usps' => $this->usps($hotel),
+            'amenities' => $this->houseAmenities($hotel),
         ]);
     }
 }

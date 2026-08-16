@@ -1,106 +1,222 @@
-@extends('layouts.app')
+@extends('layouts.app', ['hideBreadcrumbs' => true])
 
 @section('content')
     @php
         use App\Support\Money;
+        use App\Support\Routing\Localization;
+
+        $photos = $roomType->media;
+        $cover = $roomType->coverImage();
+        $sidePhotos = $photos->reject(fn ($p) => $p->is($cover))->take(3);
+        $inclusions = $roomType->inclusionsByCategory();
+        $extras = $roomType->availableExtras();
     @endphp
 
-    <article class="mx-auto max-w-4xl px-4 py-12">
-        <h1 class="text-3xl font-semibold tracking-tight">{{ $roomType->t('name') }}</h1>
+    <div class="wrap">
+        {{-- Visible twin of the BreadcrumbList in JSON-LD (§11). --}}
+        <nav class="crumbs" aria-label="Breadcrumb">
+            <a href="{{ Localization::route('home') }}">{{ $hotel->name }}</a><span aria-hidden="true">›</span>
+            <a href="{{ Localization::route('rooms.index') }}">{{ __('common.rooms') }}</a><span aria-hidden="true">›</span>
+            <span style="color:var(--ink)" aria-current="page">{{ $roomType->t('name') }}</span>
+        </nav>
 
-        <p class="mt-2 text-sm text-neutral-500">
-            {{ __('common.guests', ['count' => $roomType->max_occupancy]) }}
-            @if ($roomType->size_sqm) · {{ __('common.sqm', ['size' => $roomType->size_sqm]) }} @endif
-            @if ($roomType->bed_setup) · {{ $roomType->bed_setup }} @endif
-        </p>
-
-        <x-responsive-image
-            :media="$roomType->coverImage()"
-            :eager="true"
-            sizes="(max-width: 1024px) 100vw, 896px"
-            class="mt-8 aspect-[16/9] w-full rounded-lg object-cover" />
-
-        @if ($description = $roomType->t('description'))
-            <div class="prose mt-8 max-w-none">{!! $description !!}</div>
-        @endif
-
-        @if ($inclusions = $roomType->inclusionsByCategory())
-            {{-- The visible twin of the amenityFeature entries in the room's
-                 JSON-LD — same rule as breadcrumbs and FAQs. Grouped, because
-                 twenty ungrouped ticks are a wall a guest skims past while
-                 "Bathroom" answers the question they arrived with. --}}
-            <section class="mt-10">
-                <h2 class="text-xl font-semibold tracking-tight">{{ __('extras.includes') }}</h2>
-
-                <div class="mt-4 grid gap-6 sm:grid-cols-2">
-                    @foreach ($inclusions as $category => $amenities)
-                        <div>
-                            <h3 class="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-                                {{ __('extras.category_'.$category) }}
-                            </h3>
-                            <ul class="mt-2 space-y-1 text-neutral-700">
-                                @foreach ($amenities as $amenity)
-                                    <li class="flex items-center gap-2">
-                                        <span aria-hidden="true" style="color: var(--doba-accent)">✓</span>
-                                        {{ $amenity->t('name') }}
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endforeach
+        @if ($cover)
+            <div class="gal">
+                <div class="gal-main">
+                    <x-responsive-image :media="$cover" :eager="true" sizes="(max-width: 980px) 100vw, 860px" />
+                    @if ($roomType->size_sqm)
+                        <span class="gal-badge">{{ __('common.sqm', ['size' => $roomType->size_sqm]) }}</span>
+                    @endif
                 </div>
-            </section>
+
+                @if ($sidePhotos->isNotEmpty())
+                    <div class="gal-side">
+                        @foreach ($sidePhotos as $photo)
+                            <div><x-responsive-image :media="$photo" sizes="300px" /></div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
         @endif
 
-        @php $extras = $roomType->availableExtras(); @endphp
+        <div class="cols">
+            <main>
+                <div>
+                    @if ($bed = $roomType->bed_setup)
+                        <div class="eyebrow">{{ $bed }}</div>
+                    @endif
+                    <h1 style="font-size:clamp(2rem,4vw,3rem)">{{ $roomType->t('name') }}</h1>
 
-        @if ($extras->isNotEmpty())
-            <section class="mt-10">
-                <h2 class="text-xl font-semibold tracking-tight">{{ __('extras.title') }}</h2>
-                <p class="mt-1 text-sm text-neutral-500">{{ __('extras.intro') }}</p>
+                    <div class="facts">
+                        @if ($roomType->size_sqm)
+                            <span>
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                    <path d="M2.5 2.5h15v15h-15z" stroke="currentColor" stroke-width="1.3"/>
+                                    <path d="M6 6h8v8H6z" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/>
+                                </svg>
+                                {{ __('common.sqm', ['size' => $roomType->size_sqm]) }}
+                            </span>
+                        @endif
+                        <span>
+                            <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <circle cx="10" cy="6.5" r="3.2" stroke="currentColor" stroke-width="1.3"/>
+                                <path d="M3.5 17c0-3.6 2.9-5.6 6.5-5.6s6.5 2 6.5 5.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                            </svg>
+                            {{ __('common.guests', ['count' => $roomType->max_occupancy]) }}
+                        </span>
+                        @if ($bed)
+                            <span>
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                    <path d="M2 14V7.5C2 6.7 2.7 6 3.5 6h13c.8 0 1.5.7 1.5 1.5V14M2 14h16M2 14v3M18 14v3M5.5 6V4.5h9V6"
+                                          stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                {{ $bed }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
 
-                <ul class="mt-4 divide-y divide-neutral-200 rounded-lg border border-neutral-200">
-                    @foreach ($extras as $extra)
-                        <li class="flex items-baseline justify-between gap-4 px-4 py-3">
+                @if ($description = $roomType->t('description'))
+                    <section class="block">
+                        <div class="prose lede" style="max-width:70ch">{!! $description !!}</div>
+                    </section>
+                @endif
+
+                @if ($inclusions !== [])
+                    <section class="block">
+                        <h2>{{ __('extras.includes') }}</h2>
+                        <div style="display:grid;gap:26px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+                            @foreach ($inclusions as $category => $amenities)
+                                <div>
+                                    <h4 style="font-family:var(--doba-font-body);font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:10px">
+                                        {{ __('extras.category_'.$category) }}
+                                    </h4>
+                                    <ul style="list-style:none;margin:0;padding:0;display:grid;gap:7px;font-size:.9rem;color:var(--ink-soft)">
+                                        @foreach ($amenities as $amenity)
+                                            <li style="display:flex;gap:9px;align-items:center">
+                                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--doba-moss);flex:none" aria-hidden="true">
+                                                    <path d="M2 8.6l3.6 3.6L14 3.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                                {{ $amenity->t('name') }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+
+                <section class="block">
+                    <h2>{{ __('common.occupancy') }}</h2>
+                    <table class="tbl">
+                        <tbody>
+                            <tr>
+                                <th scope="row">{{ __('common.base_occupancy') }}</th>
+                                <td>{{ __('common.guests', ['count' => $roomType->base_occupancy]) }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">{{ __('common.max_occupancy') }}</th>
+                                <td>{{ __('common.guests', ['count' => $roomType->max_occupancy]) }}</td>
+                            </tr>
+                            @if ($roomType->max_children > 0)
+                                <tr>
+                                    <th scope="row">{{ __('booking.children') }}</th>
+                                    <td>{{ __('common.up_to', ['count' => $roomType->max_children]) }}</td>
+                                </tr>
+                            @endif
+                            @if ($roomType->extra_adult_price > 0)
+                                <tr>
+                                    <th scope="row">{{ __('common.extra_adult') }}</th>
+                                    <td>{{ Money::format($roomType->extra_adult_price) }} {{ __('common.per_night') }}</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </section>
+
+                @if ($extras->isNotEmpty())
+                    <section class="block">
+                        <h2>{{ __('extras.title') }}</h2>
+                        <p class="lede" style="margin-bottom:16px">{{ __('extras.intro') }}</p>
+
+                        <div class="plans">
+                            @foreach ($extras as $extra)
+                                <div class="plan" style="grid-template-columns:1fr auto">
+                                    <div>
+                                        <h3>{{ $extra->t('name') }}</h3>
+                                        @if ($description = $extra->t('description'))
+                                            <p class="terms">{{ $description }}</p>
+                                        @endif
+                                    </div>
+                                    <div class="amt">
+                                        @if ($extra->is_included)
+                                            <b style="font-size:1rem;color:var(--ok)">{{ __('extras.included') }}</b>
+                                        @else
+                                            <b>{{ Money::format($extra->price) }}</b>
+                                            <small>{{ __($extra->applies_per->label()) }}</small>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+
+                <section class="block" id="cal">
+                    <h2>{{ __('booking.availability') }}</h2>
+                    <p class="lede" style="margin-bottom:16px">{{ __('booking.calendar_lede') }}</p>
+                    @include('booking._calendar', ['roomTypes' => collect([$roomType])])
+                </section>
+
+                <section class="block">
+                    <h2>{{ __('common.good_to_know') }}</h2>
+                    <div class="pol">
+                        <div>
+                            <h4>{{ __('common.check_in_label') }}</h4>
+                            <p>{{ __('common.check_in_from', ['time' => config('doba.checkin_from')]) }}</p>
+                        </div>
+                        <div>
+                            <h4>{{ __('common.check_out_label') }}</h4>
+                            <p>{{ __('common.check_out_until', ['time' => config('doba.checkout_until')]) }}</p>
+                        </div>
+                        @if ($policy = $hotel->get('policy.cancellation'))
                             <div>
-                                <p class="font-medium">{{ $extra->t('name') }}</p>
-                                @if ($description = $extra->t('description'))
-                                    <p class="mt-0.5 text-sm text-neutral-600">{{ $description }}</p>
-                                @endif
+                                <h4>{{ __('common.cancellation') }}</h4>
+                                <p>{{ $policy }}</p>
                             </div>
-                            <p class="shrink-0 text-right text-sm">
-                                @if ($extra->is_included)
-                                    <span class="font-medium" style="color: var(--doba-accent)">{{ __('extras.included') }}</span>
-                                @else
-                                    <strong>{{ \App\Support\Money::format($extra->price) }}</strong>
-                                    <span class="block text-neutral-500">{{ __($extra->applies_per->label()) }}</span>
-                                @endif
-                            </p>
-                        </li>
-                    @endforeach
-                </ul>
-            </section>
-        @endif
+                        @endif
+                    </div>
+                </section>
 
-        @if ($roomType->default_rate)
-            <p class="mt-8 text-lg">
-                {{ __('common.from') }}
-                <strong>{{ Money::format($roomType->default_rate) }}</strong>
-                {{ __('common.per_night') }}
-            </p>
-            <p class="mt-1 text-sm text-neutral-500">{{ __('seo.direct_booking_note') }}</p>
-        @endif
+                @if ($similar->isNotEmpty())
+                    <section class="block">
+                        <h2>{{ __('common.similar_rooms') }}</h2>
+                        <div class="sim">
+                            @foreach ($similar as $other)
+                                <a href="{{ Localization::route('rooms.show', ['slug' => $other->slug()]) }}"
+                                   class="room" style="text-decoration:none">
+                                    <div class="room-img">
+                                        <x-responsive-image :media="$other->coverImage()" sizes="260px" />
+                                    </div>
+                                    <div class="room-body" style="gap:6px">
+                                        <h3 style="font-size:1.05rem">{{ $other->t('name') }}</h3>
+                                        @if ($other->default_rate)
+                                            <p style="font-size:.85rem;color:var(--ink-faint);margin:0">
+                                                {{ __('common.from') }} <strong style="color:var(--ink)">{{ Money::format($other->default_rate) }}</strong>
+                                            </p>
+                                        @endif
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+            </main>
 
-        @if ($roomType->media->count() > 1)
-            <ul class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                @foreach ($roomType->media->skip(0) as $image)
-                    @continue ($image->is($roomType->coverImage()))
-                    <li>
-                        <x-responsive-image :media="$image" sizes="(max-width: 640px) 50vw, 280px"
-                                            class="aspect-[4/3] w-full rounded object-cover" />
-                    </li>
-                @endforeach
-            </ul>
-        @endif
-    </article>
+            <aside class="side">
+                @include('rooms._booking-card', ['roomType' => $roomType])
+            </aside>
+        </div>
+    </div>
 @endsection

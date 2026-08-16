@@ -48,6 +48,8 @@ it('returns the per-date payload the picker renders', function (): void {
             'min_stay' => 1,
             'cta' => false,
             'ctd' => false,
+            // Confirmed bookings only — never holds (§6 step 5).
+            'units_left' => 2,
         ])
         ->and($days[1]['available'])->toBeFalse()   // sold out
         ->and($days[2]['available'])->toBeFalse()   // stop-sell
@@ -98,4 +100,26 @@ it('404s an inactive room type without leaking its calendar', function (): void 
         .'&from='.$this->from->toDateString()
         .'&to='.$this->from->addDays(2)->toDateString()
     )->assertStatus(404);
+});
+
+it('counts units_left from confirmed bookings, never from holds', function (): void {
+    $date = $this->from->addDays(2)->toDateString();
+
+    // One unit held (someone mid-checkout) and none confirmed: the widget
+    // must not tell the next guest a room is scarce — that would let a
+    // script manufacture scarcity on the hotel's own site (§6).
+    Availability::query()->where('date', $date)->update(['closed' => false, 'booked' => 0, 'held' => 1]);
+
+    $fetch = fn (): array => collect($this->getJson(
+        '/api/calendar?room_type='.$this->roomType->id
+        .'&from='.$this->from->toDateString()
+        .'&to='.$this->from->addDays(3)->toDateString()
+    )->assertOk()->json('days'))->firstWhere('date', $date);
+
+    expect($fetch()['units_left'])->toBe(2);
+
+    // A confirmed booking is genuine scarcity.
+    Availability::query()->where('date', $date)->update(['booked' => 1, 'held' => 0]);
+
+    expect($fetch()['units_left'])->toBe(1);
 });

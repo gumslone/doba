@@ -1,8 +1,24 @@
 import 'trix';
-import Alpine from 'alpinejs';
+import initCalendars from './calendar';
+import initDisclosures from './disclosures';
 
-// Server-rendered Blade is the default (§1) — Alpine handles the few pieces
-// that must be interactive (the date picker, the gallery, the language menu)
-// without a build step per hotel or a hydration cost on every page.
-window.Alpine = Alpine;
-Alpine.start();
+/*
+ * Plain DOM, deliberately.
+ *
+ * §1 chose "server-rendered Blade + Alpine". Alpine evaluates its templates
+ * with new Function(), which the §14 Content Security Policy forbids
+ * ('unsafe-eval' is not granted) — so every Alpine binding fails silently
+ * under our own security headers. Rather than weaken the CSP for a site
+ * with exactly three interactive pieces, those pieces are written against
+ * the DOM directly. The security posture wins; the code is smaller.
+ */
+const boot = () => {
+    initCalendars();
+    initDisclosures();
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+} else {
+    boot();
+}

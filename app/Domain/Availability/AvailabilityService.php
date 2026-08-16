@@ -234,7 +234,7 @@ class AvailabilityService
      * The calendar widget payload (§6): one entry per date with exactly
      * what the picker needs to disable cells and show "from" prices.
      *
-     * @return array<int,array{date:string,available:bool,price:int|null,min_stay:int,cta:bool,ctd:bool}>
+     * @return array<int,array{date:string,available:bool,price:int|null,min_stay:int,cta:bool,ctd:bool,units_left:int}>
      */
     public function calendar(RoomType $roomType, CarbonInterface $from, CarbonInterface $to): array
     {
@@ -257,6 +257,7 @@ class AvailabilityService
                     'min_stay' => 1,
                     'cta' => false,
                     'ctd' => false,
+                    'units_left' => 0,
                 ];
 
                 continue;
@@ -269,6 +270,10 @@ class AvailabilityService
                 'min_stay' => $row->min_stay,
                 'cta' => $row->closed_to_arrival,
                 'ctd' => $row->closed_to_departure,
+                // Confirmed bookings only — counting holds would let anyone
+                // with a script manufacture scarcity on the hotel's own
+                // site (§6 step 5).
+                'units_left' => max(0, $row->allotment - $row->booked),
             ];
         }
 

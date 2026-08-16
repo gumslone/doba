@@ -99,7 +99,27 @@ class DatabaseSeeder extends Seeder
         Setting::put('contact', 'latitude', '47.6903');
         Setting::put('contact', 'longitude', '11.7639');
 
-        Setting::put('branding', 'color_primary', '#1f2937');
+        Setting::put('general', 'star_rating', 4);
+        Setting::put('general', 'since', 1954);
+
+        // The four-up strip under the booking bar — what makes this house
+        // worth choosing, in the hotelier's own words.
+        Setting::put('general', 'usps', [
+            ['icon' => 'building', 'title' => '28 rooms', 'subtitle' => 'Never a crowd'],
+            ['icon' => 'spa', 'title' => 'Alpine spa', 'subtitle' => '900 m², mountain view'],
+            ['icon' => 'dining', 'title' => 'Half board', 'subtitle' => 'Regional, four courses'],
+            ['icon' => 'clock', 'title' => '24 h reception', 'subtitle' => 'Still there late'],
+        ]);
+
+        Setting::put('policy', 'cancellation', [
+            'en' => 'Free cancellation up to 48 hours before arrival on flexible rates.',
+            'de' => 'Kostenfreie Stornierung bis 48 Stunden vor Anreise bei flexiblen Raten.',
+            'fr' => 'Annulation gratuite jusqu’à 48 heures avant l’arrivée sur les tarifs flexibles.',
+            'nl' => 'Gratis annuleren tot 48 uur voor aankomst bij flexibele tarieven.',
+        ], translatable: true);
+
+        Setting::put('branding', 'color_primary', '#20362c');
+        Setting::put('branding', 'color_accent', '#a8823f');
 
         Setting::put('amenities', 'list', ['Free WiFi', 'Spa', 'Parking', 'Breakfast', 'Pets allowed']);
     }

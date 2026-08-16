@@ -70,6 +70,17 @@ class RoomTypeController extends Controller
 
         return view('rooms.show', [
             'roomType' => $roomType,
+            // Other categories a guest might take instead — the cheapest
+            // alternative is often the booking that would otherwise be lost.
+            'similar' => RoomType::query()
+                ->active()
+                ->ordered()
+                ->whereKeyNot($roomType->getKey())
+                ->with(['translation', 'translations', 'media'])
+                ->limit(3)
+                ->get()
+                ->filter(static fn (RoomType $other): bool => $other->slug() !== null)
+                ->values(),
         ]);
     }
 

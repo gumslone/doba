@@ -1,54 +1,90 @@
 @php
     use App\Models\Page;
+    use App\Support\Hotel\Maps;
     use App\Support\Routing\Localization;
 
-    // Legally required pages in DE/PL/UA (§16 step 8). Rendering them from
-    // the pages table rather than hard-coding keeps the footer correct when
-    // a hotelier renames "Impressum" or adds a house-rules page.
     $footerPages = Page::query()
         ->published()
-        ->where('show_in_menu', true)
         ->with('translation')
         ->orderBy('sort_order')
         ->get()
         ->filter(fn (Page $page): bool => $page->slug() !== null);
+
+    // Legally required pages in DE/PL/UA (§16 step 8) go in their own
+    // column; everything else is "explore".
+    $legalCodes = ['imprint', 'privacy', 'terms', 'cancellation'];
+    $legal = $footerPages->whereIn('code', $legalCodes);
+    $explore = $footerPages->whereNotIn('code', $legalCodes);
 @endphp
 
-<footer class="mt-16 border-t border-neutral-200 bg-neutral-50">
-    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-10 text-sm text-neutral-600 sm:grid-cols-3">
-        <div>
-            <p class="font-semibold text-neutral-900">{{ $hotel->name }}</p>
-            @if ($street = $hotel->get('contact.street'))
-                <p class="mt-2">{{ $street }}</p>
-                <p>{{ $hotel->get('contact.postal_code') }} {{ $hotel->get('contact.city') }}</p>
-            @endif
-            @if ($phone = $hotel->get('contact.phone'))
-                <p class="mt-2"><a href="tel:{{ preg_replace('/[^+0-9]/', '', $phone) }}" class="hover:underline">{{ $phone }}</a></p>
-            @endif
-            @if ($email = $hotel->get('contact.email'))
-                <p><a href="mailto:{{ $email }}" class="hover:underline">{{ $email }}</a></p>
-            @endif
-        </div>
+<footer class="site">
+    <div class="wrap">
+        <div class="fcols">
+            <div>
+                <h5>{{ $hotel->name }}</h5>
+                @if ($tagline = $hotel->get('general.tagline'))
+                    <p style="max-width:36ch;color:#9fb0a5">{{ $tagline }}</p>
+                @endif
+                @if ($street = $hotel->get('contact.street'))
+                    <p style="margin-top:14px">
+                        {{ $street }}<br>
+                        {{ $hotel->get('contact.postal_code') }} {{ $hotel->get('contact.city') }}
+                        @if ($country = $hotel->get('contact.country'))<br>{{ $country }}@endif
+                    </p>
+                @endif
+                @if ($mapLink = Maps::link($hotel))
+                    <p style="margin-top:10px">
+                        <a href="{{ $mapLink }}" target="_blank" rel="noopener">{{ __('contact.map_open') }} ↗</a>
+                    </p>
+                @endif
+            </div>
 
-        <div>
-            <p class="font-semibold text-neutral-900">{{ __('common.rooms') }}</p>
-            <p class="mt-2">{{ __('common.check_in_from', ['time' => config('doba.checkin_from')]) }}</p>
-            <p>{{ __('common.check_out_until', ['time' => config('doba.checkout_until')]) }}</p>
-            <p class="mt-2">{{ __('seo.direct_booking_note') }}</p>
-        </div>
-
-        @if ($footerPages->isNotEmpty())
-            <nav aria-label="Footer">
-                <ul class="space-y-1">
-                    @foreach ($footerPages as $page)
-                        <li>
-                            <a href="{{ Localization::route('page', ['slug' => $page->slug()]) }}" class="hover:underline">
-                                {{ $page->t('title') }}
-                            </a>
-                        </li>
+            <div>
+                <h5>{{ __('common.explore') }}</h5>
+                <ul>
+                    <li><a href="{{ Localization::route('rooms.index') }}">{{ __('common.rooms') }}</a></li>
+                    <li><a href="{{ Localization::route('events.index') }}">{{ __('events.title') }}</a></li>
+                    @foreach ($explore as $page)
+                        <li><a href="{{ Localization::route('page', ['slug' => $page->slug()]) }}">{{ $page->t('title') }}</a></li>
                     @endforeach
+                    <li><a href="{{ Localization::route('contact') }}">{{ __('contact.title') }}</a></li>
                 </ul>
-            </nav>
-        @endif
+            </div>
+
+            @if ($legal->isNotEmpty())
+                <div>
+                    <h5>{{ __('common.legal') }}</h5>
+                    <ul>
+                        @foreach ($legal as $page)
+                            <li><a href="{{ Localization::route('page', ['slug' => $page->slug()]) }}">{{ $page->t('title') }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div>
+                <h5>{{ __('contact.title') }}</h5>
+                <ul>
+                    @if ($phone = $hotel->get('contact.phone'))
+                        <li><a href="tel:{{ preg_replace('/[^+0-9]/', '', $phone) }}">{{ $phone }}</a></li>
+                    @endif
+                    @if ($email = $hotel->get('contact.email'))
+                        <li><a href="mailto:{{ $email }}">{{ $email }}</a></li>
+                    @endif
+                </ul>
+                <p style="margin-top:16px;color:#9fb0a5">
+                    {{ __('common.check_in_from', ['time' => config('doba.checkin_from')]) }}<br>
+                    {{ __('common.check_out_until', ['time' => config('doba.checkout_until')]) }}
+                </p>
+            </div>
+        </div>
+
+        <div class="fbottom">
+            <span>
+                © {{ date('Y') }} {{ $hotel->name }} ·
+                {{ __('common.powered_by') }}
+                <a href="https://github.com/gumslone/doba" rel="noopener"><strong style="color:#cbd8ce">Doba</strong></a>
+            </span>
+        </div>
     </div>
 </footer>

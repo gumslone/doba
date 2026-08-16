@@ -1,5 +1,6 @@
 {{-- The date/guest search form, reused on the home page and the results
-     page. GET, so a search is a shareable, back-button-safe URL. --}}
+     page. GET, so a search is a shareable, back-button-safe URL — and it
+     works with JavaScript disabled. --}}
 @php
     use App\Support\Routing\Localization;
 
@@ -15,31 +16,29 @@
     $checkOutValue = ($stay['check_out'] ?? null)?->toDateString() ?? '';
 @endphp
 
-<form method="GET" action="{{ Localization::route('booking.search') }}"
-      class="grid gap-3 sm:grid-cols-5 sm:items-end">
-    <div>
-        <label for="check_in" class="block text-sm font-medium">{{ __('booking.check_in') }}</label>
-        <input type="date" id="check_in" name="check_in" required
-               min="{{ $today }}" max="{{ $max }}"
-               value="{{ $checkInValue }}"
-               class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
+<form method="GET" action="{{ Localization::route('booking.search') }}" class="bookbar-card">
+    <div class="field">
+        <label for="check_in">{{ __('booking.check_in') }}</label>
+        <input class="control" type="date" id="check_in" name="check_in" required
+               min="{{ $today }}" max="{{ $max }}" value="{{ $checkInValue }}">
     </div>
-    <div>
-        <label for="check_out" class="block text-sm font-medium">{{ __('booking.check_out') }}</label>
-        <input type="date" id="check_out" name="check_out" required
-               min="{{ $today }}" max="{{ $max }}"
-               value="{{ $checkOutValue }}"
-               class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
+    <div class="field">
+        <label for="check_out">{{ __('booking.check_out') }}</label>
+        <input class="control" type="date" id="check_out" name="check_out" required
+               min="{{ $today }}" max="{{ $max }}" value="{{ $checkOutValue }}">
     </div>
-    <div>
-        <label for="adults" class="block text-sm font-medium">{{ __('booking.adults') }}</label>
-        <input type="number" id="adults" name="adults" min="1" max="20" value="{{ $stay['adults'] ?? 2 }}"
-               class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
+    <div class="field">
+        <label for="adults">{{ __('booking.guests') }}</label>
+        <div style="display:flex;gap:8px">
+            <input class="control" type="number" id="adults" name="adults" min="1" max="20"
+                   value="{{ $stay['adults'] ?? 2 }}" aria-label="{{ __('booking.adults') }}">
+            <input class="control" type="number" id="children" name="children" min="0" max="20"
+                   value="{{ $stay['children'] ?? 0 }}" aria-label="{{ __('booking.children') }}">
+        </div>
     </div>
-    <div>
-        <label for="children" class="block text-sm font-medium">{{ __('booking.children') }}</label>
-        <input type="number" id="children" name="children" min="0" max="20" value="{{ $stay['children'] ?? 0 }}"
-               class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
+    <div class="field">
+        <button type="submit" class="btn btn--primary btn--block" style="min-height:46px">
+            {{ __('booking.search') }}
+        </button>
     </div>
-    <button type="submit" class="btn-primary rounded px-5 py-2.5">{{ __('booking.search') }}</button>
 </form>

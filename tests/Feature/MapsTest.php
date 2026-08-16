@@ -18,12 +18,13 @@ it('offers the map click-to-load rather than calling Google on page load', funct
     // The button and the privacy note are present…
     expect($html)->toContain(__('contact.map_load'))
         ->toContain(__('contact.map_privacy'))
-        // …and the embed sits inside an x-if template, so no iframe is in
-        // the served markup and nothing is fetched from Google until the
-        // visitor asks.
-        ->toContain('<template x-if="loaded">');
+        // …and the embed URL travels as a data attribute that a click
+        // turns into an iframe, so the served markup contains no frame at
+        // all and nothing is fetched from Google until the visitor asks.
+        ->toContain('data-frame-container')
+        ->toContain('data-load-frame');
 
-    expect(substr_count($html, '<iframe'))->toBe(1); // only inside the template
+    expect(substr_count($html, '<iframe'))->toBe(0);
 });
 
 it('links out to Google Maps with the hotel coordinates', function (): void {
