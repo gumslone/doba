@@ -92,7 +92,25 @@
                         @endforeach
                     </fieldset>
                 @elseif (count($plans) === 1)
-                    <input type="hidden" name="rate_plan" value="{{ $plans[0]['plan']->id }}">
+                    {{-- One plan is not a choice, but the guest still has to
+                         see the terms they are agreeing to before consenting
+                         to them. --}}
+                    @php $only = $plans[0]['plan']; @endphp
+                    <input type="hidden" name="rate_plan" value="{{ $only->id }}">
+
+                    <div class="rounded-lg border border-neutral-200 p-5">
+                        <h2 class="font-medium">{{ $only->t('name') }}</h2>
+                        @if ($description = $only->t('description'))
+                            <p class="mt-1 text-sm text-neutral-600">{{ $description }}</p>
+                        @endif
+                        <p class="mt-2 text-sm">
+                            @if ($only->refundable)
+                                {{ __('booking.free_until', ['hours' => $only->cancellation_hours]) }}
+                            @else
+                                <strong>{{ __('booking.non_refundable') }}</strong>
+                            @endif
+                        </p>
+                    </div>
                 @endif
 
                 @if ($extras->isNotEmpty())

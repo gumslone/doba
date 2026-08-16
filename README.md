@@ -23,7 +23,7 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 > Still to come: channel/OTA sync, the installation wizard, the public partner API and the full
 > Filament panel — all specified in
 > [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
-> The correctness-critical paths are covered by 200+ tests on both database
+> The correctness-critical paths are covered by 210+ tests on both database
 > engines, but the platform has not yet run a real hotel — treat it as
 > pre-release.
 
@@ -295,8 +295,8 @@ is the only thing that keeps the "portable" promise honest.
 ## Admin & editing
 
 An interim admin area lives at `/admin` (the full Filament panel replaces it
-later in phase 1). It edits **availability & rates**, **CMS pages**, **events**, **extras**
-and **photos** with
+later in phase 1). It edits **availability**, **rate plans**, **CMS pages**, **events**,
+**extras** and **photos** with
 per-language tabs and a [Trix](https://trix-editor.org) WYSIWYG editor — clearing a
 language's title unpublishes that language: its URL, `hreflang` entry and
 sitemap line all disappear together. The demo seeder creates

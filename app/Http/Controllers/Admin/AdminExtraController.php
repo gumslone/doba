@@ -70,6 +70,11 @@ class AdminExtraController extends Controller
 
     protected function save(Request $request, Extra $extra): RedirectResponse
     {
+        // Normalised BEFORE validation: the code is stored upper-cased, so
+        // a unique rule checking the raw input would let "saver" through
+        // against a stored "SAVER" and fail at the database instead.
+        $request->merge(['code' => mb_strtoupper(trim((string) $request->input('code')))]);
+
         $validated = $request->validate([
             'code' => [
                 'required', 'string', 'max:64', 'alpha_dash',
@@ -92,7 +97,7 @@ class AdminExtraController extends Controller
 
         DB::transaction(function () use ($extra, $validated): void {
             $extra->fill([
-                'code' => mb_strtoupper($validated['code']),
+                'code' => $validated['code'],
                 'price' => (int) round(((float) $validated['price']) * 100),
                 'applies_per' => $validated['applies_per'],
                 'tax_rate' => (int) $validated['tax_rate'],

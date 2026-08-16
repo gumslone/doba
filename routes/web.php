@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminAvailabilityController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminPageController;
+use App\Http\Controllers\Admin\AdminRatePlanController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\StyleController;
@@ -88,6 +89,13 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
         Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
+
+        Route::get('rate-plans', [AdminRatePlanController::class, 'index'])->name('admin.rate-plans');
+        Route::get('rate-plans/create', [AdminRatePlanController::class, 'create'])->name('admin.rate-plans.create');
+        Route::post('rate-plans', [AdminRatePlanController::class, 'store'])->name('admin.rate-plans.store');
+        Route::get('rate-plans/{ratePlan}/edit', [AdminRatePlanController::class, 'edit'])->name('admin.rate-plans.edit');
+        Route::put('rate-plans/{ratePlan}', [AdminRatePlanController::class, 'update'])->name('admin.rate-plans.update');
+        Route::delete('rate-plans/{ratePlan}', [AdminRatePlanController::class, 'destroy'])->name('admin.rate-plans.destroy');
 
         Route::get('extras', [AdminExtraController::class, 'index'])->name('admin.extras');
         Route::get('extras/create', [AdminExtraController::class, 'create'])->name('admin.extras.create');

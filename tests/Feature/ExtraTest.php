@@ -272,3 +272,26 @@ it('deactivates rather than deletes an extra that has been sold', function (): v
         // …and it stops being offered.
         ->and($this->roomType->availableExtras())->toHaveCount(0);
 });
+
+it('rejects a duplicate extra code regardless of case', function (): void {
+    $admin = User::factory()->create();
+
+    $payload = [
+        'code' => 'spa', 'price' => '25.00', 'applies_per' => 'person',
+        'tax_rate' => 1900, 'max_quantity' => 1, 'is_active' => '1',
+        'translations' => ['en' => ['name' => 'Spa access']],
+    ];
+
+    $this->actingAs($admin)->post('/admin/extras', $payload)->assertRedirect();
+
+    // Codes are stored upper-cased, so "SPA" and "spa" are the same code.
+    // Validating the raw input would let this through to the database and
+    // return a 500 instead of a field error.
+    $this->actingAs($admin)->post('/admin/extras', ['code' => 'SPA'] + $payload)
+        ->assertSessionHasErrors('code');
+
+    $this->actingAs($admin)->post('/admin/extras', ['code' => 'spa'] + $payload)
+        ->assertSessionHasErrors('code');
+
+    expect(Extra::count())->toBe(1);
+});
