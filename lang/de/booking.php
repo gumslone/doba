@@ -106,4 +106,5 @@ return [
     'free_until' => 'Kostenfreie Stornierung bis :hours Std. vor Anreise',
     'non_refundable' => 'Nicht erstattbar',
     'incl_breakfast' => 'Frühstück inklusive',
+    'download_invoice' => 'Rechnung :number herunterladen',
 ];

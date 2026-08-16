@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\AdminAvailabilityController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
+use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
 use App\Http\Controllers\Admin\AuthController;
@@ -90,6 +91,9 @@ Route::prefix('admin')->group(function (): void {
         Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
         Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
 
+        Route::get('invoices', [AdminInvoiceController::class, 'index'])->name('admin.invoices');
+        Route::get('invoices/{invoice}.pdf', [AdminInvoiceController::class, 'download'])->name('admin.invoices.download');
+
         Route::get('rate-plans', [AdminRatePlanController::class, 'index'])->name('admin.rate-plans');
         Route::get('rate-plans/create', [AdminRatePlanController::class, 'create'])->name('admin.rate-plans.create');
         Route::post('rate-plans', [AdminRatePlanController::class, 'store'])->name('admin.rate-plans.store');
@@ -161,6 +165,8 @@ foreach ($locales as $locale) {
             Route::get($booking.'/pay/{reference}', [BookingController::class, 'pay'])->name('booking.pay');
             Route::get($booking.'/confirmation/{reference}', [BookingController::class, 'confirmation'])->name('booking.confirmation');
             Route::get($booking.'/manage/{reference}/{token}', [BookingController::class, 'manage'])->name('booking.manage');
+            Route::get($booking.'/manage/{reference}/{token}/invoice.pdf', [BookingController::class, 'invoice'])
+                ->name('booking.invoice');
             Route::post($booking.'/manage/{reference}/{token}/cancel', [BookingController::class, 'cancel'])
                 ->middleware('throttle:booking')
                 ->name('booking.cancel');

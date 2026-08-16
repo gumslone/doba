@@ -34,6 +34,8 @@ return [
     'grid_horizon' => 'calendar generated to :date',
     'extras' => 'Extras',
     'rate_plans' => 'Rates',
+    'invoices' => 'Invoices',
+    'no_invoices' => 'Invoices are issued automatically when a booking is confirmed.',
     'new_rate_plan' => 'New rate plan',
     'plan_deactivated' => 'This rate has been sold before, so it was deactivated instead of deleted.',
     'base_price' => 'base price',

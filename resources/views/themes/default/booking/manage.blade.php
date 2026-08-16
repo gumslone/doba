@@ -30,6 +30,15 @@
             @include('booking._summary')
         </div>
 
+        @if ($booking->invoice)
+            <p class="mt-6">
+                <a href="{{ Localization::route('booking.invoice', ['reference' => $booking->reference, 'token' => $token]) }}"
+                   class="inline-flex items-center gap-2 rounded border border-neutral-300 px-5 py-2.5 hover:bg-neutral-50">
+                    {{ __('booking.download_invoice', ['number' => $booking->invoice->number]) }}
+                </a>
+            </p>
+        @endif
+
         @if ($booking->status->canTransitionTo(BookingStatus::Cancelled))
             <form method="POST"
                   action="{{ Localization::route('booking.cancel', ['reference' => $booking->reference, 'token' => $token]) }}"

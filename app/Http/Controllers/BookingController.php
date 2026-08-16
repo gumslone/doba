@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Domain\Availability\AvailabilityService;
 use App\Domain\Booking\BookingService;
 use App\Domain\Booking\NoAvailabilityException;
+use App\Domain\Invoicing\InvoiceRenderer;
 use App\Domain\Payments\GatewayRegistry;
 use App\Domain\Payments\PaymentService;
 use App\Enums\BookingStatus;
@@ -20,6 +21,8 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -211,7 +214,7 @@ class BookingController extends Controller
             ->alternates(Localization::alternates('booking.confirmation', compact('reference')));
 
         return view('booking.confirmation', [
-            'booking' => $booking->load('rooms.roomType.translations', 'extras.extra.translations', 'guest'),
+            'booking' => $booking->load('rooms.roomType.translations', 'extras.extra.translations', 'guest', 'invoice'),
         ]);
     }
 
@@ -227,8 +230,36 @@ class BookingController extends Controller
 
         return view('booking.manage', [
             'booking' => $this->findByToken($reference, $token)
-                ->load('rooms.roomType.translations', 'extras.extra.translations', 'guest'),
+                ->load('rooms.roomType.translations', 'extras.extra.translations', 'guest', 'invoice'),
             'token' => $token,
+        ]);
+    }
+
+    /**
+     * The guest's own copy of their invoice.
+     *
+     * Gated by the same manage token as the rest of this page — the PDF
+     * carries their name and address, so it can never be served from a
+     * public disk or a guessable URL.
+     */
+    public function invoice(string $reference, string $token, InvoiceRenderer $renderer): Response
+    {
+        $invoice = $this->findByToken($reference, $token)->invoice;
+
+        if ($invoice === null) {
+            throw new NotFoundHttpException('No invoice has been issued for this booking.');
+        }
+
+        if ($invoice->pdf_path === null || ! Storage::disk('local')->exists($invoice->pdf_path)) {
+            $renderer->store($invoice);
+            $invoice->refresh();
+        }
+
+        return response(Storage::disk('local')->get($invoice->pdf_path), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$invoice->number.'.pdf"',
+            // Never let a shared proxy keep a copy of somebody's invoice.
+            'Cache-Control' => 'private, no-store',
         ]);
     }
 

@@ -120,6 +120,12 @@ class DatabaseSeeder extends Seeder
             'nl' => 'Gratis annuleren tot 48 uur voor aankomst bij flexibele tarieven.',
         ], translatable: true);
 
+        // Basis points. German accommodation is the reduced rate while
+        // breakfast, parking and spa are standard — which is exactly why
+        // the invoice needs a per-rate breakdown (§5).
+        Setting::put('tax', 'accommodation_rate', 700);
+        Setting::put('tax', 'vat_id', 'DE123456789');
+
         Setting::put('branding', 'color_primary', '#20362c');
         Setting::put('branding', 'color_accent', '#a8823f');
 

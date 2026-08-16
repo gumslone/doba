@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Booking;
 
+use App\Domain\Invoicing\InvoiceBuilder;
 use App\Domain\Pricing\RateResolver;
 use App\Enums\BookingStatus;
 use App\Mail\BookingConfirmed;
@@ -215,7 +216,10 @@ class BookingService
 
             $booking->forceFill([
                 'extras_total' => $extrasTotal,
-                'total' => $booking->subtotal + $extrasTotal - $booking->discount_total,
+                // City tax belongs in the total because the invoice bills
+                // it: a booking whose total omits a line the invoice prints
+                // is a document that demands more than the guest agreed to.
+                'total' => $booking->subtotal + $extrasTotal + $booking->city_tax - $booking->discount_total,
             ]);
 
             $booking->balance_due = $booking->total - $booking->paid_amount;
@@ -303,11 +307,17 @@ class BookingService
             return $booking;
         }, attempts: 3);
 
-        // Sent after the transaction commits, never inside it: a queued job
-        // picked up before the commit would find no booking, and a mail
-        // failure must not roll back a confirmed booking (§13).
-        if ($booking->status === BookingStatus::Confirmed && $booking->guest?->email) {
-            Mail::to($booking->guest->email)->queue(new BookingConfirmed($booking));
+        // Both of these run AFTER the transaction commits, never inside
+        // it: a queued job picked up before the commit would find no
+        // booking, and neither a mail nor an invoice failure may roll back
+        // a confirmed, paid stay (§13).
+        if ($booking->status === BookingStatus::Confirmed) {
+            // The invoice is issued first so the mail can carry it.
+            app(InvoiceBuilder::class)->issue($booking);
+
+            if ($booking->guest?->email) {
+                Mail::to($booking->guest->email)->queue(new BookingConfirmed($booking));
+            }
         }
 
         return $booking;

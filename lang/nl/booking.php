@@ -106,4 +106,5 @@ return [
     'free_until' => 'Gratis annuleren tot :hours uur voor aankomst',
     'non_refundable' => 'Niet-restitueerbaar',
     'incl_breakfast' => 'Ontbijt inbegrepen',
+    'download_invoice' => 'Factuur :number downloaden',
 ];

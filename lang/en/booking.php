@@ -106,4 +106,5 @@ return [
     'free_until' => 'Free cancellation up to :hours h before arrival',
     'non_refundable' => 'Non-refundable',
     'incl_breakfast' => 'Breakfast included',
+    'download_invoice' => 'Download invoice :number',
 ];

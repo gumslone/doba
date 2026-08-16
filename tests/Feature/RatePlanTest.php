@@ -6,6 +6,7 @@ use App\Domain\Availability\AvailabilityService;
 use App\Domain\Booking\BookingService;
 use App\Models\Availability;
 use App\Models\Booking;
+use App\Models\Invoice;
 use App\Models\RatePlan;
 use App\Models\RoomType;
 use Carbon\CarbonImmutable;
@@ -267,6 +268,10 @@ it('books the plan the guest chose and refuses one the engine would not sell', f
         ->subtotal->toBe(20000)
         ->and(Booking::sole()->rooms->first()->rate_plan_id)->toBeNull();
 
+    // The invoice goes first: the schema deliberately refuses to delete a
+    // booking that has one, so an issued tax document cannot be destroyed
+    // as a side effect of tidying up a stay.
+    Invoice::query()->delete();
     Booking::query()->delete();
 
     $this->post('/en/booking', $payload + ['rate_plan' => $flex->id])->assertRedirect();

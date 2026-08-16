@@ -199,6 +199,23 @@ Everything below is implemented and covered by tests.
   into an overbooking.
 - Partial and full **refunds** with correct `paid_amount` / `balance_due`
   bookkeeping; refunds are their own rows so the ledger reconstructs a dispute.
+- **Invoices, with the VAT arithmetic done the way tax authorities expect.**
+  A confirmed booking issues a sequentially numbered invoice (`2026-0001`,
+  restarting each year, claimed under a locking read so two simultaneous
+  confirmations cannot share a number) and the PDF is attached to the
+  confirmation mail. Two rules make the figures trustworthy: VAT is
+  **extracted** from the gross price rather than added to it — every amount
+  the guest was ever shown already included it, so adding it would quietly
+  bill them more than they agreed to — and **net is rounded while tax is the
+  remainder**, so `net + tax` equals the gross exactly on every line and
+  therefore on every total. The document prints the **per-rate breakdown** a
+  German, Polish or Ukrainian invoice is required to show, because
+  accommodation is reduced-rate while breakfast, parking and the spa are not.
+  PDFs are rendered with Dompdf (not Browsershot: no headless Chromium on a
+  hotel's server) onto the **private** disk and served only through the
+  admin session or the guest's own manage-link token — an invoice carries a
+  name and a home address, and sequential numbers make a public URL trivially
+  enumerable. The schema refuses to delete a booking that has been invoiced.
 
 ### Security (§14)
 
@@ -296,7 +313,7 @@ is the only thing that keeps the "portable" promise honest.
 
 An interim admin area lives at `/admin` (the full Filament panel replaces it
 later in phase 1). It edits **availability**, **rate plans**, **CMS pages**, **events**,
-**extras** and **photos** with
+**extras** and **photos**, and lists **invoices** for download, with
 per-language tabs and a [Trix](https://trix-editor.org) WYSIWYG editor — clearing a
 language's title unpublishes that language: its URL, `hreflang` entry and
 sitemap line all disappear together. The demo seeder creates

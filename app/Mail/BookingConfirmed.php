@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Domain\Invoicing\InvoiceRenderer;
 use App\Models\Booking;
 use App\Support\Routing\Localization;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -43,5 +45,29 @@ class BookingConfirmed extends Mailable
                 'token' => $this->booking->manage_token,
             ], $this->booking->locale),
         ]);
+    }
+
+    /**
+     * The invoice travels with the confirmation, so the guest has the
+     * document without having to come back for it.
+     *
+     * @return array<int,Attachment>
+     */
+    public function attachments(): array
+    {
+        $invoice = $this->booking->invoice;
+
+        if ($invoice === null) {
+            // A booking confirmed before invoicing was configured still
+            // gets its confirmation; a missing PDF is not a mail failure.
+            return [];
+        }
+
+        return [
+            Attachment::fromData(
+                fn (): string => app(InvoiceRenderer::class)->render($invoice),
+                $invoice->number.'.pdf',
+            )->withMime('application/pdf'),
+        ];
     }
 }

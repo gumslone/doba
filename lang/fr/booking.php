@@ -106,4 +106,5 @@ return [
     'free_until' => 'Annulation gratuite jusqu’à :hours h avant l’arrivée',
     'non_refundable' => 'Non remboursable',
     'incl_breakfast' => 'Petit-déjeuner inclus',
+    'download_invoice' => 'Télécharger la facture :number',
 ];
