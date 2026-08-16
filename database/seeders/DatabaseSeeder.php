@@ -8,9 +8,12 @@ use App\Models\Amenity;
 use App\Models\Faq;
 use App\Models\Page;
 use App\Models\RoomType;
+use App\Models\Season;
+use App\Models\SeasonRate;
 use App\Models\Setting;
 use App\Support\Hotel\HotelSettings;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 /**
  * A demo hotel: enough real content in four languages that the SEO layer
@@ -29,6 +32,11 @@ class DatabaseSeeder extends Seeder
         $this->amenities();
         $this->pages();
         $this->faqs();
+        $this->seasons();
+
+        // Fill the calendar through the bookable window so the demo does
+        // not open on the "empty calendar looks broken" state (§16 step 7).
+        Artisan::call('availability:extend');
 
         HotelSettings::flush();
     }
@@ -146,6 +154,27 @@ class DatabaseSeeder extends Seeder
                     'description' => '<p>'.$translation['short'].'</p>',
                 ]);
             }
+        }
+    }
+
+    protected function seasons(): void
+    {
+        $season = Season::updateOrCreate(['name' => 'High season'], [
+            'starts_on' => now()->toDateString(),
+            'ends_on' => now()->addDays(90)->toDateString(),
+            'priority' => 10,
+        ]);
+
+        $double = RoomType::query()->where('code', 'DBL')->first();
+
+        if ($double !== null) {
+            // Weekend surcharge on the double room: one row instead of
+            // twenty-six availability edits (§5).
+            SeasonRate::updateOrCreate([
+                'season_id' => $season->id,
+                'room_type_id' => $double->id,
+                'weekday_mask' => SeasonRate::SATURDAY | SeasonRate::SUNDAY,
+            ], ['price' => 14500]);
         }
     }
 

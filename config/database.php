@@ -38,10 +38,22 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
-            'transaction_mode' => 'DEFERRED',
+
+            /*
+             * The §6 concurrency contract, and it is mandatory, not tuning.
+             *
+             * Laravel opens SQLite transactions as a plain deferred BEGIN, so
+             * the booking transaction would start as a reader and upgrade to
+             * a writer at its first UPDATE — and in WAL mode that upgrade
+             * fails instantly with SQLITE_BUSY (the busy handler is never
+             * consulted for read-to-write upgrades). BEGIN IMMEDIATE takes
+             * the write lock up front, so concurrent bookings serialise
+             * instead of sporadically erroring.
+             */
+            'transaction_mode' => 'IMMEDIATE',
+            'journal_mode' => 'wal',
+            'busy_timeout' => 5000,
+            'synchronous' => 'normal',
         ],
 
         'mysql' => [
