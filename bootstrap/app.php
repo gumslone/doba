@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Models\Redirect;
 use Illuminate\Foundation\Application;
@@ -31,6 +32,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectGuestsTo('/admin/login');
         $middleware->redirectUsersTo('/admin/pages');
+
+        // Webhooks authenticate by provider signature, not by session.
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+
+        // §14 response headers on every route — web, api and webhooks alike.
+        $middleware->append(SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         /*

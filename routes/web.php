@@ -10,6 +10,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\SetLocale;
@@ -36,6 +37,17 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('robots.txt', [SitemapController::class, 'robots'])->name('robots');
+
+/*
+| Provider webhooks (§8). CSRF-exempt (see bootstrap/app.php) because the
+| caller is Stripe/PayPal/LiqPay/Coinbase, not a browser — each request
+| authenticates by its own signature scheme instead, verified in the
+| gateway before anything is acted on.
+*/
+Route::post('webhooks/stripe', [PaymentWebhookController::class, 'stripe'])->name('webhooks.stripe');
+Route::post('webhooks/paypal', [PaymentWebhookController::class, 'paypal'])->name('webhooks.paypal');
+Route::post('webhooks/liqpay', [PaymentWebhookController::class, 'liqpay'])->name('webhooks.liqpay');
+Route::post('webhooks/coinbase', [PaymentWebhookController::class, 'coinbase'])->name('webhooks.coinbase');
 
 /*
 | The pre-Filament admin area. Locale-less on purpose: staff URLs are not

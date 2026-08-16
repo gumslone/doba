@@ -15,14 +15,29 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 
 *doba* is the everyday word for one hotel night in Polish and Ukrainian.
 
-> **Status: early.** This repository currently contains the **phase-1
-> foundation and the complete SEO layer** — routing, content model, themes,
-> structured data, sitemap, redirects. The availability engine, payments,
-> channel sync and admin panel are specified in
-> [`docs/architecture.md`](docs/architecture.md) and not yet built. See
-> [Roadmap](#roadmap). Nothing here should be pointed at a live hotel yet.
+> **Status: in progress.** Built so far: the multilingual SEO layer, the
+> availability & rate engine, the booking core (holds, locking, state
+> machine), **online payments** (Stripe, PayPal, LiqPay, crypto, manual),
+> events, and an interim admin with a WYSIWYG editor. Still to come: the
+> channel/OTA sync, the installation wizard, the public partner API and the
+> full Filament panel — all specified in
+> [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
+> The correctness-critical paths are covered by 130+ tests on both database
+> engines, but the platform has not yet run a real hotel — treat it as
+> pre-release.
 
 ---
+
+## Screenshots
+
+The demo hotel below is what `migrate --seed` produces — real rooms, rates,
+events and four languages, rendered by the default theme.
+
+| | |
+|---|---|
+| [![Home](docs/screenshots/home.png)](docs/screenshots/home.png)<br>**Home** — hero, rooms with "from" prices, upcoming events | [![Rooms](docs/screenshots/rooms.png)](docs/screenshots/rooms.png)<br>**Rooms** — the room list with occupancy and rates |
+| [![Room detail](docs/screenshots/room-detail.png)](docs/screenshots/room-detail.png)<br>**Room detail** — gallery, amenities, `HotelRoom` + `Offer` schema | [![Events](docs/screenshots/events.png)](docs/screenshots/events.png)<br>**Events** — dated happenings with `Event` schema |
+| [![Contact](docs/screenshots/contact.png)](docs/screenshots/contact.png)<br>**Contact** — enquiry form with honeypot + timing spam guard | |
 
 ## Why this exists
 
@@ -86,6 +101,56 @@ Everything below is implemented and covered by tests.
 - **A visible breadcrumb trail that matches the structured one**, a language
   switcher that points at the current page in each language rather than the home
   page, and one `<h1>` per page.
+
+### Booking engine
+
+- **Availability** as one row per room type per night, with a raw-DDL `CHECK`
+  constraint (`booked + held <= allotment`) as the last line of defence
+  against overselling on both MySQL and SQLite.
+- **Correct restriction handling**: min/max-stay and closed-to-arrival on the
+  arrival night only, closed-to-departure on the checkout night only,
+  `min_stay_through`, occupancy limits, multi-room composition. A missing row
+  is unbookable, never "assume available".
+- **Rate resolution**: per-date override → season rate (priority + weekday
+  bitmask) → default rate, frozen per night into the booking so a confirmed
+  price never moves.
+- **Double-booking prevention** via `lockForUpdate` inside the booking
+  transaction — and on SQLite via a mandatory `BEGIN IMMEDIATE` connection so
+  concurrent bookings genuinely serialise rather than throwing `SQLITE_BUSY`.
+  The concurrency test proves exactly one of two racers wins.
+- **Holds & a state machine** where inventory is released by the status being
+  *entered*, so no path can leak a unit; expired holds are swept every minute.
+- A public **calendar JSON endpoint** for the date picker.
+
+### Payments
+
+- A `PaymentGateway` contract with **Stripe**, **PayPal**, **LiqPay**
+  (Ukraine/PrivatBank), **Coinbase Commerce** (crypto) and a **manual**
+  (bank-transfer / pay-on-arrival) implementation — all over Laravel's HTTP
+  client, no SDK dependencies, fully faked in tests.
+- **The webhook is the source of truth, never the browser redirect.** Every
+  handler verifies the provider's signature (and fails *closed* if the signing
+  secret is unset), is idempotent on the gateway payment id, and re-acquires
+  inventory under lock before confirming.
+- **The late-webhook trap is handled**: a payment that lands after the hold
+  expired and the room was resold is auto-refunded (or, for crypto that can't
+  refund via API, released and flagged for a manual refund) — never confirmed
+  into an overbooking.
+- Partial and full **refunds** with correct `paid_amount` / `balance_due`
+  bookkeeping; refunds are their own rows so the ledger reconstructs a dispute.
+
+### Security (§14)
+
+- Response headers on every route: CSP, `X-Content-Type-Options`,
+  `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and HSTS over
+  HTTPS.
+- HTTPS forced in production so canonical URLs and redirects never emit
+  `http://`; secure-cookie and CSRF handling; webhook routes are CSRF-exempt
+  but signature-authenticated instead.
+- Public forms carry a honeypot + timing check and per-IP rate limits; admin
+  login is throttled. Money is integer minor units end to end.
+- The branch ships with an adversarial security review on record (fail-open
+  webhook verification found and fixed before merge).
 
 ### Platform
 
@@ -198,6 +263,23 @@ DOBA_LOCALES=en,de,fr,nl        # first entry is the default locale
 DOBA_HIDE_DEFAULT_PREFIX=false  # serve the default locale at / instead of /en
 DOBA_NOINDEX=false              # true on staging: noindex + Disallow: / together
 DOBA_SCHEMA_TYPE=Hotel          # or Resort, BedAndBreakfast, …
+PAYMENT_GATEWAY=manual          # stripe | paypal | liqpay | coinbase | manual
+```
+
+### Payment providers
+
+Set `PAYMENT_GATEWAY` to the default and fill the matching keys in `.env`
+(`STRIPE_*`, `PAYPAL_*`, `LIQPAY_*`, `COINBASE_COMMERCE_*`). `manual` takes
+bookings without online payment — a legitimate starting configuration. Every
+configured provider's `POST /webhooks/<name>` endpoint stays live regardless of
+the default, so switching gateways never orphans events for payments taken
+under the old one. Point each provider's dashboard at:
+
+```
+https://<your-domain>/webhooks/stripe
+https://<your-domain>/webhooks/paypal
+https://<your-domain>/webhooks/liqpay
+https://<your-domain>/webhooks/coinbase
 ```
 
 ## Architecture
@@ -217,9 +299,10 @@ wizard and the public API, is in
 
 | Phase | Scope | State |
 |---|---|---|
-| 1 | Foundation: config/theme layer, content model, i18n routing, **SEO layer**, CI | **in progress** |
-| 2 | Availability service, rate engine, search, checkout, holds + locking, admin availability grid | planned |
-| 3 | Stripe payments, invoices, CMS, extras, promo codes | planned |
+| 1 | Foundation: config/theme layer, content model, i18n routing, **SEO layer**, CI | **done** |
+| 2 | Availability service, rate engine, holds + locking + reconciliation, calendar API | **done** · checkout funnel + admin availability grid next |
+| 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds) | **done** · invoices, extras, promo codes next |
+| — | Events, WYSIWYG admin, customizable styles, security headers | **done** |
 | 4 | First hotel live | planned |
 | 5 | iCal two-way channel sync, reports, multi-install deploy | planned |
 | 6 | Public REST API + webhooks, OpenAPI docs | planned |

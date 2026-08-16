@@ -7,6 +7,7 @@ namespace App\Providers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,6 +19,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // HTTPS enforced (§14): behind Apache/mod_proxy_fcgi the app, not
+        // the vhost, is what generates canonical URLs, hreflang hrefs and
+        // redirect targets — one http:// among them undoes the whole
+        // canonical story.
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         // Public-form rate limits (§14). Keyed by IP: the form is
         // pre-authentication by definition. Five a minute is generous for a
         // human retrying a typo and useless for a spam run.

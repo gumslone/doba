@@ -58,6 +58,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Payments
+    |--------------------------------------------------------------------------
+    |
+    | The default gateway the checkout initiates with; provider credentials
+    | live in config/services.php. Webhook endpoints stay active for every
+    | configured provider regardless of this default, because switching
+    | gateways must not orphan events for payments made under the old one.
+    |
+    */
+
+    'payment' => [
+        'gateway' => env('PAYMENT_GATEWAY', 'manual'), // stripe | paypal | liqpay | coinbase | manual
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Seeded admin account
     |--------------------------------------------------------------------------
     |
