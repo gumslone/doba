@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\Amenity;
 use App\Models\Event;
+use App\Models\Extra;
 use App\Models\Faq;
 use App\Models\Page;
 use App\Models\RoomType;
@@ -34,6 +35,7 @@ class DatabaseSeeder extends Seeder
         $this->settings();
         $this->roomTypes();
         $this->amenities();
+        $this->extras();
         $this->pages();
         $this->faqs();
         $this->events();
@@ -254,27 +256,121 @@ class DatabaseSeeder extends Seeder
 
     protected function amenities(): void
     {
+        // What a guest actually wants to know before booking, in the order
+        // they ask: the room, then the bathroom, then comfort, then the view.
         $amenities = [
-            ['icon' => 'wifi', 'sort' => 1, 'names' => ['en' => 'Free WiFi', 'de' => 'Kostenloses WLAN', 'fr' => 'Wi-Fi gratuit', 'nl' => 'Gratis wifi'], 'rooms' => ['DBL', 'JSUITE', 'SGL']],
-            ['icon' => 'balcony', 'sort' => 2, 'names' => ['en' => 'Balcony', 'de' => 'Balkon', 'fr' => 'Balcon', 'nl' => 'Balkon'], 'rooms' => ['DBL', 'JSUITE']],
-            ['icon' => 'minibar', 'sort' => 3, 'names' => ['en' => 'Minibar', 'de' => 'Minibar', 'fr' => 'Minibar', 'nl' => 'Minibar'], 'rooms' => ['JSUITE']],
-            ['icon' => 'mountain', 'sort' => 4, 'names' => ['en' => 'Mountain view', 'de' => 'Bergblick', 'fr' => 'Vue montagne', 'nl' => 'Bergzicht'], 'rooms' => ['DBL', 'JSUITE']],
-            ['icon' => 'safe', 'sort' => 5, 'names' => ['en' => 'In-room safe', 'de' => 'Zimmersafe', 'fr' => 'Coffre-fort', 'nl' => 'Kluis op de kamer'], 'rooms' => ['DBL', 'JSUITE', 'SGL']],
+            ['wifi', 'room', 1, ['en' => 'Free WiFi', 'de' => 'Kostenloses WLAN', 'fr' => 'Wi-Fi gratuit', 'nl' => 'Gratis wifi'], ['DBL', 'JSUITE', 'SGL']],
+            ['desk', 'room', 2, ['en' => 'Desk & reading chair', 'de' => 'Schreibtisch & Lesesessel', 'fr' => 'Bureau & fauteuil de lecture', 'nl' => 'Bureau & leesstoel'], ['DBL', 'JSUITE', 'SGL']],
+            ['tv', 'room', 3, ['en' => 'Smart TV', 'de' => 'Smart-TV', 'fr' => 'Smart TV', 'nl' => 'Smart-tv'], ['DBL', 'JSUITE']],
+            ['safe', 'room', 4, ['en' => 'In-room safe', 'de' => 'Zimmersafe', 'fr' => 'Coffre-fort', 'nl' => 'Kluis op de kamer'], ['DBL', 'JSUITE', 'SGL']],
+            ['minibar', 'room', 5, ['en' => 'Minibar', 'de' => 'Minibar', 'fr' => 'Minibar', 'nl' => 'Minibar'], ['JSUITE']],
+
+            ['shower', 'bathroom', 10, ['en' => 'Walk-in shower', 'de' => 'Ebenerdige Dusche', 'fr' => 'Douche à l’italienne', 'nl' => 'Inloopdouche'], ['DBL', 'JSUITE', 'SGL']],
+            ['bathtub', 'bathroom', 11, ['en' => 'Bathtub', 'de' => 'Badewanne', 'fr' => 'Baignoire', 'nl' => 'Ligbad'], ['JSUITE']],
+            ['wc', 'bathroom', 12, ['en' => 'Private WC', 'de' => 'Eigenes WC', 'fr' => 'WC privé', 'nl' => 'Eigen toilet'], ['DBL', 'JSUITE', 'SGL']],
+            ['hairdryer', 'bathroom', 13, ['en' => 'Hairdryer', 'de' => 'Haartrockner', 'fr' => 'Sèche-cheveux', 'nl' => 'Föhn'], ['DBL', 'JSUITE', 'SGL']],
+            ['toiletries', 'bathroom', 14, ['en' => 'Organic toiletries', 'de' => 'Bio-Pflegeprodukte', 'fr' => 'Produits de toilette bio', 'nl' => 'Biologische toiletartikelen'], ['DBL', 'JSUITE']],
+
+            ['heating', 'comfort', 20, ['en' => 'Underfloor heating', 'de' => 'Fußbodenheizung', 'fr' => 'Chauffage au sol', 'nl' => 'Vloerverwarming'], ['DBL', 'JSUITE']],
+            ['coffee', 'comfort', 21, ['en' => 'Coffee & tea making', 'de' => 'Kaffee- & Teezubereitung', 'fr' => 'Nécessaire à café et thé', 'nl' => 'Koffie- en theefaciliteiten'], ['DBL', 'JSUITE', 'SGL']],
+            ['soundproof', 'comfort', 22, ['en' => 'Soundproofed windows', 'de' => 'Schallschutzfenster', 'fr' => 'Fenêtres insonorisées', 'nl' => 'Geluidsisolerende ramen'], ['DBL', 'JSUITE', 'SGL']],
+
+            ['balcony', 'view', 30, ['en' => 'Private balcony', 'de' => 'Eigener Balkon', 'fr' => 'Balcon privé', 'nl' => 'Eigen balkon'], ['DBL', 'JSUITE']],
+            ['mountain', 'view', 31, ['en' => 'Mountain view', 'de' => 'Bergblick', 'fr' => 'Vue montagne', 'nl' => 'Bergzicht'], ['DBL', 'JSUITE']],
+            ['lake', 'view', 32, ['en' => 'Lake view', 'de' => 'Seeblick', 'fr' => 'Vue sur le lac', 'nl' => 'Uitzicht op het meer'], ['JSUITE']],
         ];
 
-        foreach ($amenities as $data) {
-            $amenity = Amenity::updateOrCreate(['icon' => $data['icon']], [
-                'sort_order' => $data['sort'],
+        foreach ($amenities as [$icon, $category, $sort, $names, $rooms]) {
+            $amenity = Amenity::updateOrCreate(['icon' => $icon], [
+                'category' => $category,
+                'sort_order' => $sort,
             ]);
 
-            foreach ($data['names'] as $locale => $name) {
+            foreach ($names as $locale => $name) {
                 $amenity->translations()->updateOrCreate(['locale' => $locale], ['name' => $name]);
             }
 
             $amenity->roomTypes()->sync(
-                RoomType::query()->whereIn('code', $data['rooms'])->pluck('id')
+                RoomType::query()->whereIn('code', $rooms)->pluck('id')
             );
         }
+    }
+
+    protected function extras(): void
+    {
+        // price is in cents; tax_rate in basis points (700 = 7% reduced,
+        // 1900 = 19% standard — the German split for accommodation vs
+        // everything else).
+        $extras = [
+            ['BREAKFAST', 1800, 'person_night', 700, 2, 1, false, [
+                'en' => ['Breakfast buffet', 'Regional cheeses, fresh bread and eggs to order, served 07:00–10:30.'],
+                'de' => ['Frühstücksbuffet', 'Regionale Käsesorten, frisches Brot und Eierspeisen, 07:00–10:30 Uhr.'],
+                'fr' => ['Petit-déjeuner buffet', 'Fromages régionaux, pain frais et œufs à la demande, de 7h00 à 10h30.'],
+                'nl' => ['Ontbijtbuffet', 'Regionale kazen, vers brood en eieren naar keuze, van 07:00 tot 10:30.'],
+            ]],
+            ['SPA', 2500, 'person', 1900, 4, 2, false, [
+                'en' => ['Spa & sauna access', 'Finnish sauna, steam room and the indoor pool, towels included.'],
+                'de' => ['Spa- & Saunazugang', 'Finnische Sauna, Dampfbad und Hallenbad, Handtücher inklusive.'],
+                'fr' => ['Accès spa & sauna', 'Sauna finlandais, hammam et piscine intérieure, serviettes incluses.'],
+                'nl' => ['Spa- & saunatoegang', 'Finse sauna, stoombad en binnenzwembad, handdoeken inbegrepen.'],
+            ]],
+            ['TRANSFER', 4500, 'stay', 1900, 2, 3, false, [
+                'en' => ['Airport transfer', 'Private car from Munich airport, one way. Tell us your flight number.'],
+                'de' => ['Flughafentransfer', 'Privatwagen ab Flughafen München, einfache Fahrt. Bitte Flugnummer angeben.'],
+                'fr' => ['Transfert aéroport', 'Voiture privée depuis l’aéroport de Munich, aller simple. Indiquez votre vol.'],
+                'nl' => ['Luchthaventransfer', 'Privéauto vanaf de luchthaven van München, enkele reis. Geef uw vluchtnummer door.'],
+            ]],
+            ['PARKING', 1200, 'night', 1900, 2, 4, false, [
+                'en' => ['Garage parking', 'A reserved space in the underground garage.'],
+                'de' => ['Garagenstellplatz', 'Reservierter Platz in der Tiefgarage.'],
+                'fr' => ['Place de garage', 'Place réservée au garage souterrain.'],
+                'nl' => ['Parkeerplaats in de garage', 'Gereserveerde plek in de ondergrondse garage.'],
+            ]],
+            ['COT', 1500, 'night', 700, 1, 5, false, [
+                'en' => ['Cot for an infant', 'Set up before you arrive, linen included.'],
+                'de' => ['Babybett', 'Vor Ihrer Ankunft aufgestellt, Bettwäsche inklusive.'],
+                'fr' => ['Lit bébé', 'Installé avant votre arrivée, linge inclus.'],
+                'nl' => ['Babybedje', 'Voor uw aankomst klaargezet, beddengoed inbegrepen.'],
+            ]],
+            ['LATE_CHECKOUT', 3000, 'stay', 1900, 1, 6, false, [
+                'en' => ['Late checkout (16:00)', 'Subject to availability on the day.'],
+                'de' => ['Später Checkout (16:00)', 'Nach Verfügbarkeit am Abreisetag.'],
+                'fr' => ['Départ tardif (16h00)', 'Selon disponibilité le jour même.'],
+                'nl' => ['Laat uitchecken (16:00)', 'Op basis van beschikbaarheid op de dag zelf.'],
+            ]],
+            // Shown as included rather than sold — the pool comes with the room.
+            ['POOL', 0, 'stay', 0, 1, 7, true, [
+                'en' => ['Indoor pool', 'Open 07:00–21:00, free for hotel guests.'],
+                'de' => ['Hallenbad', 'Geöffnet 07:00–21:00 Uhr, für Hausgäste kostenfrei.'],
+                'fr' => ['Piscine intérieure', 'Ouverte de 7h00 à 21h00, gratuite pour nos hôtes.'],
+                'nl' => ['Binnenzwembad', 'Open van 07:00 tot 21:00, gratis voor hotelgasten.'],
+            ]],
+        ];
+
+        foreach ($extras as [$code, $price, $per, $tax, $max, $sort, $included, $translations]) {
+            $extra = Extra::updateOrCreate(['code' => $code], [
+                'price' => $price,
+                'applies_per' => $per,
+                'tax_rate' => $tax,
+                'max_quantity' => $max,
+                'sort_order' => $sort,
+                'is_included' => $included,
+                'is_active' => true,
+                'icon' => mb_strtolower($code),
+            ]);
+
+            foreach ($translations as $locale => [$name, $description]) {
+                $extra->translations()->updateOrCreate(['locale' => $locale], [
+                    'name' => $name,
+                    'description' => $description,
+                ]);
+            }
+        }
+
+        // The cot only makes sense where a child fits.
+        Extra::query()->where('code', 'COT')->first()?->roomTypes()->sync(
+            RoomType::query()->whereIn('code', ['DBL', 'JSUITE'])->pluck('id')
+        );
     }
 
     protected function faqs(): void

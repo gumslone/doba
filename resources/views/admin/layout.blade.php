@@ -19,6 +19,7 @@
                 <span class="font-semibold">Doba</span>
                 <a href="/admin/pages" @class(['underline' => request()->is('admin/pages*')])>{{ __('admin.pages') }}</a>
                 <a href="/admin/events" @class(['underline' => request()->is('admin/events*')])>{{ __('admin.events') }}</a>
+                <a href="/admin/extras" @class(['underline' => request()->is('admin/extras*')])>{{ __('admin.extras') }}</a>
                 <a href="/admin/photos" @class(['underline' => request()->is('admin/photos*')])>{{ __('admin.photos') }}</a>
                 <a href="/admin/styles" @class(['underline' => request()->is('admin/styles*')])>{{ __('admin.styles') }}</a>
             </nav>

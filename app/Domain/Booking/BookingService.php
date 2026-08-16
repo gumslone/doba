@@ -9,6 +9,7 @@ use App\Enums\BookingStatus;
 use App\Models\Availability;
 use App\Models\Booking;
 use App\Models\BookingHold;
+use App\Models\Extra;
 use App\Models\Guest;
 use App\Models\RoomType;
 use Carbon\CarbonImmutable;
@@ -150,6 +151,58 @@ class BookingService
 
             return $booking;
         }, attempts: 3);
+    }
+
+    /**
+     * Attach extras to a booking, snapshotting unit price, multiplier and
+     * tax rate (§7): an extra's price may change, a taken booking's may not.
+     *
+     * @param  array<int,int>  $quantities  extra id => quantity
+     */
+    public function addExtras(Booking $booking, array $quantities): Booking
+    {
+        return DB::transaction(function () use ($booking, $quantities): Booking {
+            $guests = $booking->adults + $booking->children;
+
+            $extras = Extra::query()
+                ->active()
+                ->whereIn('id', array_keys($quantities))
+                ->get();
+
+            foreach ($extras as $extra) {
+                $quantity = max(0, min((int) $quantities[$extra->id], $extra->max_quantity));
+
+                if ($quantity < 1 || $extra->is_included) {
+                    continue; // included extras are shown, never charged
+                }
+
+                $total = $extra->totalFor($booking->nights, $guests, $quantity);
+
+                $booking->extras()->updateOrCreate(['extra_id' => $extra->id], [
+                    'quantity' => $quantity,
+                    'unit_price' => $extra->price,
+                    'total' => $total,
+                    'applies_per' => $extra->applies_per,
+                    'tax_rate' => $extra->tax_rate,
+                ]);
+            }
+
+            // Summed from the rows rather than accumulated, so calling this
+            // twice cannot double a guest's breakfast — updateOrCreate above
+            // makes each call idempotent per extra.
+            $extrasTotal = (int) $booking->extras()->sum('total');
+
+            $booking->forceFill([
+                'extras_total' => $extrasTotal,
+                'total' => $booking->subtotal + $extrasTotal - $booking->discount_total,
+            ]);
+
+            $booking->balance_due = $booking->total - $booking->paid_amount;
+            $booking->deposit_due = min($booking->deposit_due ?: $booking->total, $booking->total);
+            $booking->save();
+
+            return $booking;
+        });
     }
 
     /**

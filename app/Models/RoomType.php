@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Concerns\HasMedia;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -79,6 +80,47 @@ class RoomType extends Model implements HasMedia
             ->filter()
             ->values()
             ->all();
+    }
+
+    /**
+     * What the room includes, grouped for the guest: bed, bathroom,
+     * comfort, view. Categories keep their declared order and empty ones
+     * disappear.
+     *
+     * @return array<string,array<int,Amenity>>
+     */
+    public function inclusionsByCategory(): array
+    {
+        $grouped = $this->amenities->groupBy('category');
+        $ordered = [];
+
+        foreach (Amenity::CATEGORIES as $category) {
+            if ($grouped->has($category)) {
+                $ordered[$category] = $grouped->get($category)->all();
+            }
+        }
+
+        // Anything using a category the constant does not know still shows,
+        // rather than silently vanishing from the room page.
+        foreach ($grouped as $category => $amenities) {
+            if (! isset($ordered[$category])) {
+                $ordered[$category] = $amenities->all();
+            }
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * @return Collection<int,Extra>
+     */
+    public function availableExtras(): Collection
+    {
+        return Extra::query()
+            ->active()
+            ->forRoomType($this)
+            ->with('translations')
+            ->get();
     }
 
     /**

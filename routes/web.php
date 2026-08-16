@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminEventController;
+use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\PhotoController;
@@ -82,6 +83,13 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('styles', [StyleController::class, 'edit'])->name('admin.styles');
         Route::put('styles', [StyleController::class, 'update'])->name('admin.styles.update');
+
+        Route::get('extras', [AdminExtraController::class, 'index'])->name('admin.extras');
+        Route::get('extras/create', [AdminExtraController::class, 'create'])->name('admin.extras.create');
+        Route::post('extras', [AdminExtraController::class, 'store'])->name('admin.extras.store');
+        Route::get('extras/{extra}/edit', [AdminExtraController::class, 'edit'])->name('admin.extras.edit');
+        Route::put('extras/{extra}', [AdminExtraController::class, 'update'])->name('admin.extras.update');
+        Route::delete('extras/{extra}', [AdminExtraController::class, 'destroy'])->name('admin.extras.destroy');
 
         Route::get('photos', [PhotoController::class, 'index'])->name('admin.photos');
         Route::get('photos/{subject}', [PhotoController::class, 'show'])->name('admin.photos.show');

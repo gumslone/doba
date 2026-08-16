@@ -74,6 +74,14 @@ class Booking extends Model
     }
 
     /**
+     * @return HasMany<BookingExtra, $this>
+     */
+    public function extras(): HasMany
+    {
+        return $this->hasMany(BookingExtra::class);
+    }
+
+    /**
      * @return HasMany<BookingHold, $this>
      */
     public function holds(): HasMany

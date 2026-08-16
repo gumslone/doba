@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  *
  * @property int $id
  * @property string|null $icon
+ * @property string $category
  */
 class Amenity extends Model
 {
@@ -24,7 +25,7 @@ class Amenity extends Model
 
     protected string $translationForeignKey = 'amenity_id';
 
-    protected $fillable = ['icon', 'sort_order'];
+    protected $fillable = ['icon', 'category', 'sort_order'];
 
     protected $casts = ['sort_order' => 'integer'];
 
@@ -35,4 +36,11 @@ class Amenity extends Model
     {
         return $this->belongsToMany(RoomType::class);
     }
+
+    /**
+     * The categories a room's inclusions are grouped under, in the order
+     * a guest asks about them: the bed, then the bathroom, then comfort,
+     * then the view.
+     */
+    public const CATEGORIES = ['room', 'bathroom', 'comfort', 'view', 'general'];
 }
