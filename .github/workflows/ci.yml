@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }} · ${{ matrix.db }}
+    runs-on: ubuntu-latest
+
+    # The whole "portable MySQL *or* SQLite" promise rests on this matrix.
+    # A schema or query that works on only one engine is a bug that would
+    # otherwise surface on a customer's install months later.
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4']
+        db: [sqlite, mysql]
+
+    # Set as real process environment variables rather than written into
+    # .env: PHPUnit's <env> entries do not overwrite variables that already
+    # exist in the environment, so this is what actually beats the
+    # sqlite/:memory: default in phpunit.xml. Writing them to .env instead
+    # would leave the MySQL leg quietly testing SQLite.
+    env:
+      DB_CONNECTION: ${{ matrix.db }}
+      DB_DATABASE: ${{ matrix.db == 'mysql' && 'doba_test' || ':memory:' }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: '3306'
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: doba_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_mysql, pdo_sqlite, mbstring, intl, gd, zip, curl, openssl
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ matrix.php }}-
+
+      - run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # The public site renders @vite() in its <head>, so without a build
+      # every feature test fails on a missing manifest rather than on the
+      # thing it is testing.
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify the migrations run on this engine
+        run: php artisan migrate --force
+        if: matrix.db == 'mysql'
+
+      - run: php artisan test
+
+  static-analysis:
+    name: Pint & PHPStan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, mbstring, intl, gd, zip, curl, openssl
+          coverage: none
+
+      - run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check code style
+        run: vendor/bin/pint --test
+
+      - name: Static analysis
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G

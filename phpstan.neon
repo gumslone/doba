@@ -1,0 +1,16 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 6
+
+    paths:
+        - app
+        - config
+        - database
+        - routes
+
+    # tests/ is deliberately excluded: Pest binds every closure to the
+    # TestCase at runtime, which static analysis cannot see, so analysing
+    # them produces hundreds of "undefined method $this->get()" and nothing
+    # of value. The suite itself is the check on the suite.

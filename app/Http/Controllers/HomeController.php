@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers;
+
+use App\Models\RoomType;
+use App\Support\Hotel\HotelSettings;
+use App\Support\Routing\Localization;
+use App\Support\Seo\JsonLd;
+use App\Support\Seo\Seo;
+use Illuminate\Contracts\View\View;
+
+class HomeController extends Controller
+{
+    public function __invoke(Seo $seo, HotelSettings $hotel): View
+    {
+        $roomTypes = RoomType::query()
+            ->active()
+            ->ordered()
+            ->with(['translation', 'translations', 'media'])
+            ->limit(3)
+            ->get();
+
+        $seo->title($hotel->get('seo.title') ?: $hotel->name)
+            ->description($hotel->get('seo.description'))
+            ->image($hotel->ogImage())
+            ->canonical(Localization::route('home'))
+            ->alternates(Localization::alternates('home'))
+            ->breadcrumb($hotel->name, Localization::route('home'))
+            ->schema(JsonLd::hotel($hotel))
+            ->schema(JsonLd::website(
+                $hotel,
+                Localization::hasRoute('booking.search') ? Localization::route('booking.search') : null
+            ));
+
+        return view('home', [
+            'roomTypes' => $roomTypes,
+        ]);
+    }
+}
