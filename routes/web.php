@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\StyleController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\EventController;
@@ -81,6 +82,12 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('styles', [StyleController::class, 'edit'])->name('admin.styles');
         Route::put('styles', [StyleController::class, 'update'])->name('admin.styles.update');
+
+        Route::get('photos', [PhotoController::class, 'index'])->name('admin.photos');
+        Route::get('photos/{subject}', [PhotoController::class, 'show'])->name('admin.photos.show');
+        Route::post('photos/{subject}', [PhotoController::class, 'store'])->name('admin.photos.store');
+        Route::put('photos/{subject}/{media}', [PhotoController::class, 'update'])->name('admin.photos.update');
+        Route::delete('photos/{subject}/{media}', [PhotoController::class, 'destroy'])->name('admin.photos.destroy');
     });
 });
 

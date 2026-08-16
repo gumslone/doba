@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\HasMedia;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property int $max_occupancy
  * @property int|null $default_rate
  */
-class RoomType extends Model
+class RoomType extends Model implements HasMedia
 {
     use HasTranslations;
 

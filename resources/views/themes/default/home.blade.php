@@ -6,6 +6,17 @@
         use App\Support\Routing\Localization;
     @endphp
 
+    @if ($hero)
+        {{-- The LCP element on the whole site. Eager + fetchpriority=high
+             via the component; lazy-loading this one image is a measurable,
+             self-inflicted ranking loss. --}}
+        <x-responsive-image
+            :media="$hero"
+            :eager="true"
+            sizes="100vw"
+            class="aspect-[21/9] w-full object-cover" />
+    @endif
+
     <section class="mx-auto max-w-6xl px-4 py-16">
         {{-- Exactly one h1 per page, carrying the words the page should rank
              for. The hotel name alone ranks for the hotel name, which is
@@ -68,6 +79,23 @@
             </p>
         @endif
     </section>
+
+    @if ($galleryPhotos->isNotEmpty())
+        <section class="mx-auto max-w-6xl px-4 pb-16">
+            <h2 class="text-2xl font-semibold tracking-tight">{{ __('common.gallery') }}</h2>
+
+            <ul class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                @foreach ($galleryPhotos as $photo)
+                    <li>
+                        <x-responsive-image
+                            :media="$photo"
+                            sizes="(max-width: 640px) 50vw, 380px"
+                            class="aspect-[4/3] w-full rounded-lg object-cover" />
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
 
     @if ($events->isNotEmpty())
         <section class="mx-auto max-w-6xl px-4 pb-16">

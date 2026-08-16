@@ -15,6 +15,7 @@ return [
     'our_rooms' => 'Unsere Zimmer',
     'skip_to_content' => 'Zum Inhalt springen',
     'faq' => 'Häufige Fragen',
+    'gallery' => 'Galerie',
     'language' => 'Sprache',
     'no_rooms_yet' => 'Es wurden noch keine Zimmerkategorien veröffentlicht.',
 ];

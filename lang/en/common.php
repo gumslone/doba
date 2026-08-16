@@ -15,6 +15,7 @@ return [
     'our_rooms' => 'Our rooms',
     'skip_to_content' => 'Skip to content',
     'faq' => 'Frequently asked questions',
+    'gallery' => 'Gallery',
     'language' => 'Language',
     'no_rooms_yet' => 'No room types have been published yet.',
 ];

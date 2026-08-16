@@ -7,6 +7,7 @@ namespace App\Support\Seo;
 use App\Models\Event;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
+use App\Support\Hotel\Maps;
 use Illuminate\Support\Arr;
 
 /**
@@ -52,6 +53,7 @@ final class JsonLd
                 'latitude' => (float) $hotel->get('contact.latitude'),
                 'longitude' => (float) $hotel->get('contact.longitude'),
             ] : null,
+            'hasMap' => Maps::link($hotel),
             'sameAs' => array_values(array_filter([
                 $hotel->get('social.facebook'),
                 $hotel->get('social.instagram'),

@@ -15,4 +15,8 @@ return [
     'sent' => 'Dank u — uw bericht is verzonden. Wij nemen spoedig contact met u op.',
     'mail_subject' => 'Nieuwe aanvraag van :name',
     'mail_footer' => 'Verzonden via het contactformulier van de website (taal: :locale). Beantwoord deze e-mail om de gast rechtstreeks te bereiken.',
+    'map_title' => 'Kaart & route',
+    'map_load' => 'Kaart laden',
+    'map_open' => 'Openen in Google Maps',
+    'map_privacy' => 'De kaart wordt pas na een klik van Google geladen.',
 ];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\HasMedia;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property string $template
  * @property bool $is_published
  */
-class Page extends Model
+class Page extends Model implements HasMedia
 {
     use HasTranslations;
 

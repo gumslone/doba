@@ -15,4 +15,8 @@ return [
     'sent' => 'Thank you — your message has been sent. We will get back to you shortly.',
     'mail_subject' => 'New enquiry from :name',
     'mail_footer' => 'Sent via the website contact form (language: :locale). Reply to this email to answer the guest directly.',
+    'map_title' => 'Map & directions',
+    'map_load' => 'Load map',
+    'map_open' => 'Open in Google Maps',
+    'map_privacy' => 'The map is loaded from Google only after you tap the button.',
 ];

@@ -40,6 +40,11 @@ class SecurityHeaders
                 "img-src 'self' data:",
                 "font-src 'self'",
                 "connect-src 'self'",
+                // The one third-party exception: the click-to-load map
+                // iframe on the contact page. Nothing loads from Google
+                // until the visitor presses the button; the CSP merely
+                // permits the frame once they do.
+                'frame-src https://maps.google.com https://www.google.com',
                 "frame-ancestors 'self'",
                 "base-uri 'self'",
                 "form-action 'self' https://www.liqpay.ua",

@@ -15,6 +15,7 @@ return [
     'our_rooms' => 'Onze kamers',
     'skip_to_content' => 'Naar de inhoud',
     'faq' => 'Veelgestelde vragen',
+    'gallery' => 'Galerij',
     'language' => 'Taal',
     'no_rooms_yet' => 'Er zijn nog geen kamertypes gepubliceerd.',
 ];

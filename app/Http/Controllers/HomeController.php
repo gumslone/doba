@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Faq;
+use App\Models\Gallery;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Routing\Localization;
@@ -26,6 +27,9 @@ class HomeController extends Controller
 
         $faqs = Faq::forCurrentLocale();
 
+        $gallery = Gallery::hotel();
+        $hero = $gallery->coverImage();
+
         $events = Event::query()
             ->published()
             ->upcoming()
@@ -35,13 +39,22 @@ class HomeController extends Controller
             ->filter(static fn (Event $event): bool => $event->slug() !== null)
             ->values();
 
+        // The house photos double as the Hotel node's image set and as the
+        // og:image fallback — a hotel with photos should never share as a
+        // blank card.
+        $hotelSchema = JsonLd::hotel($hotel);
+
+        if ($gallery->media->isNotEmpty()) {
+            $hotelSchema['image'] = $gallery->media->map(static fn ($photo): string => $photo->url())->all();
+        }
+
         $seo->title($hotel->get('seo.title') ?: $hotel->name)
             ->description($hotel->get('seo.description'))
-            ->image($hotel->ogImage())
+            ->image($hotel->ogImage() ?? $hero?->url())
             ->canonical(Localization::route('home'))
             ->alternates(Localization::alternates('home'))
             ->breadcrumb($hotel->name, Localization::route('home'))
-            ->schema(JsonLd::hotel($hotel))
+            ->schema($hotelSchema)
             ->schema(JsonLd::website(
                 $hotel,
                 Localization::hasRoute('booking.search') ? Localization::route('booking.search') : null
@@ -57,6 +70,8 @@ class HomeController extends Controller
             'roomTypes' => $roomTypes,
             'faqs' => $faqs,
             'events' => $events,
+            'hero' => $hero,
+            'galleryPhotos' => $gallery->media->reject(static fn ($photo): bool => $photo->is($hero))->take(6)->values(),
         ]);
     }
 }

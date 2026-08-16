@@ -2,6 +2,7 @@
 
 @section('content')
     @php
+        use App\Support\Hotel\Maps;
         use App\Support\Routing\Localization;
     @endphp
 
@@ -82,5 +83,36 @@
                 </button>
             </p>
         </form>
+
+        @if ($mapEmbed = Maps::embed($hotel))
+            <div class="mt-12" x-data="{ loaded: false }">
+                <h2 class="text-xl font-semibold tracking-tight">{{ __('contact.map_title') }}</h2>
+
+                {{-- Click-to-load: nothing is requested from Google until the
+                     visitor asks — the GDPR-honest way to embed a map, and
+                     the reason the privacy policy stays short. --}}
+                <div x-show="!loaded" class="mt-4 flex aspect-[16/9] flex-col items-center justify-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50">
+                    <button type="button" @click="loaded = true" class="btn-primary rounded px-5 py-2.5">
+                        {{ __('contact.map_load') }}
+                    </button>
+                    <p class="px-6 text-center text-xs text-neutral-500">{{ __('contact.map_privacy') }}</p>
+                </div>
+
+                <template x-if="loaded">
+                    <iframe src="{{ $mapEmbed }}"
+                            title="{{ __('contact.map_title') }}"
+                            class="mt-4 aspect-[16/9] w-full rounded-lg border-0"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            allowfullscreen></iframe>
+                </template>
+
+                <p class="mt-3 text-sm">
+                    <a href="{{ Maps::link($hotel) }}" target="_blank" rel="noopener" class="link-accent underline underline-offset-4">
+                        {{ __('contact.map_open') }} ↗
+                    </a>
+                </p>
+            </div>
+        @endif
     </section>
 @endsection

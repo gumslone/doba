@@ -43,6 +43,10 @@ class DatabaseSeeder extends Seeder
         // not open on the "empty calendar looks broken" state (§16 step 7).
         Artisan::call('availability:extend');
 
+        // Generated demo photography — a hotel site with no images
+        // demonstrates nothing and hides every image bug.
+        $this->call(DemoPhotoSeeder::class);
+
         HotelSettings::flush();
     }
 
