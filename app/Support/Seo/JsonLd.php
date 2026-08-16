@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Seo;
 
+use App\Models\Event;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
 use Illuminate\Support\Arr;
@@ -144,6 +145,46 @@ final class JsonLd
                 ],
             ],
         ], static fn ($value) => $value !== null && $value !== '');
+    }
+
+    /**
+     * A hotel happening as schema.org/Event — startDate is what qualifies
+     * it for event search results, and the venue defaults to the hotel
+     * itself since that is where most hotel events happen.
+     *
+     * @param  array<string,mixed>  $context  url, image
+     * @return array<string,mixed>
+     */
+    public static function event(Event $event, HotelSettings $hotel, array $context = []): array
+    {
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'Event',
+            'name' => $event->t('title'),
+            'description' => $event->t('excerpt') ?: $event->t('meta_description'),
+            'url' => Arr::get($context, 'url'),
+            'image' => Arr::get($context, 'image'),
+            'startDate' => $event->starts_at->toIso8601String(),
+            'endDate' => $event->ends_at?->toIso8601String(),
+            'eventStatus' => 'https://schema.org/EventScheduled',
+            'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+            'location' => [
+                '@type' => 'Place',
+                'name' => $event->location ?: $hotel->name,
+                'address' => array_filter([
+                    '@type' => 'PostalAddress',
+                    'streetAddress' => $hotel->get('contact.street'),
+                    'postalCode' => $hotel->get('contact.postal_code'),
+                    'addressLocality' => $hotel->get('contact.city'),
+                    'addressCountry' => $hotel->get('contact.country'),
+                ]),
+            ],
+            'organizer' => [
+                '@type' => 'Organization',
+                'name' => $hotel->name,
+                'url' => url('/'),
+            ],
+        ], static fn ($value) => $value !== null && $value !== '' && $value !== []);
     }
 
     /**

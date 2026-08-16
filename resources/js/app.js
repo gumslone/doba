@@ -1,3 +1,4 @@
+import 'trix';
 import Alpine from 'alpinejs';
 
 // Server-rendered Blade is the default (§1) — Alpine handles the few pieces

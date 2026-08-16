@@ -79,6 +79,10 @@ Everything below is implemented and covered by tests.
   prevent layout shift, WebP `srcset`/`sizes` capped at the source's real width,
   eager + `fetchpriority=high` on the LCP image and lazy on everything else,
   no third-party origins in the critical path.
+- **Events** with per-locale slugs (`/de/veranstaltungen/weinverkostung`),
+  an upcoming-events section on the front page, and `schema.org/Event`
+  markup with the hotel as the default venue — one of the few SERP features
+  an independent hotel can win that an OTA listing cannot.
 - **A visible breadcrumb trail that matches the structured one**, a language
   switcher that points at the current page in each language rather than the home
   page, and one `<h1>` per page.
@@ -155,6 +159,32 @@ vendor/bin/pint --test && vendor/bin/phpstan analyse --memory-limit=1G
 
 CI runs the suite against **both SQLite and MySQL** on every push — that matrix
 is the only thing that keeps the "portable" promise honest.
+
+## Admin & editing
+
+An interim admin area lives at `/admin` (the full Filament panel replaces it
+later in phase 1). It edits **CMS pages** and **events** with per-language
+tabs and a [Trix](https://trix-editor.org) WYSIWYG editor — clearing a
+language's title unpublishes that language: its URL, `hreflang` entry and
+sitemap line all disappear together. The demo seeder creates
+`admin@example.com` / `password` (override with `DOBA_ADMIN_EMAIL` /
+`DOBA_ADMIN_PASSWORD` before seeding anything public-facing).
+
+## Theming & custom styles
+
+Two layers, deliberately separate:
+
+1. **Styles are settings.** `/admin/styles` edits brand colours, heading/body
+   fonts and free-form custom CSS, stored in the database and emitted as CSS
+   variables (`--doba-primary`, `--doba-accent`, `--doba-font-*`) on every
+   public page. Fonts are a curated list of system stacks, so no webfont ever
+   enters the critical path. Custom CSS is applied after the theme stylesheet;
+   `<` is escaped on output so it cannot break out of its style block.
+2. **Themes are structure.** Set `DOBA_THEME=<name>` and create
+   `resources/views/themes/<name>/`; any Blade file placed there overrides the
+   same path in `themes/default`, file by file, everything else falls through.
+   A theme override is for layout changes — the moment a theme exists only to
+   change a colour, it should have been a setting.
 
 ## Configuration
 

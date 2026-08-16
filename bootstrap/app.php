@@ -28,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // every canonical URL, redirect and hreflang href it generates comes
         // out as http:// on an HTTPS-only site.
         $middleware->trustProxies(at: '*');
+
+        $middleware->redirectGuestsTo('/admin/login');
+        $middleware->redirectUsersTo('/admin/pages');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         /*

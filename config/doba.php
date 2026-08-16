@@ -56,6 +56,22 @@ return [
         'multi_property' => false, // always false in this model
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Seeded admin account
+    |--------------------------------------------------------------------------
+    |
+    | Used only by the database seeder for the demo /admin login. Override
+    | both before seeding any install reachable from the internet; the
+    | installation wizard (§16) replaces this with a real owner-account step.
+    |
+    */
+
+    'admin' => [
+        'email' => env('DOBA_ADMIN_EMAIL', 'admin@example.com'),
+        'password' => env('DOBA_ADMIN_PASSWORD', 'password'),
+    ],
+
     'booking' => [
         'hold_minutes' => (int) env('DOBA_HOLD_MINUTES', 20),
         'max_nights' => (int) env('DOBA_MAX_NIGHTS', 30),

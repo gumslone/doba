@@ -21,6 +21,7 @@
 
         <nav class="flex items-center gap-6 text-sm" aria-label="Main">
             <a href="{{ Localization::route('rooms.index') }}" class="hover:underline">{{ __('common.rooms') }}</a>
+            <a href="{{ Localization::route('events.index') }}" class="hover:underline">{{ __('events.title') }}</a>
             <a href="{{ Localization::route('contact') }}" class="hover:underline">{{ __('contact.title') }}</a>
 
             @if (count($alternates) > 1)

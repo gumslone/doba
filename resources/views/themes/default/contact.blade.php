@@ -77,7 +77,7 @@
             </div>
 
             <p>
-                <button type="submit" class="rounded bg-neutral-900 px-6 py-2.5 text-white">
+                <button type="submit" class="btn-primary rounded px-6 py-2.5">
                     {{ __('contact.send') }}
                 </button>
             </p>

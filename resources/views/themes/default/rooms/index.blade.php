@@ -51,7 +51,7 @@
 
                             <p class="mt-4">
                                 <a href="{{ Localization::route('rooms.show', ['slug' => $roomType->slug()]) }}"
-                                   class="inline-block rounded bg-neutral-900 px-4 py-2 text-sm text-white">
+                                   class="inline-block btn-primary rounded px-4 py-2 text-sm">
                                     {{ __('common.view_room') }}
                                 </a>
                             </p>

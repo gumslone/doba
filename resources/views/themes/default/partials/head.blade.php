@@ -64,6 +64,30 @@
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+@php
+    $brandingFonts = \App\Http\Controllers\Admin\StyleController::FONT_STACKS;
+    $brandingVars = array_filter([
+        '--doba-primary' => $hotel->get('branding.color_primary'),
+        '--doba-accent' => $hotel->get('branding.color_accent'),
+        '--doba-font-heading' => $brandingFonts[$hotel->get('branding.font_heading', '')] ?? null,
+        '--doba-font-body' => $brandingFonts[$hotel->get('branding.font_body', '')] ?? null,
+    ]);
+    $brandingCss = (string) $hotel->get('branding.custom_css', '');
+@endphp
+
+@if ($brandingVars !== [])
+    {{-- Settings-driven styling (§3): colours and fonts are data, never a
+         theme file. Defaults live in app.css; only overrides are emitted. --}}
+    <style>:root{ @foreach ($brandingVars as $var => $value){{ $var }}:{{ $value }}; @endforeach }</style>
+@endif
+
+@if ($brandingCss !== '')
+    {{-- Every "<" is emitted as the CSS escape \3c: inside a string it
+         denotes the same character, everywhere else a literal "<" was
+         invalid CSS anyway — and no markup can form inside the block. --}}
+    <style>{!! str_replace('<', '\\3c ', $brandingCss) !!}</style>
+@endif
+
 @foreach ($seo->schemas() as $schema)
     @jsonld($schema)
 @endforeach

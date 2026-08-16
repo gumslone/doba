@@ -69,6 +69,36 @@
         @endif
     </section>
 
+    @if ($events->isNotEmpty())
+        <section class="mx-auto max-w-6xl px-4 pb-16">
+            <h2 class="text-2xl font-semibold tracking-tight">{{ __('events.upcoming') }}</h2>
+
+            <ul class="mt-6 grid gap-6 sm:grid-cols-3">
+                @foreach ($events as $event)
+                    <li class="rounded-lg border border-neutral-200 p-5">
+                        <p class="text-sm font-medium" style="color: var(--doba-primary)">
+                            {{ $event->starts_at->translatedFormat('D, j M · H:i') }}
+                        </p>
+                        <h3 class="mt-1 font-medium">
+                            <a href="{{ Localization::route('events.show', ['slug' => $event->slug()]) }}" class="hover:underline">
+                                {{ $event->t('title') }}
+                            </a>
+                        </h3>
+                        @if ($excerpt = $event->t('excerpt'))
+                            <p class="mt-2 line-clamp-2 text-sm text-neutral-600">{{ $excerpt }}</p>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+
+            <p class="mt-6">
+                <a href="{{ Localization::route('events.index') }}" class="underline underline-offset-4">
+                    {{ __('events.all') }} →
+                </a>
+            </p>
+        </section>
+    @endif
+
     @if ($faqs !== [])
         {{-- The visible twin of the FAQPage JSON-LD the controller emits:
              the markup must never describe questions the page doesn't show. --}}

@@ -13,5 +13,6 @@ declare(strict_types=1);
 return [
     'rooms' => 'rooms',
     'booking' => 'booking',
+    'events' => 'events',
     'contact' => 'contact',
 ];

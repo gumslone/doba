@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\Faq;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
@@ -24,6 +25,15 @@ class HomeController extends Controller
             ->get();
 
         $faqs = Faq::forCurrentLocale();
+
+        $events = Event::query()
+            ->published()
+            ->upcoming()
+            ->with(['translation', 'translations'])
+            ->limit(3)
+            ->get()
+            ->filter(static fn (Event $event): bool => $event->slug() !== null)
+            ->values();
 
         $seo->title($hotel->get('seo.title') ?: $hotel->name)
             ->description($hotel->get('seo.description'))
@@ -46,6 +56,7 @@ class HomeController extends Controller
         return view('home', [
             'roomTypes' => $roomTypes,
             'faqs' => $faqs,
+            'events' => $events,
         ]);
     }
 }

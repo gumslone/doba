@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Seo;
 
+use App\Models\Event;
 use App\Models\Page;
 use App\Models\RoomType;
 use App\Support\Routing\Localization;
@@ -37,6 +38,7 @@ final class SitemapGenerator
 
         $this->addStaticRoutes();
         $this->addRoomTypes();
+        $this->addEvents();
         $this->addPages();
 
         return $this->render();
@@ -55,6 +57,14 @@ final class SitemapGenerator
 
             foreach ($rooms as $url) {
                 $this->push($url, null, 'weekly', '0.9', $rooms);
+            }
+        }
+
+        if (Localization::hasRoute('events.index', Localization::defaultLocale())) {
+            $events = Localization::alternates('events.index');
+
+            foreach ($events as $url) {
+                $this->push($url, null, 'weekly', '0.7', $events);
             }
         }
 
@@ -82,6 +92,26 @@ final class SitemapGenerator
 
                     foreach ($alternates as $url) {
                         $this->push($url, $roomType->updated_at, 'weekly', '0.8', $alternates);
+                    }
+                }
+            });
+    }
+
+    protected function addEvents(): void
+    {
+        Event::query()
+            ->published()
+            ->upcoming()
+            ->with('translations')
+            ->chunk(200, function (Collection $events): void {
+                foreach ($events as $event) {
+                    $alternates = Localization::alternates(
+                        'events.show',
+                        static fn (string $l): ?array => ($s = $event->slug($l)) ? ['slug' => $s] : null
+                    );
+
+                    foreach ($alternates as $url) {
+                        $this->push($url, $event->updated_at, 'weekly', '0.6', $alternates);
                     }
                 }
             });

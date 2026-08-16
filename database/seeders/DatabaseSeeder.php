@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Amenity;
+use App\Models\Event;
 use App\Models\Faq;
 use App\Models\Page;
 use App\Models\RoomType;
 use App\Models\Season;
 use App\Models\SeasonRate;
 use App\Models\Setting;
+use App\Models\User;
 use App\Support\Hotel\HotelSettings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * A demo hotel: enough real content in four languages that the SEO layer
@@ -27,11 +30,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->adminUser();
         $this->settings();
         $this->roomTypes();
         $this->amenities();
         $this->pages();
         $this->faqs();
+        $this->events();
         $this->seasons();
 
         // Fill the calendar through the bookable window so the demo does
@@ -39,6 +44,20 @@ class DatabaseSeeder extends Seeder
         Artisan::call('availability:extend');
 
         HotelSettings::flush();
+    }
+
+    protected function adminUser(): void
+    {
+        // /admin login for the demo install. Override via env before
+        // seeding anything reachable from the internet; the wizard (§16)
+        // replaces this with a proper owner-account step.
+        User::query()->firstOrCreate(
+            ['email' => (string) config('doba.admin.email')],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make((string) config('doba.admin.password')),
+            ]
+        );
     }
 
     protected function settings(): void
@@ -152,6 +171,57 @@ class DatabaseSeeder extends Seeder
                     'name' => $translation['name'],
                     'short_description' => $translation['short'],
                     'description' => '<p>'.$translation['short'].'</p>',
+                ]);
+            }
+        }
+    }
+
+    protected function events(): void
+    {
+        $events = [
+            [
+                'starts_at' => now()->addDays(12)->setTime(18, 0),
+                'ends_at' => now()->addDays(12)->setTime(21, 0),
+                'location' => null, // at the hotel
+                'translations' => [
+                    'en' => ['slug' => 'wine-tasting-evening', 'title' => 'Wine tasting evening', 'excerpt' => 'Six regional wines with a guided tasting by our sommelier.'],
+                    'de' => ['slug' => 'weinverkostung', 'title' => 'Weinverkostung am Abend', 'excerpt' => 'Sechs regionale Weine, begleitet von unserer Sommelière.'],
+                    'fr' => ['slug' => 'soiree-degustation', 'title' => 'Soirée dégustation de vins', 'excerpt' => 'Six vins régionaux commentés par notre sommelière.'],
+                    'nl' => ['slug' => 'wijnproeverij', 'title' => 'Wijnproeverij', 'excerpt' => 'Zes regionale wijnen met toelichting van onze sommelier.'],
+                ],
+            ],
+            [
+                'starts_at' => now()->addDays(26)->setTime(19, 30),
+                'ends_at' => null,
+                'location' => 'Lakeside terrace',
+                'translations' => [
+                    'en' => ['slug' => 'jazz-on-the-terrace', 'title' => 'Jazz on the terrace', 'excerpt' => 'An open-air trio set at sunset — free for hotel guests.'],
+                    'de' => ['slug' => 'jazz-auf-der-terrasse', 'title' => 'Jazz auf der Terrasse', 'excerpt' => 'Open-Air-Trio bei Sonnenuntergang — für Hausgäste kostenlos.'],
+                    'fr' => ['slug' => 'jazz-en-terrasse', 'title' => 'Jazz en terrasse', 'excerpt' => 'Un trio en plein air au coucher du soleil — gratuit pour nos hôtes.'],
+                    // Deliberately untranslated into Dutch, like the junior
+                    // suite: the partial-translation path stays exercised.
+                ],
+            ],
+        ];
+
+        foreach ($events as $index => $data) {
+            $translations = $data['translations'];
+            unset($data['translations']);
+
+            $firstSlug = reset($translations)['slug'];
+
+            $event = Event::query()
+                ->whereHas('translations', static fn ($q) => $q->where('slug', $firstSlug))
+                ->first() ?? Event::create($data + ['is_published' => true]);
+
+            $event->update($data + ['is_published' => true]);
+
+            foreach ($translations as $locale => $translation) {
+                $event->translations()->updateOrCreate(['locale' => $locale], [
+                    'slug' => $translation['slug'],
+                    'title' => $translation['title'],
+                    'excerpt' => $translation['excerpt'],
+                    'body' => '<p>'.$translation['excerpt'].'</p>',
                 ]);
             }
         }
