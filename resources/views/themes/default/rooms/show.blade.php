@@ -24,6 +24,18 @@
             <div class="prose mt-8 max-w-none">{!! $description !!}</div>
         @endif
 
+        @if ($amenities = $roomType->amenityNames())
+            {{-- The visible twin of the amenityFeature entries in the room's
+                 JSON-LD — same rule as breadcrumbs and FAQs. --}}
+            <ul class="mt-8 grid grid-cols-2 gap-2 text-neutral-700 sm:grid-cols-3">
+                @foreach ($amenities as $amenity)
+                    <li class="flex items-center gap-2">
+                        <span aria-hidden="true" class="text-green-700">✓</span> {{ $amenity }}
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+
         @if ($roomType->default_rate)
             <p class="mt-8 text-lg">
                 {{ __('common.from') }}

@@ -59,6 +59,13 @@ Everything below is implemented and covered by tests.
 - **Editable, translated FAQs** rendered on the home page with matching
   `FAQPage` markup — the structured data never describes questions the page
   doesn't visibly show.
+- **Translated amenities** per room type, rendered on the room page and
+  mirrored as `LocationFeatureSpecification` entries in the room's JSON-LD.
+- **Contact form with enquiry storage** on a translated route (`/de/kontakt`,
+  `/en/contact`): honeypot + timing check (spam is stored under its own
+  status, never silently dropped, and the response never reveals detection),
+  per-IP rate limiting, optional stay dates for quote requests, and a queued
+  mail to the hotel inbox with reply-to set to the guest.
 - **XML sitemap** with per-URL `xhtml:link` alternates, written nightly by
   `php artisan doba:sitemap` and generated live as a fallback.
 - **`robots.txt` from the same flag as the meta robots tag** — a staging install

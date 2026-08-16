@@ -94,6 +94,11 @@ final class JsonLd
                 'value' => $roomType->size_sqm,
                 'unitCode' => 'MTK', // square metre
             ] : null,
+            'amenityFeature' => array_map(static fn (string $name): array => [
+                '@type' => 'LocationFeatureSpecification',
+                'name' => $name,
+                'value' => true,
+            ], $roomType->amenityNames()),
             'containedInPlace' => ['@id' => url('/').'#hotel'],
             'offers' => self::offer(
                 $roomType->default_rate,

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\RoomTypeController;
@@ -64,6 +65,13 @@ foreach ($locales as $locale) {
 
             Route::get($rooms, [RoomTypeController::class, 'index'])->name('rooms.index');
             Route::get($rooms.'/{slug}', [RoomTypeController::class, 'show'])->name('rooms.show');
+
+            $contact = Localization::segment('contact', $locale);
+
+            Route::get($contact, [ContactController::class, 'show'])->name('contact');
+            Route::post($contact, [ContactController::class, 'submit'])
+                ->middleware('throttle:contact')
+                ->name('contact.submit');
 
             // CMS pages last: {slug} would otherwise swallow "rooms".
             Route::get('{slug}', [PageController::class, 'show'])

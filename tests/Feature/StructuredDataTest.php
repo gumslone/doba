@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Amenity;
 use App\Models\RoomType;
 use App\Models\Setting;
 use App\Support\Hotel\HotelSettings;
@@ -42,6 +43,23 @@ it('publishes a Hotel node with an address and coordinates on the home page', fu
         ->and($hotel['address']['@type'])->toBe('PostalAddress')
         ->and($hotel['address']['addressLocality'])->toBe('Rottach-Egern')
         ->and($hotel['geo']['latitude'])->toBe(47.6903);
+});
+
+it('publishes localised amenityFeature entries on the room', function (): void {
+    $amenity = Amenity::create(['icon' => 'wifi', 'sort_order' => 1]);
+    $amenity->translations()->create(['locale' => 'en', 'name' => 'Free WiFi']);
+    $amenity->roomTypes()->attach($this->roomType);
+
+    $html = $this->get('/en/rooms/double-room')->assertOk()->getContent();
+
+    $room = collect(jsonLdBlocks($html))->firstWhere('@type', 'HotelRoom');
+
+    expect($room['amenityFeature'][0])->toBe([
+        '@type' => 'LocationFeatureSpecification',
+        'name' => 'Free WiFi',
+        'value' => true,
+    ])->and($html)->toContain('Free WiFi'); // visible twin
+
 });
 
 it('publishes a HotelRoom whose Offer price is in major units', function (): void {

@@ -57,6 +57,14 @@ final class SitemapGenerator
                 $this->push($url, null, 'weekly', '0.9', $rooms);
             }
         }
+
+        if (Localization::hasRoute('contact', Localization::defaultLocale())) {
+            $contact = Localization::alternates('contact');
+
+            foreach ($contact as $url) {
+                $this->push($url, null, 'monthly', '0.5', $contact);
+            }
+        }
     }
 
     protected function addRoomTypes(): void

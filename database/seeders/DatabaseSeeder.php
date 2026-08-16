@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Amenity;
 use App\Models\Faq;
 use App\Models\Page;
 use App\Models\RoomType;
@@ -25,6 +26,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->settings();
         $this->roomTypes();
+        $this->amenities();
         $this->pages();
         $this->faqs();
 
@@ -147,6 +149,31 @@ class DatabaseSeeder extends Seeder
         }
     }
 
+    protected function amenities(): void
+    {
+        $amenities = [
+            ['icon' => 'wifi', 'sort' => 1, 'names' => ['en' => 'Free WiFi', 'de' => 'Kostenloses WLAN', 'fr' => 'Wi-Fi gratuit', 'nl' => 'Gratis wifi'], 'rooms' => ['DBL', 'JSUITE', 'SGL']],
+            ['icon' => 'balcony', 'sort' => 2, 'names' => ['en' => 'Balcony', 'de' => 'Balkon', 'fr' => 'Balcon', 'nl' => 'Balkon'], 'rooms' => ['DBL', 'JSUITE']],
+            ['icon' => 'minibar', 'sort' => 3, 'names' => ['en' => 'Minibar', 'de' => 'Minibar', 'fr' => 'Minibar', 'nl' => 'Minibar'], 'rooms' => ['JSUITE']],
+            ['icon' => 'mountain', 'sort' => 4, 'names' => ['en' => 'Mountain view', 'de' => 'Bergblick', 'fr' => 'Vue montagne', 'nl' => 'Bergzicht'], 'rooms' => ['DBL', 'JSUITE']],
+            ['icon' => 'safe', 'sort' => 5, 'names' => ['en' => 'In-room safe', 'de' => 'Zimmersafe', 'fr' => 'Coffre-fort', 'nl' => 'Kluis op de kamer'], 'rooms' => ['DBL', 'JSUITE', 'SGL']],
+        ];
+
+        foreach ($amenities as $data) {
+            $amenity = Amenity::updateOrCreate(['icon' => $data['icon']], [
+                'sort_order' => $data['sort'],
+            ]);
+
+            foreach ($data['names'] as $locale => $name) {
+                $amenity->translations()->updateOrCreate(['locale' => $locale], ['name' => $name]);
+            }
+
+            $amenity->roomTypes()->sync(
+                RoomType::query()->whereIn('code', $data['rooms'])->pluck('id')
+            );
+        }
+    }
+
     protected function faqs(): void
     {
         $faqs = [
@@ -195,17 +222,9 @@ class DatabaseSeeder extends Seeder
 
     protected function pages(): void
     {
+        // No "contact" CMS page: /kontakt etc. is a dedicated route with the
+        // enquiry form, and a CMS page on the same slug would be shadowed.
         $pages = [
-            [
-                'code' => 'contact',
-                'sort_order' => 1,
-                'translations' => [
-                    'en' => ['slug' => 'contact', 'title' => 'Contact & directions'],
-                    'de' => ['slug' => 'kontakt', 'title' => 'Kontakt & Anfahrt'],
-                    'fr' => ['slug' => 'contact', 'title' => 'Contact & accès'],
-                    'nl' => ['slug' => 'contact', 'title' => 'Contact & route'],
-                ],
-            ],
             [
                 'code' => 'privacy',
                 'sort_order' => 2,

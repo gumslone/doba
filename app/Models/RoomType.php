@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
@@ -57,6 +58,29 @@ class RoomType extends Model
     }
 
     /**
+     * @return BelongsToMany<Amenity, $this>
+     */
+    public function amenities(): BelongsToMany
+    {
+        return $this->belongsToMany(Amenity::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Amenity names in the current locale — the shape both the Blade list
+     * and the JSON-LD amenityFeature entries consume.
+     *
+     * @return array<int,string>
+     */
+    public function amenityNames(): array
+    {
+        return $this->amenities
+            ->map(static fn (Amenity $amenity): ?string => $amenity->t('name'))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
      * @param  Builder<RoomType>  $query
      * @return Builder<RoomType>
      */
@@ -88,7 +112,7 @@ class RoomType extends Model
             ->whereHas('translations', static fn (Builder $q) => $q
                 ->where('locale', $locale)
                 ->where('slug', $slug))
-            ->with(['translations', 'media'])
+            ->with(['translations', 'media', 'amenities.translations'])
             ->first();
     }
 
