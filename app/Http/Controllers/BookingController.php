@@ -91,10 +91,20 @@ class BookingController extends Controller
                 ->with('booking_error', __('booking.error_gone'));
         }
 
+        $plans = $availability->ratePlansFor($roomType, $stay['check_in'], $stay['check_out']);
+
+        // The plan the guest picked on the room page, if it is still
+        // eligible; otherwise the cheapest one. Never trust the query
+        // string to name a plan the engine would refuse.
+        $selected = collect($plans)->firstWhere('plan.id', $request->integer('rate_plan')) ?? ($plans[0] ?? null);
+
         return view('booking.checkout', [
             'stay' => $stay,
             'roomType' => $roomType,
-            'total' => $availability->stayPrice($roomType, $stay['check_in'], $stay['check_out']),
+            'plans' => $plans,
+            'selected' => $selected,
+            'total' => $selected['total']
+                ?? $availability->stayPrice($roomType, $stay['check_in'], $stay['check_out']),
             'extras' => $roomType->availableExtras(),
         ]);
     }
@@ -118,6 +128,15 @@ class BookingController extends Controller
                 ->with('booking_error', __('booking.error_range'));
         }
 
+        // Re-resolved server-side: a posted plan id is a request, not a
+        // fact, and an ineligible plan must never set the price.
+        $ratePlan = null;
+
+        if ($planId = ($validated['rate_plan'] ?? null)) {
+            $eligible = collect($availability->ratePlansFor($roomType, $stay['check_in'], $stay['check_out']));
+            $ratePlan = $eligible->firstWhere('plan.id', (int) $planId)['plan'] ?? null;
+        }
+
         try {
             $booking = $bookings->place(
                 $roomType,
@@ -134,6 +153,7 @@ class BookingController extends Controller
                 adults: $stay['adults'],
                 children: $stay['children'],
                 sessionId: $request->session()->getId(),
+                ratePlan: $ratePlan,
             );
         } catch (NoAvailabilityException) {
             // Someone else took the last room while this guest typed.

@@ -15,6 +15,7 @@ class StoreBookingRequest extends FormRequest
     {
         return [
             'room_type' => ['required', 'integer', 'exists:room_types,id'],
+            'rate_plan' => ['nullable', 'integer', 'exists:rate_plans,id'],
             'check_in' => ['required', 'date_format:Y-m-d'],
             'check_out' => ['required', 'date_format:Y-m-d', 'after:check_in'],
             'adults' => ['required', 'integer', 'min:1', 'max:20'],

@@ -100,4 +100,10 @@ return [
     'card_hint' => 'Vous vérifiez tout avant de payer.',
     'trust_no_fee' => 'Aucun frais de réservation, aucun supplément caché.',
     'trust_hold' => 'Nous gardons votre chambre pendant :minutes minutes.',
+    'choose_rate' => 'Choisissez votre tarif',
+    'rates_title' => 'Tarifs',
+    'rates_lede' => 'Tous les tarifs s’appliquent aux dates choisies, petit-déjeuner et taxe de séjour inclus. Les conditions du tarif retenu sont enregistrées avec votre réservation, dans votre langue.',
+    'free_until' => 'Annulation gratuite jusqu’à :hours h avant l’arrivée',
+    'non_refundable' => 'Non remboursable',
+    'incl_breakfast' => 'Petit-déjeuner inclus',
 ];

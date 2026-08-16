@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\Extra;
 use App\Models\Faq;
 use App\Models\Page;
+use App\Models\RatePlan;
 use App\Models\RoomType;
 use App\Models\Season;
 use App\Models\SeasonRate;
@@ -36,6 +37,7 @@ class DatabaseSeeder extends Seeder
         $this->roomTypes();
         $this->amenities();
         $this->extras();
+        $this->ratePlans();
         $this->pages();
         $this->faqs();
         $this->events();
@@ -313,6 +315,58 @@ class DatabaseSeeder extends Seeder
             $amenity->roomTypes()->sync(
                 RoomType::query()->whereIn('code', $rooms)->pluck('id')
             );
+        }
+    }
+
+    protected function ratePlans(): void
+    {
+        // adjustment_value is basis points for percent plans (-1000 = -10%).
+        $plans = [
+            ['FLEX', 'standard', 'percent', 0, true, 48, 10, [], [
+                'en' => ['Flexible rate', 'Cancel free of charge up to 48 hours before arrival.', 'Free cancellation up to 48 hours before the day of arrival. After that, the first night is charged. No-shows are charged in full.'],
+                'de' => ['Flexible Rate', 'Kostenfreie Stornierung bis 48 Stunden vor Anreise.', 'Kostenfreie Stornierung bis 48 Stunden vor dem Anreisetag. Danach wird die erste Nacht berechnet. Bei Nichtanreise wird der Gesamtbetrag berechnet.'],
+                'fr' => ['Tarif flexible', 'Annulation gratuite jusqu’à 48 heures avant l’arrivée.', 'Annulation gratuite jusqu’à 48 heures avant le jour d’arrivée. Passé ce délai, la première nuit est facturée. En cas de non-présentation, la totalité est due.'],
+                'nl' => ['Flexibel tarief', 'Gratis annuleren tot 48 uur voor aankomst.', 'Gratis annuleren tot 48 uur voor de aankomstdag. Daarna wordt de eerste nacht in rekening gebracht. Bij no-show wordt het volledige bedrag berekend.'],
+            ]],
+            ['SAVER', 'non_refundable', 'percent', -1200, false, 0, 20, [], [
+                'en' => ['Saver rate', '12% off, paid at booking. Not refundable.', 'This rate is not refundable and cannot be changed. The full amount is charged at booking and is not returned if the stay is cancelled or shortened, for any reason.'],
+                'de' => ['Sparrate', '12% günstiger, Zahlung bei Buchung. Nicht erstattbar.', 'Diese Rate ist nicht erstattbar und nicht umbuchbar. Der Gesamtbetrag wird bei der Buchung berechnet und bei Stornierung oder Verkürzung des Aufenthalts aus keinem Grund zurückerstattet.'],
+                'fr' => ['Tarif économique', '12% de réduction, payé à la réservation. Non remboursable.', 'Ce tarif n’est ni remboursable ni modifiable. Le montant total est débité à la réservation et n’est restitué en aucun cas.'],
+                'nl' => ['Voordeeltarief', '12% korting, betaald bij boeking. Niet restitueerbaar.', 'Dit tarief is niet restitueerbaar en niet wijzigbaar. Het volledige bedrag wordt bij de boeking in rekening gebracht en wordt om geen enkele reden terugbetaald.'],
+            ]],
+            ['EARLY', 'early_bird', 'percent', -800, true, 168, 15, ['min_days_before_arrival' => 30], [
+                'en' => ['Early bird', '8% off when you book at least 30 days ahead.', 'Free cancellation up to 7 days before arrival. Booked at least 30 days in advance.'],
+                'de' => ['Frühbucher', '8% günstiger ab 30 Tagen Vorlauf.', 'Kostenfreie Stornierung bis 7 Tage vor Anreise. Buchung mindestens 30 Tage im Voraus.'],
+                'fr' => ['Réservation anticipée', '8% de réduction à partir de 30 jours à l’avance.', 'Annulation gratuite jusqu’à 7 jours avant l’arrivée. Réservation au moins 30 jours à l’avance.'],
+                'nl' => ['Vroegboekkorting', '8% korting bij minstens 30 dagen vooruit boeken.', 'Gratis annuleren tot 7 dagen voor aankomst. Minstens 30 dagen vooraf geboekt.'],
+            ]],
+            ['LONGSTAY', 'long_stay', 'percent', -1500, true, 72, 12, ['min_nights' => 5], [
+                'en' => ['Long stay', '15% off from five nights.', 'Free cancellation up to 72 hours before arrival. Applies to stays of five nights or more.'],
+                'de' => ['Langzeitrate', '15% günstiger ab fünf Nächten.', 'Kostenfreie Stornierung bis 72 Stunden vor Anreise. Gilt ab fünf Nächten.'],
+                'fr' => ['Long séjour', '15% de réduction à partir de cinq nuits.', 'Annulation gratuite jusqu’à 72 heures avant l’arrivée. À partir de cinq nuits.'],
+                'nl' => ['Langverblijf', '15% korting vanaf vijf nachten.', 'Gratis annuleren tot 72 uur voor aankomst. Geldt vanaf vijf nachten.'],
+            ]],
+        ];
+
+        foreach ($plans as [$code, $type, $adjType, $adjValue, $refundable, $hours, $priority, $extra, $translations]) {
+            $plan = RatePlan::updateOrCreate(['code' => $code], $extra + [
+                'type' => $type,
+                'adjustment_type' => $adjType,
+                'adjustment_value' => $adjValue,
+                'refundable' => $refundable,
+                'cancellation_hours' => $hours,
+                'priority' => $priority,
+                'includes_breakfast' => true,
+                'is_active' => true,
+            ]);
+
+            foreach ($translations as $locale => [$name, $description, $policy]) {
+                $plan->translations()->updateOrCreate(['locale' => $locale], [
+                    'name' => $name,
+                    'description' => $description,
+                    'policy_text' => $policy,
+                ]);
+            }
         }
     }
 

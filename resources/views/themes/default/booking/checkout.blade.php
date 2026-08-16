@@ -61,6 +61,40 @@
                     </div>
                 </fieldset>
 
+                @if (count($plans) > 1)
+                    <fieldset class="space-y-3 rounded-lg border border-neutral-200 p-5">
+                        <legend class="px-1 font-medium">{{ __('booking.choose_rate') }}</legend>
+
+                        @foreach ($plans as $offer)
+                            @php $plan = $offer['plan']; @endphp
+                            <label class="plan @if (($selected['plan'] ?? null)?->is($plan)) on @endif"
+                                   style="grid-template-columns:22px 1fr auto">
+                                <input type="radio" name="rate_plan" value="{{ $plan->id }}"
+                                       @checked(($selected['plan'] ?? null)?->is($plan))>
+                                <div>
+                                    <h3>{{ $plan->t('name') }}</h3>
+                                    @if ($description = $plan->t('description'))
+                                        <p class="terms">{{ $description }}</p>
+                                    @endif
+                                    <p class="terms" style="margin-top:6px">
+                                        @if ($plan->refundable)
+                                            {{ __('booking.free_until', ['hours' => $plan->cancellation_hours]) }}
+                                        @else
+                                            <strong>{{ __('booking.non_refundable') }}</strong>
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="amt">
+                                    <b>{{ Money::format($offer['total']) }}</b>
+                                    <small>{{ Money::format($offer['per_night']) }} {{ __('common.per_night') }}</small>
+                                </div>
+                            </label>
+                        @endforeach
+                    </fieldset>
+                @elseif (count($plans) === 1)
+                    <input type="hidden" name="rate_plan" value="{{ $plans[0]['plan']->id }}">
+                @endif
+
                 @if ($extras->isNotEmpty())
                     <fieldset class="space-y-3 rounded-lg border border-neutral-200 p-5">
                         <legend class="px-1 font-medium">{{ __('booking.extras_title') }}</legend>

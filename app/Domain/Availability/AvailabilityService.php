@@ -6,6 +6,7 @@ namespace App\Domain\Availability;
 
 use App\Domain\Pricing\RateResolver;
 use App\Models\Availability;
+use App\Models\RatePlan;
 use App\Models\RoomType;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -117,16 +118,43 @@ class AvailabilityService
     }
 
     /**
-     * Total stay price for one unit, summing resolved nightly prices over N.
+     * Total stay price for one unit, summing resolved nightly prices over N
+     * and applying the rate plan's adjustment per night (§7 step 4).
+     *
+     * Per night, not to the total: a fixed −€10 plan is ten euros off each
+     * night, which is what a hotelier means and what the frozen
+     * booking_room_nights rows have to add up to.
+     *
      * Null when any night has no resolvable price.
      */
-    public function stayPrice(RoomType $roomType, CarbonInterface $checkIn, CarbonInterface $checkOut): ?int
-    {
+    public function stayPrice(
+        RoomType $roomType,
+        CarbonInterface $checkIn,
+        CarbonInterface $checkOut,
+        ?RatePlan $ratePlan = null,
+    ): ?int {
+        $nights = $this->nightlyPrices($roomType, $checkIn, $checkOut, $ratePlan);
+
+        return $nights === null ? null : array_sum($nights);
+    }
+
+    /**
+     * The per-night prices for a stay, keyed by date — the exact numbers
+     * frozen into booking_room_nights (§5).
+     *
+     * @return array<string,int>|null
+     */
+    public function nightlyPrices(
+        RoomType $roomType,
+        CarbonInterface $checkIn,
+        CarbonInterface $checkOut,
+        ?RatePlan $ratePlan = null,
+    ): ?array {
         $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
         $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
 
         $rows = $this->rows($roomType, $checkIn, $checkOut->subDay());
-        $total = 0;
+        $prices = [];
 
         for ($date = $checkIn; $date < $checkOut; $date = $date->addDay()) {
             $price = $this->rates->nightlyPrice($roomType, $date, $rows->get($date->toDateString()));
@@ -135,10 +163,50 @@ class AvailabilityService
                 return null;
             }
 
-            $total += $price;
+            $prices[$date->toDateString()] = $ratePlan?->adjust($price) ?? $price;
         }
 
-        return $total;
+        return $prices;
+    }
+
+    /**
+     * Every plan sellable for this stay, cheapest first.
+     *
+     * @return array<int,array{plan:RatePlan,total:int,per_night:int}>
+     */
+    public function ratePlansFor(
+        RoomType $roomType,
+        CarbonInterface $checkIn,
+        CarbonInterface $checkOut,
+    ): array {
+        $nights = (int) CarbonImmutable::instance($checkIn)->startOfDay()
+            ->diffInDays(CarbonImmutable::instance($checkOut)->startOfDay());
+
+        $offers = [];
+
+        $plans = RatePlan::query()
+            ->active()
+            ->forRoomType($roomType)
+            ->with('translations')
+            ->get();
+
+        foreach ($plans as $plan) {
+            if (! $plan->isEligible($checkIn, $nights)) {
+                continue;
+            }
+
+            $total = $this->stayPrice($roomType, $checkIn, $checkOut, $plan);
+
+            if ($total === null) {
+                continue;
+            }
+
+            $offers[] = ['plan' => $plan, 'total' => $total, 'per_night' => (int) round($total / max(1, $nights))];
+        }
+
+        usort($offers, static fn (array $a, array $b): int => $a['total'] <=> $b['total']);
+
+        return $offers;
     }
 
     /**
@@ -169,7 +237,7 @@ class AvailabilityService
      * Returns offers rather than models so the view has nothing left to
      * compute — and so the same shape can feed the future partner API.
      *
-     * @return array<int,array{room_type:RoomType,total:int,per_night:int,units_left:int}>
+     * @return array<int,array{room_type:RoomType,rate_plans:array<int,array{plan:RatePlan,total:int,per_night:int}>,total:int,per_night:int,units_left:int}>
      */
     public function search(
         CarbonInterface $checkIn,
@@ -194,7 +262,14 @@ class AvailabilityService
                 continue;
             }
 
-            $total = $this->stayPrice($roomType, $checkIn, $checkOut);
+            $plans = $this->ratePlansFor($roomType, $checkIn, $checkOut);
+
+            // Cheapest eligible plan drives the headline price; the room
+            // page shows the full set. With no plans configured at all the
+            // base price still sells, so a hotel need not define any.
+            $total = $plans === []
+                ? $this->stayPrice($roomType, $checkIn, $checkOut)
+                : $plans[0]['total'];
 
             if ($total === null) {
                 continue; // no resolvable price is not an offer
@@ -202,6 +277,7 @@ class AvailabilityService
 
             $offers[] = [
                 'room_type' => $roomType,
+                'rate_plans' => $plans,
                 'total' => $total,
                 'per_night' => (int) round($total / max(1, $nights)),
                 // Confirmed bookings only: counting holds would let anyone

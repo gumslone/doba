@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Domain\Availability\AvailabilityService;
 use App\Models\Media;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Routing\Localization;
 use App\Support\Seo\JsonLd;
 use App\Support\Seo\Seo;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -38,7 +40,7 @@ class RoomTypeController extends Controller
         ]);
     }
 
-    public function show(string $slug, Seo $seo, HotelSettings $hotel): View
+    public function show(string $slug, Seo $seo, HotelSettings $hotel, AvailabilityService $availability): View
     {
         $locale = app()->getLocale();
 
@@ -68,8 +70,14 @@ class RoomTypeController extends Controller
                 'images' => $roomType->media->map(static fn (Media $image): string => $image->url())->all(),
             ]));
 
+        // Plans priced for a representative near-term stay, so the room
+        // page shows real numbers rather than an abstract percentage. The
+        // funnel re-prices for the guest's actual dates.
+        $sampleIn = CarbonImmutable::today(config('doba.timezone'))->addDays(14);
+
         return view('rooms.show', [
             'roomType' => $roomType,
+            'ratePlans' => $availability->ratePlansFor($roomType, $sampleIn, $sampleIn->addDays(2)),
             // Other categories a guest might take instead — the cheapest
             // alternative is often the booking that would otherwise be lost.
             'similar' => RoomType::query()

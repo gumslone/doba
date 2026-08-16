@@ -100,4 +100,10 @@ return [
     'card_hint' => 'U ziet alles nog een keer voordat u betaalt.',
     'trust_no_fee' => 'Geen boekingskosten en geen verborgen toeslagen.',
     'trust_hold' => 'We houden uw kamer :minutes minuten voor u vrij.',
+    'choose_rate' => 'Kies uw tarief',
+    'rates_title' => 'Tarieven',
+    'rates_lede' => 'Alle tarieven gelden voor de gekozen data, inclusief ontbijt en toeristenbelasting. De voorwaarden van het gekozen tarief worden bij uw boeking vastgelegd, in uw taal.',
+    'free_until' => 'Gratis annuleren tot :hours uur voor aankomst',
+    'non_refundable' => 'Niet-restitueerbaar',
+    'incl_breakfast' => 'Ontbijt inbegrepen',
 ];

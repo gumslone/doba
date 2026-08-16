@@ -100,4 +100,10 @@ return [
     'card_hint' => 'You can review everything before you pay.',
     'trust_no_fee' => 'No booking fee and no hidden surcharges.',
     'trust_hold' => 'We hold your room for :minutes minutes while you check out.',
+    'choose_rate' => 'Choose your rate',
+    'rates_title' => 'Rates',
+    'rates_lede' => 'All rates apply to the dates you choose and include breakfast and local tax. The terms of the rate you pick are recorded with your booking, in your language.',
+    'free_until' => 'Free cancellation up to :hours h before arrival',
+    'non_refundable' => 'Non-refundable',
+    'incl_breakfast' => 'Breakfast included',
 ];

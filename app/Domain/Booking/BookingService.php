@@ -12,6 +12,7 @@ use App\Models\Booking;
 use App\Models\BookingHold;
 use App\Models\Extra;
 use App\Models\Guest;
+use App\Models\RatePlan;
 use App\Models\RoomType;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -54,6 +55,7 @@ class BookingService
         int $units = 1,
         ?string $sessionId = null,
         ?string $locale = null,
+        ?RatePlan $ratePlan = null,
     ): Booking {
         $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
         $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
@@ -64,9 +66,11 @@ class BookingService
 
         $nights = (int) $checkIn->diffInDays($checkOut);
 
+        $bookingLocale = $locale ?? app()->getLocale();
+
         return DB::transaction(function () use (
             $roomType, $checkIn, $checkOut, $nights, $guestData,
-            $adults, $children, $units, $sessionId, $locale
+            $adults, $children, $units, $sessionId, $bookingLocale, $ratePlan
         ): Booking {
             // NOTE: nights only — the checkout row consumes no inventory (§6).
             $rows = $this->lockNights($roomType, $checkIn, $checkOut->subDay());
@@ -94,6 +98,10 @@ class BookingService
                     throw new NoAvailabilityException($row->date->toDateString());
                 }
 
+                // The plan's adjustment lands here, so the frozen per-night
+                // rows already carry the price the guest agreed to (§7).
+                $price = $ratePlan?->adjust($price) ?? $price;
+
                 $nightPrices[$row->date->toDateString()] = $price;
                 $perUnitTotal += $price;
             }
@@ -114,16 +122,27 @@ class BookingService
                 'total' => $subtotal,
                 'deposit_due' => $subtotal,
                 'balance_due' => $subtotal,
-                'locale' => $locale ?? app()->getLocale(),
+                'locale' => $bookingLocale,
                 'guest_id' => $guest->id,
             ]);
 
             for ($i = 0; $i < $units; $i++) {
                 $room = $booking->rooms()->create([
                     'room_type_id' => $roomType->id,
+                    'rate_plan_id' => $ratePlan?->id,
                     'adults' => (int) ceil($adults / $units),
                     'children' => (int) floor($children / $units),
                     'price_total' => $perUnitTotal,
+                    // Frozen in the guest's own language at booking time.
+                    // A dispute is settled by the wording they agreed to,
+                    // not by today's version of the policy — and it lives
+                    // per room because a booking may mix plans (§7).
+                    'cancellation_policy_snapshot' => $ratePlan?->t('policy_text', $bookingLocale),
+                    'cancellation_hours_snapshot' => $ratePlan?->cancellation_hours,
+                    // No plan configured at all means a refundable booking:
+                    // a hotel that never defined its terms cannot be said
+                    // to have sold a non-refundable stay.
+                    'refundable_snapshot' => $ratePlan === null || $ratePlan->refundable,
                 ]);
 
                 foreach ($nightPrices as $date => $price) {
@@ -205,6 +224,44 @@ class BookingService
 
             return $booking;
         });
+    }
+
+    /**
+     * What a cancellation right now would refund (§7).
+     *
+     * Computed entirely from the SNAPSHOT on each booking room, never from
+     * the live rate plan: the guest is owed what they agreed to, and the
+     * hotelier may have edited the plan since. Room nights and extras are
+     * treated alike — a cancelled stay does not owe breakfast.
+     */
+    public function refundableAmount(Booking $booking, ?CarbonInterface $at = null): int
+    {
+        $at = CarbonImmutable::instance($at ?? now());
+        $refundable = 0;
+
+        foreach ($booking->rooms as $room) {
+            if (! $room->refundable_snapshot) {
+                continue; // the saver rate, forfeited by design
+            }
+
+            $deadline = $booking->check_in
+                ->startOfDay()
+                ->subHours($room->cancellation_hours_snapshot ?? 0);
+
+            if ($at->lte($deadline)) {
+                $refundable += $room->price_total;
+            }
+        }
+
+        // Extras follow the rooms: if anything is still inside its free
+        // window, the extras attached to the stay come back too.
+        if ($refundable > 0) {
+            $refundable += (int) $booking->extras()->sum('total');
+        }
+
+        // Never more than the guest actually paid — a partial payment
+        // cannot become a profit centre.
+        return min($refundable, $booking->paid_amount);
     }
 
     /**

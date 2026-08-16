@@ -23,7 +23,7 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 > Still to come: channel/OTA sync, the installation wizard, the public partner API and the full
 > Filament panel — all specified in
 > [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
-> The correctness-critical paths are covered by 185+ tests on both database
+> The correctness-critical paths are covered by 200+ tests on both database
 > engines, but the platform has not yet run a real hotel — treat it as
 > pre-release.
 
@@ -139,8 +139,19 @@ Everything below is implemented and covered by tests.
   `min_stay_through`, occupancy limits, multi-room composition. A missing row
   is unbookable, never "assume available".
 - **Rate resolution**: per-date override → season rate (priority + weekday
-  bitmask) → default rate, frozen per night into the booking so a confirmed
-  price never moves.
+  bitmask) → default rate, then the chosen **rate plan's** adjustment —
+  frozen per night into the booking so a confirmed price never moves.
+- **Rate plans**: flexible, non-refundable saver, early bird, long stay.
+  Each carries eligibility (nights, days-before-arrival, a validity window
+  bounded by the *stay*), a percent (basis points) or fixed adjustment
+  applied **per night**, and its own cancellation terms. A plan posted for
+  a stay it is not eligible for is ignored rather than honoured — a
+  discount cannot be bought by editing a form field.
+- **The cancellation policy is snapshotted onto the booking** in the
+  guest's own language at booking time, per room because a booking may mix
+  plans. Refunds are computed from that snapshot, never from the live
+  plan: a dispute is settled by the wording the guest agreed to, and
+  editing the plan afterwards cannot change what a taken booking owes.
 - **Double-booking prevention** via `lockForUpdate` inside the booking
   transaction — and on SQLite via a mandatory `BEGIN IMMEDIATE` connection so
   concurrent bookings genuinely serialise rather than throwing `SQLITE_BUSY`.

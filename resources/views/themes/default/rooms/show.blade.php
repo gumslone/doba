@@ -135,6 +135,43 @@
                     </table>
                 </section>
 
+                @if ($ratePlans !== [])
+                    <section class="block">
+                        <h2>{{ __('booking.rates_title') }}</h2>
+                        <p class="lede" style="margin-bottom:16px">{{ __('booking.rates_lede') }}</p>
+
+                        <div class="plans">
+                            @foreach ($ratePlans as $offer)
+                                @php $plan = $offer['plan']; @endphp
+                                <div class="plan" style="grid-template-columns:1fr auto">
+                                    <div>
+                                        <h3>{{ $plan->t('name') }}</h3>
+                                        @if ($description = $plan->t('description'))
+                                            <p class="terms">{{ $description }}</p>
+                                        @endif
+                                        <div class="incl">
+                                            @if ($plan->includes_breakfast)
+                                                <span class="tag">{{ __('booking.incl_breakfast') }}</span>
+                                            @endif
+                                            <span class="tag">
+                                                @if ($plan->refundable)
+                                                    {{ __('booking.free_until', ['hours' => $plan->cancellation_hours]) }}
+                                                @else
+                                                    {{ __('booking.non_refundable') }}
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="amt">
+                                        <b>{{ Money::format($offer['per_night']) }}</b>
+                                        <small>{{ __('common.per_night') }}</small>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </section>
+                @endif
+
                 @if ($extras->isNotEmpty())
                     <section class="block">
                         <h2>{{ __('extras.title') }}</h2>

@@ -100,4 +100,10 @@ return [
     'card_hint' => 'Sie sehen alles noch einmal, bevor Sie bezahlen.',
     'trust_no_fee' => 'Keine Buchungsgebühr, keine versteckten Zuschläge.',
     'trust_hold' => 'Wir halten Ihr Zimmer :minutes Minuten lang für Sie frei.',
+    'choose_rate' => 'Rate wählen',
+    'rates_title' => 'Raten',
+    'rates_lede' => 'Alle Raten gelten für die gewählten Daten, inklusive Frühstück und Kurtaxe. Die Bedingungen der gewählten Rate werden mit Ihrer Buchung in Ihrer Sprache festgehalten.',
+    'free_until' => 'Kostenfreie Stornierung bis :hours Std. vor Anreise',
+    'non_refundable' => 'Nicht erstattbar',
+    'incl_breakfast' => 'Frühstück inklusive',
 ];
