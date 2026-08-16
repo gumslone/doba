@@ -9,8 +9,6 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
-pest()->extend(TestCase::class)->in('Unit');
-
 /**
  * Every canonical URL, hreflang href and sitemap <loc> is absolute, so the
  * assertions need a stable host. Without this they would pass against

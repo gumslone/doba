@@ -99,8 +99,9 @@ Everything below is implemented and covered by tests.
 
 ## Requirements
 
-- PHP 8.2+ with `pdo_mysql`, `pdo_sqlite`, `mbstring`, `intl`, `gd`, `zip`,
-  `curl`, `openssl`
+- PHP 8.4+ with `pdo_mysql`, `pdo_sqlite`, `mbstring`, `intl`, `gd`, `zip`,
+  `curl`, `openssl` — 8.4 is a hard floor: the SQLite `BEGIN IMMEDIATE`
+  transaction mode the booking engine's locking depends on requires it
 - Composer 2, Node 20 (build-time only)
 - MySQL 8 **or** SQLite 3.35+
 - Apache 2.4 with `mod_rewrite` + php-fpm in production (see

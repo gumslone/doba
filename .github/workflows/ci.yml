@@ -20,10 +20,14 @@ jobs:
     # The whole "portable MySQL *or* SQLite" promise rests on this matrix.
     # A schema or query that works on only one engine is a bug that would
     # otherwise surface on a customer's install months later.
+    #
+    # PHP floor is 8.4: the SQLite BEGIN IMMEDIATE transaction mode the
+    # booking engine depends on (§6) only exists in the framework's
+    # PHP >= 8.4 code path.
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.3', '8.4']
+        php: ['8.4', '8.5']
         db: [sqlite, mysql]
 
     # Set as real process environment variables rather than written into
@@ -104,7 +108,7 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           extensions: pdo_sqlite, mbstring, intl, gd, zip, curl, openssl
           coverage: none
 
