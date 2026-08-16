@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'search_title' => 'Chambres disponibles',
+    'checkout_title' => 'Vos coordonnées',
+    'pay_title' => 'Paiement',
+    'confirmation_title' => 'Réservation confirmée',
+    'manage_title' => 'Votre réservation',
+
+    'check_in' => 'Arrivée',
+    'check_out' => 'Départ',
+    'adults' => 'Adultes',
+    'children' => 'Enfants',
+    'search' => 'Rechercher',
+    'nights' => ':count nuits',
+    'night' => '1 nuit',
+    'guests' => 'Personnes',
+
+    'no_offers' => 'Aucune chambre n’est libre à ces dates. Essayez d’autres dates ou envoyez-nous une demande.',
+    'choose' => 'Choisir cette chambre',
+    'only_left' => 'Plus que :count',
+    'stay_total' => 'Total du séjour',
+
+    'your_details' => 'Vos coordonnées',
+    'first_name' => 'Prénom',
+    'last_name' => 'Nom',
+    'email' => 'E-mail',
+    'phone' => 'Téléphone',
+    'country' => 'Pays',
+    'notes' => 'Demandes (facultatif)',
+    'notes_hint' => 'Heure d’arrivée, allergies, tout ce qu’il faut savoir.',
+    'extras_title' => 'Ajouter des options',
+    'terms' => 'J’accepte les conditions de réservation et d’annulation.',
+    'marketing' => 'Envoyez-moi occasionnellement des offres par e-mail. (Facultatif, indépendant de la réservation.)',
+    'book' => 'Finaliser la réservation',
+
+    'summary' => 'Votre séjour',
+    'room' => 'Chambre',
+    'total' => 'Total',
+    'deposit' => 'À payer maintenant',
+    'balance' => 'À payer à l’arrivée',
+    'status' => 'Statut',
+    'dates' => 'Dates',
+    'reference' => 'Numéro de réservation',
+
+    'hold_notice' => 'Nous gardons cette chambre pour vous jusqu’à :time.',
+    'pay_now' => 'Payer maintenant',
+    'pay_redirect' => 'Continuer vers le paiement',
+    'pay_manual' => 'Aucun paiement en ligne n’est nécessaire. Votre réservation est confirmée.',
+
+    'confirmed_heading' => 'Merci — votre réservation est confirmée.',
+    'pending_heading' => 'Nous attendons la confirmation de votre paiement.',
+    'cancelled_heading' => 'Cette réservation a été annulée.',
+    'confirmation_note' => 'Une confirmation est en route vers :email.',
+    'manage_link' => 'Vous pouvez consulter ou annuler cette réservation via le lien reçu par e-mail.',
+    'cancel' => 'Annuler cette réservation',
+    'cancel_confirm' => 'Annuler cette réservation ? C’est irréversible.',
+    'cancelled_notice' => 'Votre réservation a été annulée.',
+
+    'error_range' => 'La date de départ doit suivre la date d’arrivée.',
+    'error_past' => 'Cette date d’arrivée est passée.',
+    'error_too_long' => 'Ce séjour dépasse la durée réservable en ligne. Envoyez-nous une demande.',
+    'error_too_far' => 'Cette date dépasse notre calendrier.',
+    'error_gone' => 'Désolé — cette chambre n’est plus libre à ces dates.',
+    'error_just_taken' => 'Désolé — cette chambre vient d’être réservée. Voici ce qui reste.',
+    'error_terms' => 'Veuillez accepter les conditions de réservation et d’annulation.',
+    'error_not_cancellable' => 'Cette réservation ne peut plus être annulée en ligne. Contactez-nous.',
+
+    'status_pending' => 'En attente de paiement',
+    'status_confirmed' => 'Confirmée',
+    'status_checked_in' => 'Arrivé',
+    'status_checked_out' => 'Parti',
+    'status_cancelled' => 'Annulée',
+    'status_no_show' => 'Non présenté',
+];

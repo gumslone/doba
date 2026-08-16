@@ -33,6 +33,11 @@
             {{ __('common.check_in_from', ['time' => config('doba.checkin_from')]) }} ·
             {{ __('common.check_out_until', ['time' => config('doba.checkout_until')]) }}
         </p>
+
+        {{-- The booking funnel starts here: the whole point of the site. --}}
+        <div class="mt-8 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+            @include('booking._form', ['stay' => null])
+        </div>
     </section>
 
     <section class="mx-auto max-w-6xl px-4 pb-16">

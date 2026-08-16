@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'search_title' => 'Verfügbare Zimmer',
+    'checkout_title' => 'Ihre Daten',
+    'pay_title' => 'Zahlung',
+    'confirmation_title' => 'Buchung bestätigt',
+    'manage_title' => 'Ihre Buchung',
+
+    'check_in' => 'Anreise',
+    'check_out' => 'Abreise',
+    'adults' => 'Erwachsene',
+    'children' => 'Kinder',
+    'search' => 'Suchen',
+    'nights' => ':count Nächte',
+    'night' => '1 Nacht',
+    'guests' => 'Gäste',
+
+    'no_offers' => 'Für diese Daten ist kein Zimmer frei. Versuchen Sie andere Daten oder senden Sie uns eine Anfrage.',
+    'choose' => 'Dieses Zimmer wählen',
+    'only_left' => 'Nur noch :count verfügbar',
+    'stay_total' => 'Gesamt für den Aufenthalt',
+
+    'your_details' => 'Ihre Daten',
+    'first_name' => 'Vorname',
+    'last_name' => 'Nachname',
+    'email' => 'E-Mail',
+    'phone' => 'Telefon',
+    'country' => 'Land',
+    'notes' => 'Wünsche (optional)',
+    'notes_hint' => 'Ankunftszeit, Allergien, alles was wir wissen sollten.',
+    'extras_title' => 'Zusatzleistungen',
+    'terms' => 'Ich akzeptiere die Buchungs- und Stornobedingungen.',
+    'marketing' => 'Senden Sie mir gelegentlich Angebote per E-Mail. (Optional, unabhängig von der Buchung.)',
+    'book' => 'Buchung abschließen',
+
+    'summary' => 'Ihr Aufenthalt',
+    'room' => 'Zimmer',
+    'total' => 'Gesamt',
+    'deposit' => 'Jetzt fällig',
+    'balance' => 'Bei Anreise fällig',
+    'status' => 'Status',
+    'dates' => 'Zeitraum',
+    'reference' => 'Buchungsnummer',
+
+    'hold_notice' => 'Wir halten dieses Zimmer bis :time für Sie frei.',
+    'pay_now' => 'Jetzt bezahlen',
+    'pay_redirect' => 'Weiter zur Zahlung',
+    'pay_manual' => 'Eine Onlinezahlung ist nicht nötig. Ihre Buchung ist bestätigt, wir melden uns.',
+
+    'confirmed_heading' => 'Vielen Dank — Ihre Buchung ist bestätigt.',
+    'pending_heading' => 'Wir warten auf den Zahlungseingang.',
+    'cancelled_heading' => 'Diese Buchung wurde storniert.',
+    'confirmation_note' => 'Eine Bestätigung ist an :email unterwegs.',
+    'manage_link' => 'Sie können diese Buchung jederzeit über den Link in Ihrer E-Mail ansehen oder stornieren.',
+    'cancel' => 'Buchung stornieren',
+    'cancel_confirm' => 'Diese Buchung stornieren? Das lässt sich nicht rückgängig machen.',
+    'cancelled_notice' => 'Ihre Buchung wurde storniert.',
+
+    'error_range' => 'Das Abreisedatum muss nach dem Anreisedatum liegen.',
+    'error_past' => 'Dieses Anreisedatum liegt in der Vergangenheit.',
+    'error_too_long' => 'Dieser Aufenthalt ist länger als online buchbar. Bitte senden Sie uns eine Anfrage.',
+    'error_too_far' => 'Dieses Datum liegt weiter in der Zukunft als unser Kalender reicht.',
+    'error_gone' => 'Leider ist dieses Zimmer für diese Daten nicht mehr frei.',
+    'error_just_taken' => 'Leider wurde dieses Zimmer gerade gebucht. Das ist noch frei.',
+    'error_terms' => 'Bitte akzeptieren Sie die Buchungs- und Stornobedingungen.',
+    'error_not_cancellable' => 'Diese Buchung kann online nicht mehr storniert werden. Bitte kontaktieren Sie uns.',
+
+    'status_pending' => 'Zahlung ausstehend',
+    'status_confirmed' => 'Bestätigt',
+    'status_checked_in' => 'Eingecheckt',
+    'status_checked_out' => 'Ausgecheckt',
+    'status_cancelled' => 'Storniert',
+    'status_no_show' => 'Nicht erschienen',
+];

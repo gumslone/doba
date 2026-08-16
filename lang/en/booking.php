@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'search_title' => 'Available rooms',
+    'checkout_title' => 'Your details',
+    'pay_title' => 'Payment',
+    'confirmation_title' => 'Booking confirmed',
+    'manage_title' => 'Your booking',
+
+    'check_in' => 'Arrival',
+    'check_out' => 'Departure',
+    'adults' => 'Adults',
+    'children' => 'Children',
+    'search' => 'Search',
+    'nights' => ':count nights',
+    'night' => '1 night',
+    'guests' => 'Guests',
+
+    'no_offers' => 'No rooms are free for those dates. Try different dates, or send us an enquiry.',
+    'choose' => 'Choose this room',
+    'only_left' => 'Only :count left',
+    'stay_total' => 'Total for the stay',
+
+    'your_details' => 'Your details',
+    'first_name' => 'First name',
+    'last_name' => 'Last name',
+    'email' => 'Email',
+    'phone' => 'Phone',
+    'country' => 'Country',
+    'notes' => 'Requests (optional)',
+    'notes_hint' => 'Arrival time, allergies, anything we should know.',
+    'extras_title' => 'Add extras',
+    'terms' => 'I accept the booking and cancellation terms.',
+    'marketing' => 'Send me occasional offers by email. (Optional, and separate from the booking.)',
+    'book' => 'Complete booking',
+
+    'summary' => 'Your stay',
+    'room' => 'Room',
+    'total' => 'Total',
+    'deposit' => 'Due now',
+    'balance' => 'Due on arrival',
+    'status' => 'Status',
+    'dates' => 'Dates',
+    'reference' => 'Booking reference',
+
+    'hold_notice' => 'We are holding this room for you until :time.',
+    'pay_now' => 'Pay now',
+    'pay_redirect' => 'Continue to payment',
+    'pay_manual' => 'No online payment is needed. Your booking is confirmed and we will be in touch.',
+
+    'confirmed_heading' => 'Thank you — your booking is confirmed.',
+    'pending_heading' => 'We are waiting for your payment to clear.',
+    'cancelled_heading' => 'This booking has been cancelled.',
+    'confirmation_note' => 'A confirmation is on its way to :email.',
+    'manage_link' => 'You can view or cancel this booking at any time using the link in your email.',
+    'cancel' => 'Cancel this booking',
+    'cancel_confirm' => 'Cancel this booking? This cannot be undone.',
+    'cancelled_notice' => 'Your booking has been cancelled.',
+
+    'error_range' => 'The departure date must be after the arrival date.',
+    'error_past' => 'That arrival date is in the past.',
+    'error_too_long' => 'That stay is longer than we can book online. Please send us an enquiry.',
+    'error_too_far' => 'That date is further ahead than our calendar goes.',
+    'error_gone' => 'Sorry — that room is no longer free for those dates.',
+    'error_just_taken' => 'Sorry — that room was just taken. Here is what is still free.',
+    'error_terms' => 'Please accept the booking and cancellation terms.',
+    'error_not_cancellable' => 'This booking can no longer be cancelled online. Please contact us.',
+
+    'status_pending' => 'Awaiting payment',
+    'status_confirmed' => 'Confirmed',
+    'status_checked_in' => 'Checked in',
+    'status_checked_out' => 'Checked out',
+    'status_cancelled' => 'Cancelled',
+    'status_no_show' => 'No-show',
+];

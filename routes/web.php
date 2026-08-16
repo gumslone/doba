@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\StyleController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
@@ -137,6 +138,20 @@ foreach ($locales as $locale) {
 
             Route::get($events, [EventController::class, 'index'])->name('events.index');
             Route::get($events.'/{slug}', [EventController::class, 'show'])->name('events.show');
+
+            $booking = Localization::segment('booking', $locale);
+
+            Route::get($booking.'/search', [BookingController::class, 'search'])->name('booking.search');
+            Route::get($booking.'/checkout', [BookingController::class, 'checkout'])->name('booking.checkout');
+            Route::post($booking, [BookingController::class, 'store'])
+                ->middleware('throttle:booking')
+                ->name('booking.store');
+            Route::get($booking.'/pay/{reference}', [BookingController::class, 'pay'])->name('booking.pay');
+            Route::get($booking.'/confirmation/{reference}', [BookingController::class, 'confirmation'])->name('booking.confirmation');
+            Route::get($booking.'/manage/{reference}/{token}', [BookingController::class, 'manage'])->name('booking.manage');
+            Route::post($booking.'/manage/{reference}/{token}/cancel', [BookingController::class, 'cancel'])
+                ->middleware('throttle:booking')
+                ->name('booking.cancel');
 
             $contact = Localization::segment('contact', $locale);
 

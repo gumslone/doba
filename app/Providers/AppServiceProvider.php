@@ -31,5 +31,10 @@ class AppServiceProvider extends ServiceProvider
         // pre-authentication by definition. Five a minute is generous for a
         // human retrying a typo and useless for a spam run.
         RateLimiter::for('contact', static fn (Request $request) => Limit::perMinute(5)->by((string) $request->ip()));
+
+        // Booking creation takes real inventory, so it is limited harder
+        // than a form post: ten a minute is far more than a human books
+        // and far less than a script needs to sweep the calendar.
+        RateLimiter::for('booking', static fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
     }
 }

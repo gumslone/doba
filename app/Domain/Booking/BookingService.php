@@ -6,6 +6,7 @@ namespace App\Domain\Booking;
 
 use App\Domain\Pricing\RateResolver;
 use App\Enums\BookingStatus;
+use App\Mail\BookingConfirmed;
 use App\Models\Availability;
 use App\Models\Booking;
 use App\Models\BookingHold;
@@ -16,6 +17,7 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 
 /**
@@ -210,7 +212,7 @@ class BookingService
      */
     public function transition(Booking $booking, BookingStatus $to, ?string $reason = null, ?int $userId = null): Booking
     {
-        return DB::transaction(function () use ($booking, $to, $reason, $userId): Booking {
+        $booking = DB::transaction(function () use ($booking, $to, $reason, $userId): Booking {
             // Re-read under the transaction so two staff members clicking
             // at once serialise instead of double-applying.
             $booking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
@@ -243,6 +245,15 @@ class BookingService
 
             return $booking;
         }, attempts: 3);
+
+        // Sent after the transaction commits, never inside it: a queued job
+        // picked up before the commit would find no booking, and a mail
+        // failure must not roll back a confirmed booking (§13).
+        if ($booking->status === BookingStatus::Confirmed && $booking->guest?->email) {
+            Mail::to($booking->guest->email)->queue(new BookingConfirmed($booking));
+        }
+
+        return $booking;
     }
 
     /**

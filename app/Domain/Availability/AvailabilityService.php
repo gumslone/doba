@@ -142,6 +142,95 @@ class AvailabilityService
     }
 
     /**
+     * Validate a requested stay against the §6 step-1 rules, returning the
+     * lang key of the first problem or null when the dates are usable.
+     *
+     * Separate from isBookable() because these are *input* errors the guest
+     * can fix ("that date is in the past"), not inventory outcomes.
+     */
+    public function validateStay(CarbonInterface $checkIn, CarbonInterface $checkOut): ?string
+    {
+        $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
+        $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
+        $today = CarbonImmutable::today(config('doba.timezone'));
+
+        return match (true) {
+            $checkIn >= $checkOut => 'booking.error_range',
+            $checkIn < $today => 'booking.error_past',
+            $checkIn->diffInDays($checkOut) > (int) config('doba.booking.max_nights') => 'booking.error_too_long',
+            $today->diffInDays($checkIn) > (int) config('doba.booking.booking_window_days') => 'booking.error_too_far',
+            default => null,
+        };
+    }
+
+    /**
+     * Every room type that can host this stay, with its total price (§6).
+     *
+     * Returns offers rather than models so the view has nothing left to
+     * compute — and so the same shape can feed the future partner API.
+     *
+     * @return array<int,array{room_type:RoomType,total:int,per_night:int,units_left:int}>
+     */
+    public function search(
+        CarbonInterface $checkIn,
+        CarbonInterface $checkOut,
+        int $adults = 2,
+        int $children = 0,
+    ): array {
+        $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
+        $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
+        $nights = (int) $checkIn->diffInDays($checkOut);
+
+        $offers = [];
+
+        $roomTypes = RoomType::query()
+            ->active()
+            ->ordered()
+            ->with(['translation', 'translations', 'media', 'amenities.translations'])
+            ->get();
+
+        foreach ($roomTypes as $roomType) {
+            if (! $this->isBookable($roomType, $checkIn, $checkOut, 1, $adults, $children)) {
+                continue;
+            }
+
+            $total = $this->stayPrice($roomType, $checkIn, $checkOut);
+
+            if ($total === null) {
+                continue; // no resolvable price is not an offer
+            }
+
+            $offers[] = [
+                'room_type' => $roomType,
+                'total' => $total,
+                'per_night' => (int) round($total / max(1, $nights)),
+                // Confirmed bookings only: counting holds would let anyone
+                // with a script manufacture scarcity on the hotel's own
+                // site (§6 step 5).
+                'units_left' => $this->unitsLeft($roomType, $checkIn, $checkOut),
+            ];
+        }
+
+        return $offers;
+    }
+
+    /**
+     * Fewest units free on any night of the stay, ignoring holds.
+     */
+    protected function unitsLeft(RoomType $roomType, CarbonImmutable $checkIn, CarbonImmutable $checkOut): int
+    {
+        $rows = $this->rows($roomType, $checkIn, $checkOut->subDay());
+
+        if ($rows->isEmpty()) {
+            return 0;
+        }
+
+        return (int) $rows
+            ->map(static fn (Availability $row): int => max(0, $row->allotment - $row->booked))
+            ->min();
+    }
+
+    /**
      * The calendar widget payload (§6): one entry per date with exactly
      * what the picker needs to disable cells and show "from" prices.
      *

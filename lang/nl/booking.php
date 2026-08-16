@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'search_title' => 'Beschikbare kamers',
+    'checkout_title' => 'Uw gegevens',
+    'pay_title' => 'Betaling',
+    'confirmation_title' => 'Boeking bevestigd',
+    'manage_title' => 'Uw boeking',
+
+    'check_in' => 'Aankomst',
+    'check_out' => 'Vertrek',
+    'adults' => 'Volwassenen',
+    'children' => 'Kinderen',
+    'search' => 'Zoeken',
+    'nights' => ':count nachten',
+    'night' => '1 nacht',
+    'guests' => 'Gasten',
+
+    'no_offers' => 'Er is geen kamer vrij op deze data. Probeer andere data of stuur ons een aanvraag.',
+    'choose' => 'Kies deze kamer',
+    'only_left' => 'Nog :count beschikbaar',
+    'stay_total' => 'Totaal voor het verblijf',
+
+    'your_details' => 'Uw gegevens',
+    'first_name' => 'Voornaam',
+    'last_name' => 'Achternaam',
+    'email' => 'E-mail',
+    'phone' => 'Telefoon',
+    'country' => 'Land',
+    'notes' => 'Wensen (optioneel)',
+    'notes_hint' => 'Aankomsttijd, allergieën, alles wat we moeten weten.',
+    'extras_title' => 'Extra’s toevoegen',
+    'terms' => 'Ik ga akkoord met de boekings- en annuleringsvoorwaarden.',
+    'marketing' => 'Stuur mij af en toe aanbiedingen per e-mail. (Optioneel, los van de boeking.)',
+    'book' => 'Boeking afronden',
+
+    'summary' => 'Uw verblijf',
+    'room' => 'Kamer',
+    'total' => 'Totaal',
+    'deposit' => 'Nu te betalen',
+    'balance' => 'Bij aankomst te betalen',
+    'status' => 'Status',
+    'dates' => 'Data',
+    'reference' => 'Boekingsnummer',
+
+    'hold_notice' => 'Wij houden deze kamer voor u vrij tot :time.',
+    'pay_now' => 'Nu betalen',
+    'pay_redirect' => 'Doorgaan naar betaling',
+    'pay_manual' => 'Online betalen is niet nodig. Uw boeking is bevestigd.',
+
+    'confirmed_heading' => 'Dank u — uw boeking is bevestigd.',
+    'pending_heading' => 'We wachten op uw betaling.',
+    'cancelled_heading' => 'Deze boeking is geannuleerd.',
+    'confirmation_note' => 'Een bevestiging is onderweg naar :email.',
+    'manage_link' => 'U kunt deze boeking altijd bekijken of annuleren via de link in uw e-mail.',
+    'cancel' => 'Boeking annuleren',
+    'cancel_confirm' => 'Deze boeking annuleren? Dit kan niet ongedaan worden gemaakt.',
+    'cancelled_notice' => 'Uw boeking is geannuleerd.',
+
+    'error_range' => 'De vertrekdatum moet na de aankomstdatum liggen.',
+    'error_past' => 'Die aankomstdatum ligt in het verleden.',
+    'error_too_long' => 'Dat verblijf is langer dan online boekbaar. Stuur ons een aanvraag.',
+    'error_too_far' => 'Die datum ligt verder vooruit dan onze kalender reikt.',
+    'error_gone' => 'Helaas — die kamer is niet meer vrij op deze data.',
+    'error_just_taken' => 'Helaas — die kamer is net geboekt. Dit is nog vrij.',
+    'error_terms' => 'Accepteer de boekings- en annuleringsvoorwaarden.',
+    'error_not_cancellable' => 'Deze boeking kan niet meer online worden geannuleerd. Neem contact met ons op.',
+
+    'status_pending' => 'Wacht op betaling',
+    'status_confirmed' => 'Bevestigd',
+    'status_checked_in' => 'Ingecheckt',
+    'status_checked_out' => 'Uitgecheckt',
+    'status_cancelled' => 'Geannuleerd',
+    'status_no_show' => 'Niet verschenen',
+];
