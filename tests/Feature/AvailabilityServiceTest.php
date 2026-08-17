@@ -6,6 +6,7 @@ use App\Domain\Availability\AvailabilityService;
 use App\Models\Availability;
 use App\Models\RoomType;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 
 function makeRoomType(array $overrides = []): RoomType
 {
@@ -166,4 +167,100 @@ it('checks occupancy against the party when given', function (): void {
         ->and($this->service->isBookable($this->roomType, $this->checkIn, $this->checkIn->addDays(2), adults: 2, children: 2))->toBeFalse()
         // Two units double every limit — the multi-room path (§6 step 6).
         ->and($this->service->isBookable($this->roomType, $this->checkIn, $this->checkIn->addDays(2), units: 2, adults: 4, children: 2))->toBeTrue();
+});
+
+it('does not issue more queries as a hotel adds room types', function (): void {
+    $checkIn = CarbonImmutable::today()->addDays(20);
+    $checkOut = $checkIn->addDays(5);
+
+    $build = function (int $count) use ($checkIn, $checkOut): int {
+        RoomType::query()->delete();
+
+        foreach (range(1, $count) as $i) {
+            $roomType = RoomType::create([
+                'code' => 'R'.$i, 'base_occupancy' => 2, 'max_occupancy' => 3,
+                'default_rate' => 10000, 'total_units' => 1,
+            ]);
+
+            $roomType->translations()->create([
+                'locale' => 'en', 'slug' => 'room-'.$i, 'name' => 'Room '.$i,
+            ]);
+
+            foreach (range(0, 6) as $night) {
+                Availability::create([
+                    'room_type_id' => $roomType->id,
+                    'date' => $checkIn->addDays($night)->toDateString(),
+                    'allotment' => 1,
+                ]);
+            }
+        }
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        app(AvailabilityService::class)->search($checkIn, $checkOut, 2, 0);
+
+        $queries = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        return $queries;
+    };
+
+    $small = $build(2);
+    $large = $build(20);
+
+    // A twenty-room hotel listing its rooms individually once issued over
+    // two hundred queries for one search, because every room type asked
+    // the same questions and each re-read the same rows. The count must
+    // now be flat: a hotel that adds a room must not slow down its own
+    // search page.
+    expect($large)->toBe($small)
+        ->and($large)->toBeLessThan(20);
+});
+
+it('prices a large hotel exactly as it prices a small one', function (): void {
+    $checkIn = CarbonImmutable::today()->addDays(20);
+    $checkOut = $checkIn->addDays(3);
+
+    $roomType = RoomType::create([
+        'code' => 'SOLO', 'base_occupancy' => 2, 'max_occupancy' => 3,
+        'default_rate' => 13500, 'total_units' => 2,
+    ]);
+    $roomType->translations()->create(['locale' => 'en', 'slug' => 'solo', 'name' => 'Solo']);
+
+    foreach (range(0, 4) as $night) {
+        Availability::create([
+            'room_type_id' => $roomType->id,
+            'date' => $checkIn->addDays($night)->toDateString(),
+            'allotment' => 2,
+        ]);
+    }
+
+    // What one room type costs on its own must be what it costs beside
+    // nineteen others — the preloading is an optimisation, not a change
+    // of answer.
+    $alone = app(AvailabilityService::class)->search($checkIn, $checkOut, 2, 0);
+
+    foreach (range(1, 19) as $i) {
+        $other = RoomType::create([
+            'code' => 'X'.$i, 'base_occupancy' => 2, 'max_occupancy' => 2,
+            'default_rate' => 9000, 'total_units' => 1,
+        ]);
+        $other->translations()->create(['locale' => 'en', 'slug' => 'x-'.$i, 'name' => 'X '.$i]);
+
+        foreach (range(0, 4) as $night) {
+            Availability::create([
+                'room_type_id' => $other->id,
+                'date' => $checkIn->addDays($night)->toDateString(),
+                'allotment' => 1,
+            ]);
+        }
+    }
+
+    $crowded = collect(app(AvailabilityService::class)->search($checkIn, $checkOut, 2, 0))
+        ->firstWhere('room_type.code', 'SOLO');
+
+    expect($crowded['total'])->toBe($alone[0]['total'])
+        ->and($crowded['per_night'])->toBe($alone[0]['per_night'])
+        ->and($crowded['units_left'])->toBe($alone[0]['units_left']);
 });

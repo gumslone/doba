@@ -88,6 +88,15 @@ Everything below is implemented and covered by tests.
   balcony and the rest arrive under *Room / Bathroom / Comfort / View*
   headings rather than as one flat wall of ticks, because a guest arrives
   with a specific question ("shower or bath?") and skims past a wall.
+- **Search does not slow down as the hotel grows.** A twenty-room property
+  that lists its rooms individually — a villa, a boutique where every room
+  differs — used to issue **216 queries for one search**, because each room
+  type asked the same questions and each re-read the same nights. The
+  nights and the rate plans are now loaded once per search: **12 queries,
+  flat**, whether the hotel has three room types or thirty. The preload is
+  scoped to the single call and released in a `finally`, never memoised for
+  the request — a cache of availability that outlives the operation it was
+  built for is one that can be read after somebody's booking changed it.
 - **Bookable extras** — breakfast, spa & sauna, airport transfer, parking,
   a cot, late checkout — each priced *per stay, per night, per person or
   per person-night*, which is the difference between a €45 transfer and a

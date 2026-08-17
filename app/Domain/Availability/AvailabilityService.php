@@ -37,6 +37,22 @@ class AvailabilityService
      * Can this room type host a stay of [checkIn … checkOut) for $units
      * rooms and the given party?
      */
+    /**
+     * Availability rows preloaded for the current operation, keyed by
+     * room type id then Y-m-d. Null means "go to the database".
+     *
+     * @var array<int,Collection<string,Availability>>|null
+     */
+    protected ?array $primed = null;
+
+    /**
+     * Active rate plans preloaded for the current operation, with the room
+     * types they are restricted to. Null means "go to the database".
+     *
+     * @var Collection<int,RatePlan>|null
+     */
+    protected ?Collection $primedPlans = null;
+
     public function isBookable(
         RoomType $roomType,
         CarbonInterface $checkIn,
@@ -184,11 +200,7 @@ class AvailabilityService
 
         $offers = [];
 
-        $plans = RatePlan::query()
-            ->active()
-            ->forRoomType($roomType)
-            ->with('translations')
-            ->get();
+        $plans = $this->plansFor($roomType);
 
         foreach ($plans as $plan) {
             if (! $plan->isEligible($checkIn, $nights)) {
@@ -257,34 +269,45 @@ class AvailabilityService
             ->with(['translation', 'translations', 'media', 'amenities.translations'])
             ->get();
 
-        foreach ($roomTypes as $roomType) {
-            if (! $this->isBookable($roomType, $checkIn, $checkOut, 1, $adults, $children)) {
-                continue;
+        // One query for every room type's nights, instead of one per type
+        // per question asked about it.
+        $this->prime($roomTypes, $checkIn, $checkOut);
+
+        try {
+            foreach ($roomTypes as $roomType) {
+                if (! $this->isBookable($roomType, $checkIn, $checkOut, 1, $adults, $children)) {
+                    continue;
+                }
+
+                $plans = $this->ratePlansFor($roomType, $checkIn, $checkOut);
+
+                // Cheapest eligible plan drives the headline price; the room
+                // page shows the full set. With no plans configured at all the
+                // base price still sells, so a hotel need not define any.
+                $total = $plans === []
+                    ? $this->stayPrice($roomType, $checkIn, $checkOut)
+                    : $plans[0]['total'];
+
+                if ($total === null) {
+                    continue; // no resolvable price is not an offer
+                }
+
+                $offers[] = [
+                    'room_type' => $roomType,
+                    'rate_plans' => $plans,
+                    'total' => $total,
+                    'per_night' => (int) round($total / max(1, $nights)),
+                    // Confirmed bookings only: counting holds would let anyone
+                    // with a script manufacture scarcity on the hotel's own
+                    // site (§6 step 5).
+                    'units_left' => $this->unitsLeft($roomType, $checkIn, $checkOut),
+                ];
             }
-
-            $plans = $this->ratePlansFor($roomType, $checkIn, $checkOut);
-
-            // Cheapest eligible plan drives the headline price; the room
-            // page shows the full set. With no plans configured at all the
-            // base price still sells, so a hotel need not define any.
-            $total = $plans === []
-                ? $this->stayPrice($roomType, $checkIn, $checkOut)
-                : $plans[0]['total'];
-
-            if ($total === null) {
-                continue; // no resolvable price is not an offer
-            }
-
-            $offers[] = [
-                'room_type' => $roomType,
-                'rate_plans' => $plans,
-                'total' => $total,
-                'per_night' => (int) round($total / max(1, $nights)),
-                // Confirmed bookings only: counting holds would let anyone
-                // with a script manufacture scarcity on the hotel's own
-                // site (§6 step 5).
-                'units_left' => $this->unitsLeft($roomType, $checkIn, $checkOut),
-            ];
+        } finally {
+            // Released whatever happens, so nothing later in the request
+            // can read rows that were loaded before somebody booked.
+            $this->primed = null;
+            $this->primedPlans = null;
         }
 
         return $offers;
@@ -363,10 +386,73 @@ class AvailabilityService
      */
     protected function rows(RoomType $roomType, CarbonInterface $from, CarbonInterface $to): Collection
     {
+        if ($this->primed !== null) {
+            return ($this->primed[$roomType->id] ?? collect())
+                ->filter(static fn (Availability $row): bool => $row->date->betweenIncluded($from, $to));
+        }
+
         return Availability::query()
             ->where('room_type_id', $roomType->id)
             ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
             ->get()
             ->keyBy(static fn (Availability $row): string => $row->date->toDateString());
+    }
+
+    /**
+     * The active plans sellable for a room type.
+     *
+     * Served from the primed set during a search, where every type would
+     * otherwise run the same two queries: a plan attached to no room type
+     * sells for all of them, and one attached to some sells only there.
+     *
+     * @return Collection<int,RatePlan>
+     */
+    protected function plansFor(RoomType $roomType): Collection
+    {
+        if ($this->primedPlans === null) {
+            return RatePlan::query()
+                ->active()
+                ->forRoomType($roomType)
+                ->with('translations')
+                ->get();
+        }
+
+        return $this->primedPlans->filter(
+            static fn (RatePlan $plan): bool => $plan->roomTypes->isEmpty()
+                || $plan->roomTypes->contains('id', $roomType->id)
+        )->values();
+    }
+
+    /**
+     * Load every room type's nights for one span, once.
+     *
+     * A search asks each room type the same questions — is it bookable,
+     * what does it cost, how many are left — and each of those read the
+     * same rows again. At three room types nobody notices; a twenty-room
+     * hotel listing rooms individually issued over two hundred queries for
+     * one search.
+     *
+     * Deliberately scoped to a single call rather than memoised for the
+     * request: a cache of availability that outlives the operation it was
+     * built for is a cache that can be read after somebody's booking has
+     * changed it.
+     *
+     * @param  Collection<int,RoomType>  $roomTypes
+     */
+    protected function prime(Collection $roomTypes, CarbonImmutable $from, CarbonImmutable $to): void
+    {
+        $this->primedPlans = RatePlan::query()
+            ->active()
+            ->with(['translations', 'roomTypes:id'])
+            ->get();
+
+        $this->primed = Availability::query()
+            ->whereIn('room_type_id', $roomTypes->pluck('id'))
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->get()
+            ->groupBy('room_type_id')
+            ->map(static fn (Collection $rows): Collection => $rows
+                ->keyBy(static fn (Availability $row): string => $row->date->toDateString()))
+            ->all();
     }
 }
