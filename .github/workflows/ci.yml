@@ -80,12 +80,12 @@ jobs:
       # picks up where the last one stopped rather than starting over.
       - name: Install PHP dependencies
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             composer install --prefer-dist --no-interaction --no-progress && exit 0
             echo "composer install failed (attempt ${attempt}); retrying in $((attempt * 20))s"
             sleep $((attempt * 20))
           done
-          echo "composer install failed after 3 attempts"
+          echo "composer install failed after 5 attempts"
           exit 1
 
       - name: Prepare environment
@@ -132,12 +132,12 @@ jobs:
       # picks up where the last one stopped rather than starting over.
       - name: Install PHP dependencies
         run: |
-          for attempt in 1 2 3; do
+          for attempt in 1 2 3 4 5; do
             composer install --prefer-dist --no-interaction --no-progress && exit 0
             echo "composer install failed (attempt ${attempt}); retrying in $((attempt * 20))s"
             sleep $((attempt * 20))
           done
-          echo "composer install failed after 3 attempts"
+          echo "composer install failed after 5 attempts"
           exit 1
 
       - name: Check code style
