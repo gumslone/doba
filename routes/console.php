@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('holds:release')->everyMinute();
 Schedule::command('channels:sync')->everyFifteenMinutes()->withoutOverlapping();
 Schedule::command('availability:extend')->dailyAt('02:00');
+
+// Proves nightly that `booked` and `held` still match the bookings behind
+// them. --fix because these columns are defined as caches of those rows,
+// so recomputing them cannot lose anything — but every correction is
+// logged at error level, since drift means a bug already happened.
+Schedule::command('availability:reconcile --fix')->dailyAt('02:30')->withoutOverlapping();
 Schedule::command('doba:sitemap')->dailyAt('03:00');
 
 // On by default. A hotel that never once thought about backups is exactly

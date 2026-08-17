@@ -88,6 +88,17 @@ Everything below is implemented and covered by tests.
   balcony and the rest arrive under *Room / Bathroom / Comfort / View*
   headings rather than as one flat wall of ticks, because a guest arrives
   with a specific question ("shower or bath?") and skims past a wall.
+- **The counters are audited nightly.** `availability.booked` and `held`
+  are caches of the booking tables, and `availability:reconcile` is the job
+  that proves it — recomputing both from ground truth (one row per unit per
+  night for bookings whose status declares the `booked` side, plus every
+  OTA block still holding, plus unreleased holds) and reporting every
+  disagreement. **Both directions are reported, and the quiet one is why
+  this exists**: overselling announces itself when a guest reaches the desk,
+  but a counter stuck *high* silently stops the hotel selling a room it
+  actually has, and nothing anywhere looks broken. It exits non-zero even
+  after `--fix`, because drift means a bug already happened and a reconcile
+  that repairs it and exits 0 is a bug nobody ever hears about.
 - **Search does not slow down as the hotel grows.** A twenty-room property
   that lists its rooms individually — a villa, a boutique where every room
   differs — used to issue **216 queries for one search**, because each room
