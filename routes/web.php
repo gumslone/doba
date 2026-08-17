@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminMailController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPromoCodeController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
+use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVenueController;
 use App\Http\Controllers\Admin\AuthController;
@@ -129,6 +130,9 @@ Route::prefix('admin')->group(function (): void {
         Route::post('update/restore', [AdminUpdateController::class, 'restore'])->name('admin.update.restore');
         Route::get('update/backups/{name}', [AdminUpdateController::class, 'download'])->name('admin.update.download');
         Route::delete('update/backups/{stamp}', [AdminUpdateController::class, 'destroy'])->name('admin.update.backups.destroy');
+
+        Route::get('reports', [AdminReportController::class, 'index'])->name('admin.reports');
+        Route::get('reports/export', [AdminReportController::class, 'export'])->name('admin.reports.export');
 
         Route::get('front-desk', [AdminFrontDeskController::class, 'index'])->name('admin.front-desk');
         Route::post('front-desk/{booking}/check-in', [AdminFrontDeskController::class, 'checkIn'])->name('admin.front-desk.check-in');

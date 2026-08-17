@@ -575,6 +575,39 @@ vendor/bin/pint --test && vendor/bin/phpstan analyse --memory-limit=1G
 CI runs the suite against **both SQLite and MySQL** on every push — that matrix
 is the only thing that keeps the "portable" promise honest.
 
+## Reports
+
+Occupancy, ADR, RevPAR, channel mix and pace — with a CSV export, because
+a report that can only be read on screen gets retyped by hand, and that is
+where transcription errors come from.
+
+Four decisions make these numbers mean something, and every one of them is
+easy to get quietly wrong:
+
+- **What counts as sold** is read from the same enum the booking engine
+  uses. A cancelled booking never occupied a room. A **no-show did**, in
+  the sense that mattered — nobody else could have it.
+- **Revenue means the room, not the bill.** ADR and RevPAR are room
+  metrics; folding breakfast and the spa into them inflates both and makes
+  them incomparable with every benchmark a hotelier reads. The frozen
+  per-night prices exclude extras by construction.
+- **Discounts come off the rate.** A promo code is apportioned across that
+  booking's own nights in proportion to what each cost — so the months
+  still sum to the year, and ADR reconciles with the bank instead of
+  flattering the hotel by exactly what it gave away.
+- **OTA blocks occupy rooms and carry no rate.** An iCal sync knows the
+  room is gone and nothing about the money. Those nights count towards
+  occupancy — the room really was occupied — but averaging them into ADR
+  at zero would report a rate the hotel never charged, so they are kept
+  out of it and the page says so. They *are* in the channel mix: leaving
+  them out would make direct look like a larger share of the hotel than it
+  is, which is the exact number the commission argument turns on.
+
+**Pace** compares what is on the books against the same point in last
+year's booking curve, not against last year's finished total — that would
+always look catastrophic in March. Growth from a base of zero reports as
+"—" rather than "up 100%", which reads like growth and means "we had none".
+
 ## Mail
 
 Configured from the admin, not from `.env` — the person who needs to
@@ -744,7 +777,7 @@ wizard and the public API, is in
 | — | Events, WYSIWYG admin, customizable styles, security headers | **done** |
 | — | Invoices, **iCal channel sync**, promo codes, eight style presets, **restaurant & menu** | **done** |
 | 4 | First hotel live | planned |
-| 5 | Reports, multi-install deploy (iCal channel sync landed early) | planned |
+| 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
 | 6 | Public REST API + webhooks, OpenAPI docs | planned |
 
 ## Contributing

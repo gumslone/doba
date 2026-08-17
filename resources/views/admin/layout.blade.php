@@ -18,6 +18,7 @@
             ['/admin/front-desk', __('admin.front_desk'), 'admin/front-desk*'],
             ['/admin/availability', __('admin.availability'), 'admin/availability*'],
             ['/admin/invoices', __('admin.invoices'), 'admin/invoices*'],
+            ['/admin/reports', __('admin.reports'), 'admin/reports*'],
         ],
         __('admin.group_selling') => [
             ['/admin/rate-plans', __('admin.rate_plans'), 'admin/rate-plans*'],
