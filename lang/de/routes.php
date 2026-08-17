@@ -7,4 +7,5 @@ return [
     'booking' => 'buchung',
     'events' => 'veranstaltungen',
     'contact' => 'kontakt',
+    'dining' => 'gastronomie',
 ];

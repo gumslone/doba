@@ -10,6 +10,13 @@
     // reachable, which the footer already guarantees, and putting the
     // imprint between "Rooms" and "Contact" spends the most valuable
     // navigation on the least valuable page.
+    // Only linked when the hotel actually has one: a nav entry that leads
+    // to an empty page is worse than no nav entry.
+    $hasVenues = App\Models\Venue::query()
+        ->active()
+        ->whereHas('translations', fn ($q) => $q->where('locale', app()->getLocale()))
+        ->exists();
+
     $menuPages = Page::query()
         ->published()
         ->where('show_in_menu', true)
@@ -44,6 +51,9 @@
     <nav class="main" aria-label="Main">
         <a href="{{ Localization::route('rooms.index') }}">{{ __('common.rooms') }}</a>
         <a href="{{ Localization::route('events.index') }}">{{ __('events.title') }}</a>
+        @if ($hasVenues)
+            <a href="{{ Localization::route('venues.index') }}">{{ __('menu.title') }}</a>
+        @endif
         @foreach ($menuPages as $page)
             <a href="{{ Localization::route('page', ['slug' => $page->slug()]) }}">{{ $page->t('title') }}</a>
         @endforeach

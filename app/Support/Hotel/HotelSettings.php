@@ -31,6 +31,21 @@ class HotelSettings
     }
 
     /**
+     * Drop the in-memory copy so the next read comes from the store.
+     *
+     * `Setting::put` busts the shared cache, but nothing bust the copy
+     * held on this object — so anywhere the container outlives a request
+     * (an Octane worker, a queue worker) a hotelier could save a setting
+     * and watch the site keep serving the old value until the process was
+     * restarted. Called as each request picks up its route.
+     */
+    public function refresh(): void
+    {
+        $this->values = null;
+        $this->name = (string) ($this->get('general.name') ?: config('app.name'));
+    }
+
+    /**
      * @return array<string,mixed>
      */
     public function all(): array

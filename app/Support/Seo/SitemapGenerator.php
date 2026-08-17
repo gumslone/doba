@@ -7,6 +7,7 @@ namespace App\Support\Seo;
 use App\Models\Event;
 use App\Models\Page;
 use App\Models\RoomType;
+use App\Models\Venue;
 use App\Support\Routing\Localization;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -39,6 +40,7 @@ final class SitemapGenerator
         $this->addStaticRoutes();
         $this->addRoomTypes();
         $this->addEvents();
+        $this->addVenues();
         $this->addPages();
 
         return $this->render();
@@ -65,6 +67,17 @@ final class SitemapGenerator
 
             foreach ($events as $url) {
                 $this->push($url, null, 'weekly', '0.7', $events);
+            }
+        }
+
+        // Advertised only once there is something to see: submitting an
+        // empty listing page is asking a crawler to index a dead end.
+        if (Localization::hasRoute('venues.index', Localization::defaultLocale())
+            && Venue::query()->active()->whereHas('translations')->exists()) {
+            $dining = Localization::alternates('venues.index');
+
+            foreach ($dining as $url) {
+                $this->push($url, null, 'weekly', '0.7', $dining);
             }
         }
 
@@ -113,6 +126,25 @@ final class SitemapGenerator
                     foreach ($alternates as $url) {
                         $this->push($url, $event->updated_at, 'weekly', '0.6', $alternates);
                     }
+                }
+            });
+    }
+
+    protected function addVenues(): void
+    {
+        Venue::query()
+            ->active()
+            ->with('translations')
+            ->orderBy('sort_order')
+            ->get()
+            ->each(function (Venue $venue): void {
+                $alternates = Localization::alternates(
+                    'venues.show',
+                    static fn (string $locale): ?array => ($slug = $venue->slug($locale)) ? ['slug' => $slug] : null,
+                );
+
+                foreach ($alternates as $url) {
+                    $this->push($url, $venue->updated_at, 'monthly', '0.6', $alternates);
                 }
             });
     }

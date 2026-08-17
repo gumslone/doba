@@ -15,6 +15,7 @@ use App\Models\Season;
 use App\Models\SeasonRate;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\Venue;
 use App\Support\Hotel\HotelSettings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
@@ -41,6 +42,7 @@ class DatabaseSeeder extends Seeder
         $this->pages();
         $this->faqs();
         $this->events();
+        $this->venues();
         $this->seasons();
 
         // Fill the calendar through the bookable window so the demo does
@@ -451,6 +453,192 @@ class DatabaseSeeder extends Seeder
         Extra::query()->where('code', 'COT')->first()?->roomTypes()->sync(
             RoomType::query()->whereIn('code', ['DBL', 'JSUITE'])->pluck('id')
         );
+    }
+
+    /**
+     * The restaurant and the bar, with a card that exercises every case
+     * the templates have to handle: a market-price dish, a signature, a
+     * vegan main, allergen numbers, and a bar that serves past midnight.
+     */
+    protected function venues(): void
+    {
+        $venues = [
+            [
+                'code' => 'RESTAURANT',
+                'type' => 'restaurant',
+                'seats' => 60,
+                'price_range' => '€€€',
+                'reservations' => true,
+                'phone' => '+49 8022 000001',
+                'hours' => [
+                    'tue' => [['12:00', '14:30'], ['18:00', '22:00']],
+                    'wed' => [['12:00', '14:30'], ['18:00', '22:00']],
+                    'thu' => [['12:00', '14:30'], ['18:00', '22:00']],
+                    'fri' => [['12:00', '14:30'], ['18:00', '22:30']],
+                    'sat' => [['12:00', '14:30'], ['18:00', '22:30']],
+                    'sun' => [['12:00', '15:00']],
+                ],
+                't' => [
+                    'en' => ['seehof', 'Restaurant Seehof', 'Alpine cooking, one lake and four seasons',
+                        'The dining room looks over the water. The kitchen buys from the valley: char from the lake, beef from the farm above the village, cheese from the dairy in Kreuth. The card changes with the season and is written the morning it is served.'],
+                    'de' => ['seehof', 'Restaurant Seehof', 'Alpenküche, ein See und vier Jahreszeiten',
+                        'Der Speisesaal blickt aufs Wasser. Die Küche kauft im Tal ein: Saibling aus dem See, Rind vom Hof über dem Dorf, Käse aus der Kreuther Molkerei. Die Karte wechselt mit der Saison und wird an dem Morgen geschrieben, an dem sie serviert wird.'],
+                    'fr' => ['seehof', 'Restaurant Seehof', 'Cuisine alpine, un lac et quatre saisons',
+                        'La salle donne sur l’eau. La cuisine s’approvisionne dans la vallée : omble du lac, bœuf de la ferme au-dessus du village, fromage de la laiterie de Kreuth. La carte change avec la saison.'],
+                    'nl' => ['seehof', 'Restaurant Seehof', 'Alpiene keuken, één meer en vier seizoenen',
+                        'De eetzaal kijkt uit over het water. De keuken koopt in het dal: riddervis uit het meer, rund van de boerderij boven het dorp, kaas uit de zuivelfabriek in Kreuth. De kaart wisselt met het seizoen.'],
+                ],
+                'sections' => [
+                    ['STARTERS', ['en' => 'Starters', 'de' => 'Vorspeisen', 'fr' => 'Entrées', 'nl' => 'Voorgerechten'], [
+                        [1400, null, ['milk'], ['vegetarian'], false, [
+                            'en' => ['Kreuth cheese dumplings', 'In clear beef broth, with chives.'],
+                            'de' => ['Kreuther Käsespätzle-Suppe', 'In klarer Rindsuppe, mit Schnittlauch.'],
+                            'fr' => ['Bouillon aux quenelles de fromage', 'Bouillon de bœuf clair, ciboulette.'],
+                            'nl' => ['Bouillon met kaasknoedels', 'Heldere runderbouillon met bieslook.'],
+                        ]],
+                        [1800, null, ['fish', 'milk', 'gluten'], [], true, [
+                            'en' => ['Smoked char from the Tegernsee', 'Horseradish cream, dark bread, cucumber.'],
+                            'de' => ['Geräucherter Saibling aus dem Tegernsee', 'Meerrettichcreme, dunkles Brot, Gurke.'],
+                            'fr' => ['Omble fumé du Tegernsee', 'Crème de raifort, pain noir, concombre.'],
+                            'nl' => ['Gerookte riddervis uit de Tegernsee', 'Mierikswortelcrème, donker brood, komkommer.'],
+                        ]],
+                    ]],
+                    ['MAINS', ['en' => 'Main courses', 'de' => 'Hauptgerichte', 'fr' => 'Plats', 'nl' => 'Hoofdgerechten'], [
+                        [3200, null, ['gluten', 'eggs', 'milk'], [], true, [
+                            'en' => ['Veal schnitzel', 'Breaded in butter, potato salad, lingonberry.'],
+                            'de' => ['Wiener Schnitzel vom Kalb', 'In Butter gebacken, Kartoffelsalat, Preiselbeeren.'],
+                            'fr' => ['Escalope de veau panée', 'Cuite au beurre, salade de pommes de terre, airelles.'],
+                            'nl' => ['Kalfsschnitzel', 'Gebakken in boter, aardappelsalade, vossenbes.'],
+                        ]],
+                        [null, null, ['fish'], ['gluten_free'], false, [
+                            'en' => ['The catch of the day', 'Whatever came out of the lake this morning, grilled whole.'],
+                            'de' => ['Der Fang des Tages', 'Was heute Morgen aus dem See kam, im Ganzen gegrillt.'],
+                            'fr' => ['La pêche du jour', 'Ce qui est sorti du lac ce matin, grillé entier.'],
+                            'nl' => ['De vangst van de dag', 'Wat vanochtend uit het meer kwam, in zijn geheel gegrild.'],
+                        ]],
+                        [2400, null, ['celery', 'mustard'], ['vegan', 'vegetarian', 'lactose_free'], false, [
+                            'en' => ['Barley risotto', 'Root vegetables from the valley, herb oil, toasted seeds.'],
+                            'de' => ['Gerstenrisotto', 'Wurzelgemüse aus dem Tal, Kräuteröl, geröstete Kerne.'],
+                            'fr' => ['Risotto d’orge', 'Légumes racines de la vallée, huile d’herbes, graines torréfiées.'],
+                            'nl' => ['Gerstrisotto', 'Wortelgroenten uit het dal, kruidenolie, geroosterde pitten.'],
+                        ]],
+                    ]],
+                    ['DESSERTS', ['en' => 'Desserts', 'de' => 'Nachspeisen', 'fr' => 'Desserts', 'nl' => 'Nagerechten'], [
+                        [1100, null, ['gluten', 'eggs', 'milk', 'nuts'], ['vegetarian'], false, [
+                            'en' => ['Emperor’s pancake', 'Torn, sugared, with plum compote.'],
+                            'de' => ['Kaiserschmarrn', 'Zerrissen, gezuckert, mit Zwetschgenröster.'],
+                            'fr' => ['Kaiserschmarrn', 'Crêpe déchirée et sucrée, compote de quetsches.'],
+                            'nl' => ['Kaiserschmarrn', 'Gescheurd, gesuikerd, met pruimencompote.'],
+                        ]],
+                    ]],
+                ],
+            ],
+            [
+                'code' => 'BAR',
+                'type' => 'bar',
+                'seats' => 24,
+                'price_range' => '€€',
+                'reservations' => false,
+                'phone' => null,
+                // Past midnight on the weekend: the wrap-around case the
+                // opening-hours code has to get right.
+                'hours' => [
+                    'mon' => [['17:00', '00:00']], 'tue' => [['17:00', '00:00']],
+                    'wed' => [['17:00', '00:00']], 'thu' => [['17:00', '00:00']],
+                    'fri' => [['16:00', '01:00']], 'sat' => [['16:00', '01:00']],
+                    'sun' => [['17:00', '23:00']],
+                ],
+                't' => [
+                    'en' => ['bar', 'The Bar', 'A short list, done properly',
+                        'Eight stools, a fire in winter and a terrace in summer. The gin is from Tegernsee, the vermouth is from Turin, and the bartender will tell you which one of those is the point.'],
+                    'de' => ['bar', 'Die Bar', 'Eine kurze Karte, sauber gemacht',
+                        'Acht Hocker, im Winter ein Kaminfeuer, im Sommer die Terrasse. Der Gin kommt vom Tegernsee, der Wermut aus Turin — welcher davon zählt, sagt Ihnen der Barkeeper.'],
+                    'fr' => ['bar', 'Le Bar', 'Une carte courte, bien faite',
+                        'Huit tabourets, un feu en hiver et une terrasse en été. Le gin vient du Tegernsee, le vermouth de Turin.'],
+                    'nl' => ['bar', 'De Bar', 'Een korte kaart, goed gemaakt',
+                        'Acht krukken, een haardvuur in de winter en een terras in de zomer. De gin komt van de Tegernsee, de vermout uit Turijn.'],
+                ],
+                'sections' => [
+                    ['SIGNATURES', ['en' => 'Cocktails', 'de' => 'Cocktails', 'fr' => 'Cocktails', 'nl' => 'Cocktails'], [
+                        [1400, '0.2 l', ['sulphites'], ['vegan'], true, [
+                            'en' => ['Tegernsee Negroni', 'Local gin, Turin vermouth, bitter, orange oil.'],
+                            'de' => ['Tegernseer Negroni', 'Gin von hier, Wermut aus Turin, Bitter, Orangenöl.'],
+                            'fr' => ['Negroni du Tegernsee', 'Gin local, vermouth de Turin, bitter, huile d’orange.'],
+                            'nl' => ['Tegernsee Negroni', 'Lokale gin, vermout uit Turijn, bitter, sinaasappelolie.'],
+                        ]],
+                        [1200, '0.25 l', [], ['vegan', 'gluten_free'], false, [
+                            'en' => ['Alpine highball', 'Pine, lemon, soda. No alcohol.'],
+                            'de' => ['Alpen-Highball', 'Zirbe, Zitrone, Soda. Ohne Alkohol.'],
+                            'fr' => ['Highball alpin', 'Pin, citron, soda. Sans alcool.'],
+                            'nl' => ['Alpen-highball', 'Den, citroen, soda. Zonder alcohol.'],
+                        ]],
+                    ]],
+                    ['WINE', ['en' => 'Wine by the glass', 'de' => 'Offene Weine', 'fr' => 'Vins au verre', 'nl' => 'Wijn per glas'], [
+                        [850, '0.2 l', ['sulphites'], ['vegan'], false, [
+                            'en' => ['Grüner Veltliner', 'Wachau, dry.'],
+                            'de' => ['Grüner Veltliner', 'Wachau, trocken.'],
+                            'fr' => ['Grüner Veltliner', 'Wachau, sec.'],
+                            'nl' => ['Grüner Veltliner', 'Wachau, droog.'],
+                        ]],
+                    ]],
+                ],
+            ],
+        ];
+
+        foreach ($venues as $sort => $data) {
+            $venue = Venue::updateOrCreate(['code' => $data['code']], [
+                'type' => $data['type'],
+                'phone' => $data['phone'],
+                'price_range' => $data['price_range'],
+                'seats' => $data['seats'],
+                'opening_hours' => $data['hours'],
+                'reservations' => $data['reservations'],
+                'is_active' => true,
+                'sort_order' => $sort,
+            ]);
+
+            foreach ($data['t'] as $locale => [$slug, $name, $tagline, $description]) {
+                $venue->translations()->updateOrCreate(['locale' => $locale], [
+                    'slug' => $slug,
+                    'name' => $name,
+                    'tagline' => $tagline,
+                    'description' => $description,
+                ]);
+            }
+
+            foreach ($data['sections'] as $sectionSort => [$code, $names, $dishes]) {
+                $section = $venue->sections()->updateOrCreate(
+                    ['code' => $code],
+                    ['sort_order' => $sectionSort, 'is_active' => true],
+                );
+
+                foreach ($names as $locale => $name) {
+                    $section->translations()->updateOrCreate(['locale' => $locale], ['name' => $name]);
+                }
+
+                $section->dishes()->delete();
+
+                foreach ($dishes as $dishSort => [$price, $unit, $allergens, $diets, $signature, $translations]) {
+                    $dish = $section->dishes()->create([
+                        'price' => $price,
+                        'unit' => $unit,
+                        'allergens' => $allergens,
+                        'diets' => $diets,
+                        'is_signature' => $signature,
+                        'is_available' => true,
+                        'sort_order' => $dishSort,
+                    ]);
+
+                    foreach ($translations as $locale => [$name, $description]) {
+                        $dish->translations()->create([
+                            'locale' => $locale,
+                            'name' => $name,
+                            'description' => $description,
+                        ]);
+                    }
+                }
+            }
+        }
     }
 
     protected function faqs(): void

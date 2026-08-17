@@ -24,7 +24,7 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 > Still to come: the installation wizard, the public partner API and the full
 > Filament panel — all specified in
 > [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
-> The correctness-critical paths are covered by 270+ tests on both database
+> The correctness-critical paths are covered by 285+ tests on both database
 > engines, but the platform has not yet run a real hotel — treat it as
 > pre-release.
 
@@ -200,6 +200,28 @@ Everything below is implemented and covered by tests.
   into an overbooking.
 - Partial and full **refunds** with correct `paid_amount` / `balance_due`
   bookkeeping; refunds are their own rows so the ledger reconstructs a dispute.
+- **Restaurant, bar & the menu** — one `venues` table covering restaurant,
+  bar, café and lounge, each with sections and dishes, all translated, on
+  their own localised URLs (`/en/dining/seehof`, `/de/gastronomie/…`).
+  Prices are minor units like every other amount and are **nullable**,
+  because "market price" is a real menu entry and printing €0.00 for the
+  day's catch is worse than printing nothing. Dishes carry the **fourteen
+  allergens EU Regulation 1169/2011 requires a food business to declare**,
+  as a fixed enum rather than free text — "nuts", "Nüsse" and "may contain
+  traces of nuts" typed by three chefs are not searchable, translatable, or
+  trustworthy to a guest whose reaction is measured in minutes. They print
+  as the numbers a German or Austrian menu uses, ascending, with a key
+  listing **only the allergens that card actually uses**. A dish with *no*
+  allergen data is never presented as free of anything: an empty list may
+  mean "contains none" or "nobody filled this in", and only one of those is
+  safe to tell a guest with an allergy. Opening hours are two periods a day
+  (a kitchen closes between lunch and dinner) and **wrap past midnight**, so
+  a bar open 16:00–01:00 shows as open at half past midnight. The whole menu
+  is published as schema.org `Restaurant`/`BarOrPub` → `Menu` → `MenuSection`
+  → `MenuItem` with offers, diets and `openingHoursSpecification` — this is
+  the one hotel page a search engine will render as structured content, and a
+  market-price dish carries no `Offer` rather than a zero a search engine
+  would repeat.
 - **Promo codes** — percentage (stored in basis points, so no float ever
   touches the money path), fixed amount, or free nights with the **cheapest
   nights discounted first**, which is both what a guest reads into "your
@@ -470,7 +492,7 @@ wizard and the public API, is in
 | 2 | Availability service, rate engine, holds + locking + reconciliation, calendar API | **done** · checkout funnel + admin availability grid next |
 | 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds) | **done** |
 | — | Events, WYSIWYG admin, customizable styles, security headers | **done** |
-| — | Invoices, **iCal channel sync**, promo codes, eight style presets | **done** |
+| — | Invoices, **iCal channel sync**, promo codes, eight style presets, **restaurant & menu** | **done** |
 | 4 | First hotel live | planned |
 | 5 | Reports, multi-install deploy (iCal channel sync landed early) | planned |
 | 6 | Public REST API + webhooks, OpenAPI docs | planned |

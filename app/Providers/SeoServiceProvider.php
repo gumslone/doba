@@ -6,7 +6,9 @@ namespace App\Providers;
 
 use App\Support\Hotel\HotelSettings;
 use App\Support\Seo\Seo;
+use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,7 +16,9 @@ class SeoServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(HotelSettings::class);
+        // Scoped, not singleton: settings belong to a request, and an
+        // instance that outlives one serves yesterday's hotel name.
+        $this->app->scoped(HotelSettings::class);
 
         // One SEO bag per request: a controller fills it in, the layout
         // renders it. Scoped rather than singleton so a queued job or an
@@ -26,6 +30,15 @@ class SeoServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Emptied as each request picks up its route. `scoped` alone is a
+        // promise the container keeps only where a request ends the
+        // process; this makes it true everywhere, so one page's schema can
+        // never be published on the next.
+        Event::listen(RouteMatched::class, function (): void {
+            $this->app->make(Seo::class)->reset();
+            $this->app->make(HotelSettings::class)->refresh();
+        });
+
         View::composer('*', function ($view): void {
             $view->with([
                 'hotel' => $this->app->make(HotelSettings::class),

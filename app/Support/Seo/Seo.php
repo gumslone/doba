@@ -43,6 +43,31 @@ class Seo implements Arrayable
 
     public function __construct(protected string $siteName) {}
 
+    /**
+     * Empty the bag for a new request.
+     *
+     * The container hands out one instance per request, which is enough
+     * under FPM. It is not enough anywhere the container outlives a
+     * request — an Octane worker, a test that makes two calls — and a bag
+     * that survives publishes page A's Restaurant schema and breadcrumbs
+     * on page B. Wrong structured data is worse than none: it is what a
+     * search engine indexes.
+     */
+    public function reset(): static
+    {
+        $this->title = null;
+        $this->description = null;
+        $this->canonical = null;
+        $this->alternates = [];
+        $this->image = null;
+        $this->type = 'website';
+        $this->noindex = false;
+        $this->schemas = [];
+        $this->breadcrumbs = [];
+
+        return $this;
+    }
+
     public function title(?string $title): static
     {
         $this->title = $title;

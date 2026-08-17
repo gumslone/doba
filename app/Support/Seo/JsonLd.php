@@ -280,6 +280,10 @@ final class JsonLd
         return $specs;
     }
 
+    /**
+     * @param  array<string,mixed>  $context
+     * @return array<string,mixed>
+     */
     public static function event(Event $event, HotelSettings $hotel, array $context = []): array
     {
         return array_filter([

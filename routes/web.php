@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPromoCodeController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
+use App\Http\Controllers\Admin\AdminVenueController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\StyleController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\VenueController;
 use App\Http\Middleware\SetLocale;
 use App\Support\Routing\Localization;
 use Illuminate\Http\Request;
@@ -100,6 +102,16 @@ Route::prefix('admin')->group(function (): void {
         Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
         Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
 
+        Route::get('venues', [AdminVenueController::class, 'index'])->name('admin.venues');
+        Route::get('venues/create', [AdminVenueController::class, 'create'])->name('admin.venues.create');
+        Route::post('venues', [AdminVenueController::class, 'store'])->name('admin.venues.store');
+        Route::get('venues/{venue}/edit', [AdminVenueController::class, 'edit'])->name('admin.venues.edit');
+        Route::put('venues/{venue}', [AdminVenueController::class, 'update'])->name('admin.venues.update');
+        Route::delete('venues/{venue}', [AdminVenueController::class, 'destroy'])->name('admin.venues.destroy');
+        Route::post('venues/{venue}/sections', [AdminVenueController::class, 'storeSection'])->name('admin.venues.sections.store');
+        Route::delete('venues/{venue}/sections/{section}', [AdminVenueController::class, 'destroySection'])->name('admin.venues.sections.destroy');
+        Route::post('venues/{venue}/dishes', [AdminVenueController::class, 'saveDishes'])->name('admin.venues.dishes');
+
         Route::get('promo-codes', [AdminPromoCodeController::class, 'index'])->name('admin.promo-codes');
         Route::get('promo-codes/create', [AdminPromoCodeController::class, 'create'])->name('admin.promo-codes.create');
         Route::post('promo-codes', [AdminPromoCodeController::class, 'store'])->name('admin.promo-codes.store');
@@ -174,6 +186,11 @@ foreach ($locales as $locale) {
 
             Route::get($rooms, [RoomTypeController::class, 'index'])->name('rooms.index');
             Route::get($rooms.'/{slug}', [RoomTypeController::class, 'show'])->name('rooms.show');
+
+            $dining = Localization::segment('dining', $locale);
+
+            Route::get($dining, [VenueController::class, 'index'])->name('venues.index');
+            Route::get($dining.'/{slug}', [VenueController::class, 'show'])->name('venues.show');
 
             $events = Localization::segment('events', $locale);
 

@@ -80,6 +80,9 @@ class Dish extends Model
         return collect($this->allergens ?? [])
             ->map(static fn (string $value): ?Allergen => Allergen::tryFrom($value))
             ->filter()
+            // Ascending, as a printed card lists them: "contains 1, 3, 7"
+            // is read as a set, and an arbitrary order looks like a typo.
+            ->sortBy(static fn (Allergen $allergen): int => $allergen->number())
             ->values();
     }
 

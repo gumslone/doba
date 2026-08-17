@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Amenity;
 use App\Models\RoomType;
 use App\Models\Setting;
+use App\Models\Venue;
 use App\Support\Hotel\HotelSettings;
 
 beforeEach(function (): void {
@@ -102,4 +103,23 @@ it('escapes markup inside content so a description cannot break out of the block
 
     expect($blocks)->not->toBeEmpty()
         ->and($html)->not->toContain('<script>alert(1)</script>');
+});
+
+it('never publishes one page structured data on the next', function (): void {
+    $venue = Venue::create(['code' => 'BAR', 'type' => 'bar']);
+    $venue->translations()->create(['locale' => 'en', 'slug' => 'bar', 'name' => 'The Bar']);
+    $section = $venue->sections()->create(['code' => 'DRINKS']);
+    $section->translations()->create(['locale' => 'en', 'name' => 'Drinks']);
+    $dish = $section->dishes()->create(['price' => 1200]);
+    $dish->translations()->create(['locale' => 'en', 'name' => 'Negroni']);
+
+    $this->get('/en/dining/bar')->assertOk();
+
+    // The bag is emptied as the next request picks up its route. Without
+    // that, the bar's Restaurant node and its breadcrumbs are published on
+    // the contact page — and wrong structured data is what gets indexed.
+    $html = $this->get('/en/contact')->assertOk()->getContent();
+
+    expect($html)->not->toContain('BarOrPub')
+        ->not->toContain('Negroni');
 });

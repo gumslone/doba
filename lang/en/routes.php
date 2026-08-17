@@ -15,4 +15,5 @@ return [
     'booking' => 'booking',
     'events' => 'events',
     'contact' => 'contact',
+    'dining' => 'dining',
 ];
