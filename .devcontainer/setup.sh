@@ -23,11 +23,13 @@ if [ ! -f .env ]; then
     php artisan key:generate --force
 fi
 
-# Codespaces answers on a proxied HTTPS subdomain, not on localhost. APP_URL
-# has to say so or every canonical tag, hreflang href, sitemap entry, iCal
-# feed URL and payment return URL the app generates points at localhost —
-# which on THIS project would make the demo actively misleading, since the
-# SEO layer is the thing being demonstrated.
+# Codespaces answers on a proxied HTTPS subdomain, not on localhost.
+#
+# URLs generated inside a request are fine either way — the app trusts the
+# proxy — but everything generated OUTSIDE one reads APP_URL: the sitemap
+# `doba:sitemap` writes to disk, the iCal URLs shown in the admin, the
+# links in queued mail. Left at localhost, an SEO demo ships a sitemap
+# advertising localhost, which is the opposite of the point.
 if [ -n "${CODESPACE_NAME:-}" ]; then
     APP_URL="https://${CODESPACE_NAME}-8000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}"
 

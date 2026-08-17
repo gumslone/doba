@@ -357,9 +357,12 @@ Two details the dev container gets right, because both would otherwise make
 the demo lie about the thing it is demonstrating:
 
 - **`APP_URL` is set to the forwarded Codespaces host**, not `localhost`.
-  Every canonical tag, `hreflang` href, sitemap entry, iCal feed URL and
-  payment return URL is generated from it, and an SEO demo whose canonical
-  tags all point at `localhost` demonstrates the opposite of the point.
+  URLs built *inside* a request already come out right — the app trusts the
+  proxy, so canonical tags and `hreflang` hrefs follow the forwarded host.
+  `APP_URL` is what everything built *outside* one uses: the sitemap that
+  `doba:sitemap` writes to disk, the iCal feed URLs the admin hands to
+  Booking.com, and the links in queued confirmation mail. Left at
+  `localhost`, an SEO demo ships a sitemap advertising `localhost`.
 - **HSTS is switched off there** (`DOBA_HSTS=false`). A Codespace answers on
   `*.app.github.dev`, a domain this install does not own, and
   `Strict-Transport-Security` with `includeSubDomains` would assert a year of

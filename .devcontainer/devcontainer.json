@@ -4,6 +4,9 @@
     "features": {
         "ghcr.io/devcontainers/features/node:1": { "version": "22" }
     },
+    "containerEnv": {
+        "XDEBUG_MODE": "off"
+    },
     "onCreateCommand": "bash .devcontainer/setup.sh",
     "postAttachCommand": {
         "doba": "php artisan serve --host=0.0.0.0 --port=8000"
