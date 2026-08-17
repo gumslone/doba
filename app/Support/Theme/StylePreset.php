@@ -153,6 +153,11 @@ final class StylePreset
                     // on the one button every guest is meant to press.
                     '--on-primary' => '#14120f',
                     '--on-accent' => '#14120f',
+                    // The footer floats free of the brand here: gold-on-gold
+                    // is what a footer painted with a light brand colour
+                    // gives you, and it is unreadable.
+                    '--footer-bg' => '#0d0b09',
+                    '--footer-on' => '#f2ece1',
                     '--radius' => '0px',
                     '--radius-lg' => '0px',
                     '--btn-radius' => '0px',

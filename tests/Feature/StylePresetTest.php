@@ -124,3 +124,27 @@ it('leaves no surface hard-coded white in the stylesheet', function (): void {
     // preset regresses the next time a component is added.
     expect($css)->not->toMatch('/background:\s*#fff\s*[;}]/');
 });
+
+it('never paints a brand-coloured band with a fixed text colour', function (): void {
+    $css = file_get_contents(base_path('resources/css/app.css'));
+
+    // The top bar and footer sit on the brand colour. A preset that makes
+    // that colour light turns hard-coded pale text into gold-on-gold, so
+    // both bands must derive their type from the brand's own contrast
+    // colour rather than assuming the brand is dark.
+    preg_match_all('/(?:footer\.site|\.topbar|\.fbottom|\.lang)[^{]*\{[^}]*\}/', $css, $rules);
+
+    foreach ($rules[0] as $rule) {
+        expect($rule)->not->toMatch('/color:\s*(#[0-9a-f]{3,6}|rgba?\()/i');
+    }
+});
+
+it('floats the footer free of the brand where the brand is too light for it', function (): void {
+    Setting::put('branding', 'preset', 'grand');
+
+    $html = $this->get('/en')->assertOk()->getContent();
+
+    // Gold-on-gold is what a footer painted with a light brand gives you.
+    expect($html)->toContain('--footer-bg:#0d0b09')
+        ->toContain('--footer-on:#f2ece1');
+});

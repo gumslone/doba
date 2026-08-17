@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Support\Seo;
 
+use App\Models\Dish;
 use App\Models\Event;
 use App\Models\RoomType;
+use App\Models\Venue;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Hotel\Maps;
 use Illuminate\Support\Arr;
@@ -157,6 +159,127 @@ final class JsonLd
      * @param  array<string,mixed>  $context  url, image
      * @return array<string,mixed>
      */
+    /**
+     * A Restaurant (or BarOrPub / CafeOrCoffeeShop) carrying its whole
+     * menu (§4).
+     *
+     * Worth publishing properly: this is the one hotel page search engines
+     * will render as structured content — a menu with prices shows in
+     * results in a way a paragraph about "fine local cuisine" never does.
+     *
+     * @param  array<string,mixed>  $context
+     * @return array<string,mixed>
+     */
+    public static function venue(Venue $venue, HotelSettings $hotel, array $context = []): array
+    {
+        $sections = $venue->sections
+            ->where('is_active', true)
+            ->map(static fn ($section): array => array_filter([
+                '@type' => 'MenuSection',
+                'name' => $section->t('name'),
+                'description' => $section->t('description'),
+                'hasMenuItem' => $section->dishes
+                    ->where('is_available', true)
+                    ->map(static fn (Dish $dish): array => self::menuItem($dish))
+                    ->values()
+                    ->all(),
+            ], static fn ($value) => $value !== null && $value !== '' && $value !== []))
+            ->filter(static fn (array $section): bool => ($section['hasMenuItem'] ?? []) !== [])
+            ->values()
+            ->all();
+
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => match ($venue->type) {
+                'bar', 'lounge' => 'BarOrPub',
+                'cafe' => 'CafeOrCoffeeShop',
+                default => 'Restaurant',
+            },
+            'name' => $venue->t('name'),
+            'description' => $venue->t('description') ?: $venue->t('tagline'),
+            'url' => Arr::get($context, 'url'),
+            'image' => Arr::get($context, 'image'),
+            'telephone' => $venue->phone ?: $hotel->get('contact.phone'),
+            'priceRange' => $venue->price_range,
+            'servesCuisine' => Arr::get($context, 'cuisine'),
+            'acceptsReservations' => $venue->reservations,
+            'address' => array_filter([
+                '@type' => 'PostalAddress',
+                'streetAddress' => $hotel->get('contact.street'),
+                'postalCode' => $hotel->get('contact.postal_code'),
+                'addressLocality' => $hotel->get('contact.city'),
+                'addressCountry' => $hotel->get('contact.country'),
+            ]),
+            'openingHoursSpecification' => self::openingHours($venue),
+            'hasMenu' => $sections === [] ? null : array_filter([
+                '@type' => 'Menu',
+                'name' => __('menu.card'),
+                'hasMenuSection' => $sections,
+            ]),
+        ], static fn ($value) => $value !== null && $value !== '' && $value !== []);
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    protected static function menuItem(Dish $dish): array
+    {
+        return array_filter([
+            '@type' => 'MenuItem',
+            'name' => $dish->t('name'),
+            'description' => $dish->t('description'),
+            // Omitted entirely when the price is "market price": a
+            // structured zero would be a lie a search engine repeats.
+            'offers' => $dish->price === null ? null : [
+                '@type' => 'Offer',
+                'price' => number_format($dish->price / 100, 2, '.', ''),
+                'priceCurrency' => (string) config('doba.currency'),
+            ],
+            'suitableForDiet' => $dish->dietCases()
+                ->map(static fn ($diet): ?string => match ($diet->value) {
+                    'vegetarian' => 'https://schema.org/VegetarianDiet',
+                    'vegan' => 'https://schema.org/VeganDiet',
+                    'gluten_free' => 'https://schema.org/GlutenFreeDiet',
+                    'halal' => 'https://schema.org/HalalDiet',
+                    'kosher' => 'https://schema.org/KosherDiet',
+                    default => null,   // lactose-free has no schema.org term
+                })
+                ->filter()
+                ->values()
+                ->all(),
+        ], static fn ($value) => $value !== null && $value !== '' && $value !== []);
+    }
+
+    /**
+     * @return array<int,array<string,mixed>>
+     */
+    protected static function openingHours(Venue $venue): array
+    {
+        $names = [
+            'mon' => 'Monday', 'tue' => 'Tuesday', 'wed' => 'Wednesday', 'thu' => 'Thursday',
+            'fri' => 'Friday', 'sat' => 'Saturday', 'sun' => 'Sunday',
+        ];
+
+        $specs = [];
+
+        foreach ($venue->opening_hours ?? [] as $day => $periods) {
+            foreach ($periods as $period) {
+                if (! isset($period[0], $period[1]) || ! isset($names[$day])) {
+                    continue;
+                }
+
+                $specs[] = [
+                    '@type' => 'OpeningHoursSpecification',
+                    'dayOfWeek' => 'https://schema.org/'.$names[$day],
+                    'opens' => $period[0],
+                    'closes' => $period[1],
+                ];
+            }
+        }
+
+        return $specs;
+    }
+
     public static function event(Event $event, HotelSettings $hotel, array $context = []): array
     {
         return array_filter([

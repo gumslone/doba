@@ -42,6 +42,23 @@
     --on-accent: #ffffff;
 
     /*
+     * The two brand-coloured bands: the top bar and the footer. Their type
+     * is DERIVED from --on-primary rather than hard-coded pale-green,
+     * because the moment a preset makes the brand colour light, fixed
+     * light text on it becomes unreadable. The footer carries its own
+     * background and contrast colour so a preset can float it free of the
+     * brand entirely.
+     */
+    --on-brand-soft: color-mix(in srgb, var(--on-primary) 76%, transparent);
+    --on-brand-rule: color-mix(in srgb, var(--on-primary) 16%, transparent);
+
+    --footer-bg: var(--doba-primary);
+    --footer-on: var(--on-primary);
+    --footer-ink: color-mix(in srgb, var(--footer-on) 76%, transparent);
+    --footer-faint: color-mix(in srgb, var(--footer-on) 58%, transparent);
+    --footer-rule: color-mix(in srgb, var(--footer-on) 16%, transparent);
+
+    /*
      * Brand — only these two are written by Admin → Styles. Everything
      * derived from them below uses color-mix, so changing the primary
      * colour restyles hovers, tints and accents coherently instead of
@@ -193,7 +210,7 @@ summary:focus-visible {
 /* --- topbar & header --- */
 .topbar {
     background: var(--doba-primary);
-    color: #cfd8d1;
+    color: var(--on-brand-soft);
     font-size: .78rem;
     letter-spacing: .04em;
 }
@@ -211,7 +228,7 @@ summary:focus-visible {
 
 .langs { display: flex; gap: 2px; }
 .lang {
-    color: #cfd8d1;
+    color: var(--on-brand-soft);
     padding: .35em .55em;
     border-radius: 2px;
     text-transform: uppercase;
@@ -220,7 +237,7 @@ summary:focus-visible {
     text-decoration: none;
 }
 .lang:hover { background: rgba(255, 255, 255, .1); }
-.lang[aria-current="true"] { background: rgba(255, 255, 255, .16); color: #fff; font-weight: 600; }
+.lang[aria-current="true"] { background: var(--on-brand-rule); color: var(--on-primary); font-weight: 600; }
 
 header.site {
     position: sticky;
@@ -527,31 +544,31 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 .faq .ans { padding-bottom: 20px; color: var(--ink-soft); font-size: .94rem; max-width: 70ch; }
 
 /* --- footer --- */
-footer.site { background: var(--doba-primary); color: #b9c6bd; padding: 64px 0 0; font-size: .88rem; }
+footer.site { background: var(--footer-bg); color: var(--footer-ink); padding: 64px 0 0; font-size: .88rem; }
 footer.site h5 {
     font-family: var(--doba-font-body);
     font-size: .7rem;
     letter-spacing: .16em;
     text-transform: uppercase;
-    color: #fff;
+    color: var(--footer-on);
     margin: 0 0 16px;
     font-weight: 600;
 }
 .fcols { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1.2fr; gap: 40px; padding-bottom: 48px; }
-footer.site a { text-decoration: none; color: #b9c6bd; }
-footer.site a:hover { color: #fff; }
+footer.site a { text-decoration: none; color: var(--footer-ink); }
+footer.site a:hover { color: var(--footer-on); }
 footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
 .fbottom {
-    border-top: 1px solid rgba(255, 255, 255, .13);
+    border-top: 1px solid var(--footer-rule);
     padding: 22px 0;
     display: flex;
     justify-content: space-between;
     gap: 20px;
     flex-wrap: wrap;
     font-size: .78rem;
-    color: #8b9a90;
+    color: var(--footer-faint);
 }
-.fbottom a { color: #8b9a90; }
+.fbottom a { color: var(--footer-faint); }
 
 /* --- forms (checkout, contact) --- */
 .input {
