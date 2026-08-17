@@ -35,6 +35,7 @@
         ],
         __('admin.group_system') => [
             ['/admin/mail', __('admin.mail'), 'admin/mail*'],
+            ['/admin/api', __('admin.api'), 'admin/api*'],
             ['/admin/update', __('admin.update'), 'admin/update*'],
         ],
     ];

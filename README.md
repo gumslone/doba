@@ -575,6 +575,48 @@ vendor/bin/pint --test && vendor/bin/phpstan analyse --memory-limit=1G
 CI runs the suite against **both SQLite and MySQL** on every push — that matrix
 is the only thing that keeps the "portable" promise honest.
 
+## Partner API
+
+`/api/v1`, versioned in the path, for anything that calls the hotel: a
+channel manager, an agency, a group website.
+
+**The controllers are translation layers over `AvailabilityService`,
+`RateResolver` and `BookingService` — the same objects the website's own
+funnel uses.** That is the rule the whole surface rests on: the day the
+API grows its own booking logic is the day it sells a room the website
+thinks is free, and a guest finds that bug rather than we do.
+
+- **Key pairs** (`X-Api-Key-Id` + `X-Api-Secret`), the secret hashed and
+  shown exactly once. Every rejection looks identical whether the key id
+  is unknown, the secret is wrong, or the key was revoked an hour ago —
+  telling a caller which half they got right is an oracle for enumerating
+  the other.
+- **Scopes per route**, declared on the route rather than checked in a
+  controller, so a route's permission cannot drift away from it.
+  `bookings:write` without `bookings:cancel` is a normal grant.
+- **Optional IP allowlist, expiry, instant revocation** — and a **sandbox**
+  whose bookings are marked as tests, because without one a partner's first
+  integration test runs against the hotel's live calendar.
+- **Money is always `{"amount": 12500, "currency": "EUR"}`.** Dates are
+  dates; a `check_in` is never a timestamp.
+- **RFC 9457 `application/problem+json`** with stable `type` URIs. Partners
+  branch on `type`, so those strings are contract and the human `title` is
+  not. Running out of rooms has its own type: "it went while you were
+  deciding" is the one failure a booking partner must handle specifically.
+- **`Idempotency-Key` is required on `POST /bookings`.** A partner whose
+  request times out will retry, and an endpoint that cannot tell a retry
+  from a second booking sells the room twice. A replay returns the stored
+  response **byte for byte** — it is kept as raw text, not a JSON column,
+  because MySQL's JSON type reorders keys and "identical" is the entire
+  promise. The same key with a *different* body is a `409`, because that
+  is a bug in the caller and replaying would hide it.
+- **Cursor pagination** on the pull endpoint. Offset pagination over a
+  table being actively written to skips rows and repeats others, and a
+  partner paging through it loses bookings without ever seeing an error.
+- Every response carries **`X-Request-Id`**, logged with the request, so a
+  partner's bug report is one lookup from an answer rather than a request
+  to reproduce.
+
 ## Reports
 
 Occupancy, ADR, RevPAR, channel mix and pace — with a CSV export, because
@@ -778,7 +820,7 @@ wizard and the public API, is in
 | — | Invoices, **iCal channel sync**, promo codes, eight style presets, **restaurant & menu** | **done** |
 | 4 | First hotel live | planned |
 | 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
-| 6 | Public REST API + webhooks, OpenAPI docs | planned |
+| 6 | Public REST API **done** (read + bookings); webhooks and OpenAPI docs next | in progress |
 
 ## Contributing
 

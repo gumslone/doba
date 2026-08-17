@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\AdminApiClientController;
 use App\Http\Controllers\Admin\AdminAvailabilityController;
 use App\Http\Controllers\Admin\AdminChannelController;
 use App\Http\Controllers\Admin\AdminEventController;
@@ -118,6 +119,10 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
         Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
+
+        Route::get('api', [AdminApiClientController::class, 'index'])->name('admin.api');
+        Route::post('api', [AdminApiClientController::class, 'store'])->name('admin.api.store');
+        Route::delete('api/{api}', [AdminApiClientController::class, 'destroy'])->name('admin.api.destroy');
 
         Route::get('mail', [AdminMailController::class, 'edit'])->name('admin.mail');
         Route::put('mail', [AdminMailController::class, 'update'])->name('admin.mail.update');

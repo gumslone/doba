@@ -8,10 +8,13 @@ use App\Support\Hotel\HotelSettings;
 use App\Support\Mail\MailSettings;
 use App\Support\Maintenance\Backups;
 use App\Support\Seo\Seo;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
@@ -38,6 +41,14 @@ class SeoServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // A partner polling every minute is normal; one polling every
+        // second is a bug in their integration that must not become an
+        // outage on the hotel's own website. Keyed on the API key rather
+        // than the IP, so one noisy partner cannot exhaust the budget of
+        // everybody sharing a NAT with them.
+        RateLimiter::for('api', static fn (Request $request) => Limit::perMinute(120)
+            ->by($request->header('X-Api-Key-Id') ?? (string) $request->ip()));
+
         // Emptied as each request picks up its route. `scoped` alone is a
         // promise the container keeps only where a request ends the
         // process; this makes it true everywhere, so one page's schema can
