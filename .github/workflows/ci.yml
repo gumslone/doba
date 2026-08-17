@@ -73,7 +73,20 @@ jobs:
           key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
           restore-keys: composer-${{ matrix.php }}-
 
-      - run: composer install --prefer-dist --no-interaction --no-progress
+      # Retried, because packagist dist URLs resolve to codeload.github.com
+      # and it rate-limits under load — a 429 on one of 135 packages fails
+      # the whole run for reasons that have nothing to do with the change
+      # being tested. Composer resumes from its cache, so each attempt
+      # picks up where the last one stopped rather than starting over.
+      - name: Install PHP dependencies
+        run: |
+          for attempt in 1 2 3; do
+            composer install --prefer-dist --no-interaction --no-progress && exit 0
+            echo "composer install failed (attempt ${attempt}); retrying in $((attempt * 20))s"
+            sleep $((attempt * 20))
+          done
+          echo "composer install failed after 3 attempts"
+          exit 1
 
       - name: Prepare environment
         run: |
@@ -112,7 +125,20 @@ jobs:
           extensions: pdo_sqlite, mbstring, intl, gd, zip, curl, openssl
           coverage: none
 
-      - run: composer install --prefer-dist --no-interaction --no-progress
+      # Retried, because packagist dist URLs resolve to codeload.github.com
+      # and it rate-limits under load — a 429 on one of 135 packages fails
+      # the whole run for reasons that have nothing to do with the change
+      # being tested. Composer resumes from its cache, so each attempt
+      # picks up where the last one stopped rather than starting over.
+      - name: Install PHP dependencies
+        run: |
+          for attempt in 1 2 3; do
+            composer install --prefer-dist --no-interaction --no-progress && exit 0
+            echo "composer install failed (attempt ${attempt}); retrying in $((attempt * 20))s"
+            sleep $((attempt * 20))
+          done
+          echo "composer install failed after 3 attempts"
+          exit 1
 
       - name: Check code style
         run: vendor/bin/pint --test
