@@ -82,27 +82,61 @@
             </form>
         </div>
 
-        <p class="mt-2 text-xs text-neutral-500">{{ __('admin.backups_hint') }}</p>
+        <p class="mt-2 text-xs text-neutral-500">{{ __('admin.backups_hint') }} {{ __('admin.backups_nightly', ['at' => config('doba.backups.nightly_at')]) }}</p>
 
         <ul class="mt-4 divide-y divide-neutral-100">
-            @forelse ($backups as $file)
-                <li class="flex items-center justify-between gap-4 py-2 text-sm">
-                    <span>
-                        <span class="font-mono">{{ basename($file['path']) }}</span>
-                        <span class="ml-2 text-neutral-500">
-                            {{ $file['taken_at']->diffForHumans() }} · {{ round($file['size'] / 1024) }} KB
+            @forelse ($backups as $set)
+                <li class="py-3 text-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <span>
+                            <span class="font-mono">{{ $set['stamp'] }}</span>
+                            <span class="ml-2 text-neutral-500">
+                                {{ $set['taken_at']->diffForHumans() }} · {{ round($set['size'] / 1024) }} KB ·
+                                @if ($set['uploads'])
+                                    {{ __('admin.backup_full') }}
+                                @else
+                                    {{-- Said out loud: a hotelier who thinks the photos are
+                                         in there finds out otherwise at the worst moment. --}}
+                                    <span class="text-amber-700">{{ __('admin.backup_database_only') }}</span>
+                                @endif
+                            </span>
                         </span>
-                    </span>
-                    <span class="flex items-center gap-3">
-                        <a href="/admin/update/backups/{{ basename($file['path']) }}" class="hover:underline">
-                            {{ __('admin.download') }}
-                        </a>
-                        <form method="POST" action="/admin/update/backups/{{ basename($file['path']) }}"
-                              onsubmit="return confirm('{{ __('admin.confirm_delete') }}')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:underline">{{ __('admin.delete') }}</button>
+
+                        <span class="flex items-center gap-3">
+                            <a href="/admin/update/backups/{{ basename($set['database']) }}" class="hover:underline">
+                                {{ __('admin.download_database') }}
+                            </a>
+                            @if ($set['uploads'])
+                                <a href="/admin/update/backups/{{ basename($set['uploads']) }}" class="hover:underline">
+                                    {{ __('admin.download_uploads') }}
+                                </a>
+                            @endif
+                            <form method="POST" action="/admin/update/backups/{{ $set['stamp'] }}"
+                                  onsubmit="return confirm('{{ __('admin.confirm_delete') }}')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline">{{ __('admin.delete') }}</button>
+                            </form>
+                        </span>
+                    </div>
+
+                    <details class="mt-2">
+                        <summary class="cursor-pointer text-xs text-neutral-500">{{ __('admin.restore_this') }}</summary>
+                        <form method="POST" action="/admin/update/restore" class="mt-2 flex flex-wrap items-end gap-2">
+                            @csrf
+                            <input type="hidden" name="stamp" value="{{ $set['stamp'] }}">
+                            <div>
+                                <label class="block text-xs text-neutral-600" for="confirm-{{ $set['stamp'] }}">
+                                    {{ __('admin.restore_confirm_label', ['stamp' => $set['stamp']]) }}
+                                </label>
+                                <input id="confirm-{{ $set['stamp'] }}" name="confirm" required autocomplete="off"
+                                       class="mt-1 rounded border border-neutral-300 px-2 py-1 font-mono text-xs">
+                            </div>
+                            <button type="submit" class="rounded border border-red-300 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50">
+                                {{ __('admin.restore') }}
+                            </button>
                         </form>
-                    </span>
+                        <p class="mt-2 text-xs text-neutral-500">{{ __('admin.restore_hint') }}</p>
+                    </details>
                 </li>
             @empty
                 <li class="py-3 text-sm text-neutral-500">{{ __('admin.no_backups') }}</li>

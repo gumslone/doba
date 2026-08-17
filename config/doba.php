@@ -164,4 +164,25 @@ return [
         'hsts' => (bool) env('DOBA_HSTS', true),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Backups
+    |--------------------------------------------------------------------------
+    |
+    | A backup is the database AND the uploaded photos: restoring the
+    | database alone gives a hotel back every booking and a website of
+    | broken images. `keep` counts SETS, not files, so pruning can never
+    | leave a snapshot whose photos have gone.
+    |
+    | The nightly run is on by default. A hotel that never once thought
+    | about backups is exactly the hotel that needs them.
+    |
+    */
+
+    'backups' => [
+        'keep' => (int) env('DOBA_BACKUP_KEEP', 10),
+        'uploads' => (bool) env('DOBA_BACKUP_UPLOADS', true),
+        'nightly_at' => env('DOBA_BACKUP_AT', '03:15'),
+    ],
+
 ];

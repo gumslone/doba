@@ -15,4 +15,10 @@ Schedule::command('holds:release')->everyMinute();
 Schedule::command('channels:sync')->everyFifteenMinutes()->withoutOverlapping();
 Schedule::command('availability:extend')->dailyAt('02:00');
 Schedule::command('doba:sitemap')->dailyAt('03:00');
+
+// On by default. A hotel that never once thought about backups is exactly
+// the hotel that needs them; leave DOBA_BACKUP_AT empty to opt out.
+if (($backupAt = config('doba.backups.nightly_at')) !== null && $backupAt !== '') {
+    Schedule::command('doba:backup')->dailyAt((string) $backupAt)->withoutOverlapping();
+}
 Schedule::command('doba:images')->dailyAt('03:30');

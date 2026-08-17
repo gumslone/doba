@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
-use App\Support\Maintenance\DatabaseBackup;
+use App\Support\Maintenance\Backups;
 use App\Support\Maintenance\Updater;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Artisan;
@@ -14,11 +14,25 @@ beforeEach(function (): void {
     $this->directory = storage_path('framework/testing/backups');
     File::deleteDirectory($this->directory);
 
-    $this->backup = new DatabaseBackup($this->directory);
+    $this->backup = new Backups($this->directory);
+
+    // The command and the admin controller resolve Backups from the
+    // container; without this they would write to the real backup
+    // directory while the test inspected a different one.
+    $this->app->instance(Backups::class, $this->backup);
+
+    // Point the uploads disk at a scratch directory. A test that archives
+    // and deletes the DEVELOPER'S real storage/app/public destroys the
+    // demo photography — which is exactly what happened the first time
+    // this suite ran.
+    $this->uploads = storage_path('framework/testing/uploads');
+    File::deleteDirectory($this->uploads);
+    config()->set('filesystems.disks.public.root', $this->uploads);
 });
 
 afterEach(function (): void {
     File::deleteDirectory($this->directory);
+    File::deleteDirectory($this->uploads);
 
     // The updater legitimately rebuilds the config, route and view caches
     // — that is the behaviour under test. But a cache written during a
@@ -94,12 +108,12 @@ it('keeps only the newest snapshots so a shared host does not fill up', function
             $this->backup->create(CarbonImmutable::now()->addSeconds($i));
         }
 
-        expect($this->backup->all())->toHaveCount(12);
+        expect($this->backup->sets())->toHaveCount(12);
 
         $removed = $this->backup->prune(keep: 10);
 
         expect($removed)->toBe(2)
-            ->and($this->backup->all())->toHaveCount(10);
+            ->and($this->backup->sets())->toHaveCount(10);
     });
 });
 
@@ -119,11 +133,11 @@ it('reports pending migrations without changing anything', function (): void {
 it('refuses to update when it cannot take a snapshot first', function (): void {
     // A hotel's live reservations are not migrated on the hope that
     // nothing goes wrong.
-    $backup = Mockery::mock(DatabaseBackup::class);
+    $backup = Mockery::mock(Backups::class);
     $backup->shouldReceive('isSupported')->andReturnFalse();
     $backup->shouldReceive('unsupportedReason')->andReturn('mysqldump was not found on this server.');
 
-    $this->app->instance(DatabaseBackup::class, $backup);
+    $this->app->instance(Backups::class, $backup);
 
     $exit = Artisan::call('doba:update');
 
@@ -132,7 +146,7 @@ it('refuses to update when it cannot take a snapshot first', function (): void {
 });
 
 it('stops before touching anything when the snapshot itself fails', function (): void {
-    $backup = Mockery::mock(DatabaseBackup::class);
+    $backup = Mockery::mock(Backups::class);
     $backup->shouldReceive('isSupported')->andReturnTrue();
     $backup->shouldReceive('create')->andThrow(new RuntimeException('disk full'));
 
@@ -178,6 +192,7 @@ it('keeps the update page and its backups behind the admin session', function ()
 
     // The snapshot is the whole database, every guest in it.
     $this->get('/admin/update/backups/doba-2026-01-01-000000.sqlite')->assertRedirect('/admin/login');
+    $this->post('/admin/update/restore', ['stamp' => 'x', 'confirm' => 'x'])->assertRedirect('/admin/login');
 });
 
 it('will not serve a file outside the backup directory', function (): void {
@@ -201,4 +216,179 @@ it('runs the same sequence from the browser as from the shell', function (): voi
     // without can never diverge in the step that matters.
     expect($result->steps)->toContain('Caches rebuilt.')
         ->and($result->steps)->toContain('Queue workers signalled to restart.');
+});
+
+it('backs up the photos with the database, because half a backup is not one', function (): void {
+    onDisk(function (): void {
+        File::ensureDirectoryExists($this->uploads.'/rooms');
+        File::put($this->uploads.'/rooms/double.jpg', 'not really a jpeg');
+
+        $set = $this->backup->createSet();
+
+        expect($set['database'])->toBeString()
+            ->and($set['uploads'])->toBeString()
+            ->and($set['uploads_error'])->toBeNull()
+            // One timestamp, so the two halves are one backup.
+            ->and($this->backup->sets())->toHaveCount(1)
+            ->and($this->backup->sets()[0]['uploads'])->toBe($set['uploads']);
+
+        // Restoring the database alone would give a hotel back every
+        // booking and a website of broken images.
+        $listing = shell_exec('tar -tzf '.escapeshellarg($set['uploads']));
+
+        // The archive's top level is the basename of the configured
+        // uploads root, and restore extracts beside it — so it round-trips
+        // even on an install that moved its uploads directory.
+        expect($listing)->toContain(basename($this->uploads).'/rooms/double.jpg');
+
+        File::deleteDirectory($this->uploads.'/rooms');
+    });
+});
+
+it('prunes whole sets, never half of one', function (): void {
+    onDisk(function (): void {
+        File::ensureDirectoryExists($this->uploads.'/rooms');
+        File::put($this->uploads.'/rooms/a.jpg', 'x');
+
+        foreach (range(1, 5) as $i) {
+            $this->backup->createSet(CarbonImmutable::now()->addSeconds($i));
+        }
+
+        expect($this->backup->sets())->toHaveCount(5);
+
+        $this->backup->prune(keep: 2);
+
+        $sets = $this->backup->sets();
+
+        expect($sets)->toHaveCount(2);
+
+        // Every surviving set still has both halves — a database snapshot
+        // whose photos were pruned away is not restorable.
+        foreach ($sets as $set) {
+            expect(file_exists($set['database']))->toBeTrue()
+                ->and($set['uploads'])->not->toBeNull()
+                ->and(file_exists($set['uploads']))->toBeTrue();
+        }
+
+        File::deleteDirectory($this->uploads.'/rooms');
+    });
+});
+
+it('keeps the database snapshot even when the photos cannot be archived', function (): void {
+    onDisk(function (): void {
+        // No uploads directory at all — the common case on a fresh install.
+        File::deleteDirectory($this->uploads);
+
+        $set = $this->backup->createSet();
+
+        // The database is the half that cannot be rebuilt from anywhere
+        // else, so it is never sacrificed to a missing photo directory.
+        expect(file_exists($set['database']))->toBeTrue()
+            ->and($set['uploads'])->toBeNull();
+    });
+});
+
+it('will not offer a set that has lost its database as restorable', function (): void {
+    onDisk(function (): void {
+        $set = $this->backup->createSet();
+
+        File::delete($set['database']);
+
+        // An uploads archive on its own is not something anyone can
+        // restore from, so it is not presented as a backup.
+        expect($this->backup->sets())->toBeEmpty();
+    });
+});
+
+it('puts a set back, database and photos together', function (): void {
+    onDisk(function (): void {
+        File::ensureDirectoryExists($this->uploads.'/rooms');
+        File::put($this->uploads.'/rooms/double.jpg', 'original');
+
+        $set = $this->backup->createSet();
+
+        // The world moves on: the photo is replaced and a row is added.
+        File::put($this->uploads.'/rooms/double.jpg', 'replaced');
+        DB::connection('backup_source')->insert("insert into rooms (code) values ('SGL')");
+
+        expect((int) DB::connection('backup_source')->selectOne('select count(*) c from rooms')->c)->toBe(2);
+
+        expect($this->backup->restore($set['database']))->toBeTrue()
+            ->and($this->backup->restoreUploads($set['uploads']))->toBeTrue();
+
+        // Both halves came back, which is the whole point of keeping them
+        // as one set.
+        expect((int) DB::connection('backup_source')->selectOne('select count(*) c from rooms')->c)->toBe(1)
+            ->and(File::get($this->uploads.'/rooms/double.jpg'))->toBe('original');
+
+        File::deleteDirectory($this->uploads.'/rooms');
+    });
+});
+
+it('takes a fresh backup before restoring, so a mis-click is undoable', function (): void {
+    $admin = User::factory()->create();
+
+    onDisk(function () use ($admin): void {
+        $this->backup->createSet();
+        $stamp = $this->backup->sets()[0]['stamp'];
+
+        $this->actingAs($admin)
+            ->post('/admin/update/restore', ['stamp' => $stamp, 'confirm' => $stamp])
+            ->assertRedirect('/admin/update');
+
+        // Two sets now: the one that was put back, and a copy of the state
+        // it replaced — a restore chosen by mistake is itself undoable.
+        expect($this->backup->sets())->toHaveCount(2)
+            // And the site is open again, not left closed.
+            ->and(app()->isDownForMaintenance())->toBeFalse();
+    });
+});
+
+it('will not restore at all if the safety copy fails', function (): void {
+    $admin = User::factory()->create();
+
+    $backup = Mockery::mock(Backups::class);
+    $backup->shouldReceive('sets')->andReturn([]);
+    $backup->shouldReceive('find')->andReturn(['stamp' => 's', 'database' => '/tmp/x.sqlite', 'uploads' => null]);
+    $backup->shouldReceive('canRestoreDatabase')->andReturnTrue();
+    $backup->shouldReceive('createSet')->andThrow(new RuntimeException('disk full'));
+    // The one call that must never happen.
+    $backup->shouldNotReceive('restore');
+
+    $this->app->instance(Backups::class, $backup);
+
+    $this->actingAs($admin)
+        ->post('/admin/update/restore', ['stamp' => 's', 'confirm' => 's'])
+        ->assertSessionHas('update_error');
+
+    expect(session('update_error'))->toContain('nothing was restored');
+});
+
+it('refuses a restore that is not confirmed by typing the timestamp', function (): void {
+    $admin = User::factory()->create();
+
+    $this->actingAs($admin)
+        ->post('/admin/update/restore', ['stamp' => '2026-01-01-000000', 'confirm' => 'yes'])
+        ->assertSessionHasErrors('confirm');
+
+    $this->actingAs($admin)
+        ->post('/admin/update/restore', ['stamp' => '2026-01-01-000000', 'confirm' => '2026-01-01-000000'])
+        ->assertSessionHas('update_error', __('admin.backup_missing'));
+});
+
+it('runs a nightly backup that says so loudly when it cannot', function (): void {
+    onDisk(function (): void {
+        expect(Artisan::call('doba:backup'))->toBe(0);
+        expect($this->backup->sets())->toHaveCount(1);
+    });
+
+    $broken = Mockery::mock(Backups::class);
+    $broken->shouldReceive('isSupported')->andReturnFalse();
+    $broken->shouldReceive('unsupportedReason')->andReturn('mysqldump was not found on this server.');
+    $this->app->instance(Backups::class, $broken);
+
+    // A backup that silently never runs is worse than one nobody
+    // configured — the hotel believes it has copies.
+    expect(Artisan::call('doba:backup'))->toBe(1)
+        ->and(Artisan::output())->toContain('mysqldump was not found');
 });

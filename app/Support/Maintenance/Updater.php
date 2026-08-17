@@ -31,7 +31,7 @@ use Throwable;
  */
 class Updater
 {
-    public function __construct(protected DatabaseBackup $backup) {}
+    public function __construct(protected Backups $backup) {}
 
     /**
      * Migrations that exist in the code but not yet in the database.

@@ -439,6 +439,30 @@ Snapshots use `VACUUM INTO` on SQLite and `mysqldump --single-transaction`
 on MySQL — both consistent against a live database with writers
 mid-transaction, which a `cp` of a WAL database is emphatically not.
 
+### Backups
+
+A backup is the database **and** the uploaded photos, kept as one set
+under a single timestamp. Restoring the database alone gives a hotel back
+every booking and a website of broken images, so the two are pruned,
+deleted and restored together — half a restore is not a restore.
+
+- **Nightly by default** (`DOBA_BACKUP_AT`, 03:15). A hotel that has never
+  once thought about backups is exactly the hotel that needs them, and
+  "the hotelier will set this up" is not a plan. It logs at error level
+  when it cannot run: a backup that silently never happens is worse than
+  one nobody configured, because the hotel believes it has copies.
+- **Before every update**, automatically.
+- **On demand**, from *Admin → Update* or `php artisan doba:backup`.
+- `DOBA_BACKUP_KEEP` counts **sets**, not files, so pruning can never
+  leave a database snapshot whose photos have been deleted.
+- Download either half from the admin. A backup that only exists on the
+  same disk as the thing it protects is half a backup.
+- **Restore** from the admin, confirmed by typing the timestamp. It takes
+  a fresh backup of the current state *first* — a restore chosen by
+  mistake has to be undoable too — and refuses to proceed at all if that
+  safety copy fails. Photos are extracted *over* the current ones rather
+  than instead of them, so a picture uploaded since the backup survives.
+
 ### Getting the new code onto the server
 
 Each release ships a **tarball carrying `vendor/` and the built assets**, so

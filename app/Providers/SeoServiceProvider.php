@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Support\Hotel\HotelSettings;
-use App\Support\Maintenance\DatabaseBackup;
+use App\Support\Maintenance\Backups;
 use App\Support\Seo\Seo;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Blade;
@@ -23,7 +23,7 @@ class SeoServiceProvider extends ServiceProvider
 
         // The backup directory is configuration, not something the
         // container can guess from a type hint.
-        $this->app->bind(DatabaseBackup::class, static fn (): DatabaseBackup => DatabaseBackup::make());
+        $this->app->bind(Backups::class, static fn (): Backups => Backups::make());
 
         // One SEO bag per request: a controller fills it in, the layout
         // renders it. Scoped rather than singleton so a queued job or an

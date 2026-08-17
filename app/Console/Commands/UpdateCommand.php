@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Support\Maintenance\DatabaseBackup;
+use App\Support\Maintenance\Backups;
 use App\Support\Maintenance\Updater;
 use App\Support\Version;
 use Illuminate\Console\Command;
@@ -25,7 +25,7 @@ class UpdateCommand extends Command
 
     protected $description = 'Back up, migrate and rebuild caches after deploying new code';
 
-    public function handle(Updater $updater, DatabaseBackup $backup): int
+    public function handle(Updater $updater, Backups $backup): int
     {
         $this->line('Doba '.Version::current());
 

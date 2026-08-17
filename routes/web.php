@@ -106,8 +106,9 @@ Route::prefix('admin')->group(function (): void {
         Route::get('update', [AdminUpdateController::class, 'index'])->name('admin.update');
         Route::post('update', [AdminUpdateController::class, 'run'])->name('admin.update.run');
         Route::post('update/backup', [AdminUpdateController::class, 'backup'])->name('admin.update.backup');
+        Route::post('update/restore', [AdminUpdateController::class, 'restore'])->name('admin.update.restore');
         Route::get('update/backups/{name}', [AdminUpdateController::class, 'download'])->name('admin.update.download');
-        Route::delete('update/backups/{name}', [AdminUpdateController::class, 'destroy'])->name('admin.update.backups.destroy');
+        Route::delete('update/backups/{stamp}', [AdminUpdateController::class, 'destroy'])->name('admin.update.backups.destroy');
 
         Route::get('venues', [AdminVenueController::class, 'index'])->name('admin.venues');
         Route::get('venues/create', [AdminVenueController::class, 'create'])->name('admin.venues.create');
