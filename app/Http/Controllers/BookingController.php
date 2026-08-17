@@ -7,12 +7,14 @@ namespace App\Http\Controllers;
 use App\Domain\Availability\AvailabilityService;
 use App\Domain\Booking\BookingService;
 use App\Domain\Booking\NoAvailabilityException;
+use App\Domain\Booking\PromoCodeException;
 use App\Domain\Invoicing\InvoiceRenderer;
 use App\Domain\Payments\GatewayRegistry;
 use App\Domain\Payments\PaymentService;
 use App\Enums\BookingStatus;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
+use App\Models\PromoCode;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Routing\Localization;
@@ -140,6 +142,36 @@ class BookingController extends Controller
             $ratePlan = $eligible->firstWhere('plan.id', (int) $planId)['plan'] ?? null;
         }
 
+        // Same treatment as the rate plan: a posted code is a request, not
+        // a discount. It is looked up here and re-validated under lock
+        // inside place(), so nothing the browser sends decides a price.
+        $promoCode = null;
+
+        if ($code = trim((string) ($validated['promo_code'] ?? ''))) {
+            $promoCode = PromoCode::findByCode($code);
+
+            // Spelled out rather than ?? : a valid code returns null from
+            // rejectionReason, and coalescing that into "not found" would
+            // reject every good code ever typed.
+            $rejection = $promoCode === null
+                ? 'promo.error_invalid'
+                : $promoCode->rejectionReason(
+                    $stay['check_in'],
+                    (int) $stay['check_in']->diffInDays($stay['check_out']),
+                    0,
+                    [$roomType->id],
+                );
+
+            if ($rejection !== null) {
+                // Straight back to checkout with the reason and everything
+                // they typed — a code that fails must not cost the guest
+                // the form they just filled in.
+                return redirect(Localization::route('booking.checkout', $this->stayQuery($stay) + ['room_type' => $roomType->id]))
+                    ->withInput()
+                    ->with('booking_error', __($rejection));
+            }
+        }
+
         try {
             $booking = $bookings->place(
                 $roomType,
@@ -157,7 +189,13 @@ class BookingController extends Controller
                 children: $stay['children'],
                 sessionId: $request->session()->getId(),
                 ratePlan: $ratePlan,
+                promoCode: $promoCode,
             );
+        } catch (PromoCodeException $e) {
+            // Used up between the guest typing it and finishing checkout.
+            return redirect(Localization::route('booking.checkout', $this->stayQuery($stay) + ['room_type' => $roomType->id]))
+                ->withInput()
+                ->with('booking_error', __($e->reasonKey));
         } catch (NoAvailabilityException) {
             // Someone else took the last room while this guest typed.
             return redirect(Localization::route('booking.search', $this->stayQuery($stay)))

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminPageController;
+use App\Http\Controllers\Admin\AdminPromoCodeController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\PhotoController;
@@ -98,6 +99,13 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
         Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
+
+        Route::get('promo-codes', [AdminPromoCodeController::class, 'index'])->name('admin.promo-codes');
+        Route::get('promo-codes/create', [AdminPromoCodeController::class, 'create'])->name('admin.promo-codes.create');
+        Route::post('promo-codes', [AdminPromoCodeController::class, 'store'])->name('admin.promo-codes.store');
+        Route::get('promo-codes/{promoCode}/edit', [AdminPromoCodeController::class, 'edit'])->name('admin.promo-codes.edit');
+        Route::put('promo-codes/{promoCode}', [AdminPromoCodeController::class, 'update'])->name('admin.promo-codes.update');
+        Route::delete('promo-codes/{promoCode}', [AdminPromoCodeController::class, 'destroy'])->name('admin.promo-codes.destroy');
 
         Route::get('channels', [AdminChannelController::class, 'index'])->name('admin.channels');
         Route::get('channels/create', [AdminChannelController::class, 'create'])->name('admin.channels.create');

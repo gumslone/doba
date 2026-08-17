@@ -13,6 +13,7 @@ use App\Models\Booking;
 use App\Models\BookingHold;
 use App\Models\Extra;
 use App\Models\Guest;
+use App\Models\PromoCode;
 use App\Models\RatePlan;
 use App\Models\RoomType;
 use Carbon\CarbonImmutable;
@@ -57,6 +58,7 @@ class BookingService
         ?string $sessionId = null,
         ?string $locale = null,
         ?RatePlan $ratePlan = null,
+        ?PromoCode $promoCode = null,
     ): Booking {
         $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
         $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
@@ -71,7 +73,7 @@ class BookingService
 
         return DB::transaction(function () use (
             $roomType, $checkIn, $checkOut, $nights, $guestData,
-            $adults, $children, $units, $sessionId, $bookingLocale, $ratePlan
+            $adults, $children, $units, $sessionId, $bookingLocale, $ratePlan, $promoCode
         ): Booking {
             // NOTE: nights only — the checkout row consumes no inventory (§6).
             $rows = $this->lockNights($roomType, $checkIn, $checkOut->subDay());
@@ -109,6 +111,27 @@ class BookingService
 
             $subtotal = $perUnitTotal * $units;
 
+            // Re-read under the transaction's lock: the code was checked
+            // when the guest typed it, but "50 uses" means 50, and two
+            // checkouts finishing in the same second must not both be the
+            // fiftieth. Re-validating here also catches a code deactivated
+            // while the guest was filling in the form.
+            $discount = 0;
+
+            if ($promoCode !== null) {
+                $promoCode = PromoCode::query()->lockForUpdate()->find($promoCode->id);
+
+                $rejection = $promoCode?->rejectionReason(
+                    $checkIn, $nights, $subtotal, [$roomType->id], $guest,
+                );
+
+                if ($promoCode === null || $rejection !== null) {
+                    throw new PromoCodeException($rejection ?? 'promo.error_invalid');
+                }
+
+                $discount = $promoCode->discountFor($nightPrices, $units);
+            }
+
             $booking = Booking::create([
                 'reference' => Booking::nextReference(),
                 'manage_token' => Booking::newManageToken(),
@@ -120,9 +143,11 @@ class BookingService
                 'children' => $children,
                 'currency' => (string) config('doba.currency'),
                 'subtotal' => $subtotal,
-                'total' => $subtotal,
-                'deposit_due' => $subtotal,
-                'balance_due' => $subtotal,
+                'discount_total' => $discount,
+                'promo_code_id' => $promoCode?->id,
+                'total' => $subtotal - $discount,
+                'deposit_due' => $subtotal - $discount,
+                'balance_due' => $subtotal - $discount,
                 'locale' => $bookingLocale,
                 'guest_id' => $guest->id,
             ]);
@@ -167,6 +192,17 @@ class BookingService
                     'units' => $units,
                     'expires_at' => $expiresAt,
                 ]);
+            }
+
+            if ($promoCode !== null) {
+                $booking->redemption()->create([
+                    'promo_code_id' => $promoCode->id,
+                    'guest_id' => $guest->id,
+                    'amount' => $discount,
+                    'redeemed_at' => now(),
+                ]);
+
+                $promoCode->increment('usage_count');
             }
 
             $this->recordHistory($booking, null, BookingStatus::Pending);
@@ -298,6 +334,16 @@ class BookingService
             if ($to === BookingStatus::Cancelled) {
                 $booking->cancelled_at = now();
                 $booking->cancellation_reason = $reason;
+
+                // Give the code's use back. An abandoned checkout must not
+                // burn a redemption: a hundred expired holds would retire a
+                // campaign for no reason the hotelier could ever see.
+                $redemption = $booking->redemption()->whereNull('released_at')->first();
+
+                if ($redemption !== null) {
+                    $redemption->forceFill(['released_at' => now()])->save();
+                    $redemption->promoCode?->decrement('usage_count');
+                }
             }
 
             $booking->save();

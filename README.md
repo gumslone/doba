@@ -24,7 +24,7 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 > Still to come: the installation wizard, the public partner API and the full
 > Filament panel — all specified in
 > [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
-> The correctness-critical paths are covered by 245+ tests on both database
+> The correctness-critical paths are covered by 270+ tests on both database
 > engines, but the platform has not yet run a real hotel — treat it as
 > pre-release.
 
@@ -200,6 +200,23 @@ Everything below is implemented and covered by tests.
   into an overbooking.
 - Partial and full **refunds** with correct `paid_amount` / `balance_due`
   bookkeeping; refunds are their own rows so the ledger reconstructs a dispute.
+- **Promo codes** — percentage (stored in basis points, so no float ever
+  touches the money path), fixed amount, or free nights with the **cheapest
+  nights discounted first**, which is both what a guest reads into "your
+  third night is free" and what costs the hotel least to honour. Codes carry
+  minimum nights and total, separate *usable* and *arrival* date windows,
+  total and per-guest usage limits, and a room-type restriction. Two rules
+  keep them honest: a code discounts **the stay, never the extras** (the
+  transfer is bought at its listed price), and the discount can never exceed
+  the subtotal — a €200 code on a €150 stay is €150 off, not a refund the
+  hotel now owes. The limit is re-checked **under lock inside the booking
+  transaction**, because "50 uses" means 50 and two checkouts finishing in
+  the same second must not both be the fiftieth. Cancelling a booking
+  **gives the use back** while keeping the redemption row: a hundred
+  abandoned holds must not retire a campaign, and a code that ran out has to
+  stay explainable afterwards. A rejected code sends the guest back with the
+  actual reason — "this code needs a longer stay" changes their dates,
+  "invalid code" sends them to a competitor.
 - **Invoices, with the VAT arithmetic done the way tax authorities expect.**
   A confirmed booking issues a sequentially numbered invoice (`2026-0001`,
   restarting each year, claimed under a locking read so two simultaneous
@@ -451,9 +468,9 @@ wizard and the public API, is in
 |---|---|---|
 | 1 | Foundation: config/theme layer, content model, i18n routing, **SEO layer**, CI | **done** |
 | 2 | Availability service, rate engine, holds + locking + reconciliation, calendar API | **done** · checkout funnel + admin availability grid next |
-| 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds) | **done** · promo codes next |
+| 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds) | **done** |
 | — | Events, WYSIWYG admin, customizable styles, security headers | **done** |
-| — | Invoices, **iCal channel sync** | **done** |
+| — | Invoices, **iCal channel sync**, promo codes, eight style presets | **done** |
 | 4 | First hotel live | planned |
 | 5 | Reports, multi-install deploy (iCal channel sync landed early) | planned |
 | 6 | Public REST API + webhooks, OpenAPI docs | planned |

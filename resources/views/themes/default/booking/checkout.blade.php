@@ -11,6 +11,12 @@
     <section class="mx-auto max-w-4xl px-4 py-12">
         <h1 class="text-3xl font-semibold tracking-tight">{{ __('booking.checkout_title') }}</h1>
 
+        @if (session('booking_error'))
+            <p class="mt-6 rounded border border-amber-200 bg-amber-50 p-4 text-amber-900" role="alert">
+                {{ session('booking_error') }}
+            </p>
+        @endif
+
         <div class="mt-8 grid gap-8 lg:grid-cols-[3fr_2fr]">
             <form method="POST" action="{{ Localization::route('booking.store') }}" class="space-y-6">
                 @csrf
@@ -51,6 +57,15 @@
                                    value="{{ old('phone') }}" autocomplete="tel"
                                    class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
                         </div>
+                    </div>
+
+                    <div>
+                        <label for="promo_code" class="block text-sm font-medium">{{ __('promo.label') }}</label>
+                        <input type="text" id="promo_code" name="promo_code" maxlength="32"
+                               value="{{ old('promo_code') }}" autocomplete="off" autocapitalize="characters"
+                               placeholder="{{ __('promo.placeholder') }}"
+                               class="mt-1 w-full rounded border border-neutral-300 px-3 py-2 font-mono uppercase">
+                        <p class="mt-1 text-sm text-neutral-500">{{ __('promo.hint') }}</p>
                     </div>
 
                     <div>

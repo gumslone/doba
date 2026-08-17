@@ -32,7 +32,7 @@ class Booking extends Model
         'check_in', 'check_out', 'nights', 'adults', 'children', 'children_ages',
         'currency', 'subtotal', 'extras_total', 'discount_total', 'tax_total',
         'city_tax', 'total', 'deposit_due', 'paid_amount', 'balance_due',
-        'locale', 'guest_id', 'guest_notes', 'internal_notes',
+        'promo_code_id', 'locale', 'guest_id', 'guest_notes', 'internal_notes',
         'cancellation_reason', 'cancelled_at', 'confirmed_at',
         'ip_address', 'user_agent',
     ];
@@ -72,6 +72,22 @@ class Booking extends Model
     public function rooms(): HasMany
     {
         return $this->hasMany(BookingRoom::class);
+    }
+
+    /**
+     * @return HasOne<PromoCodeRedemption, $this>
+     */
+    public function redemption(): HasOne
+    {
+        return $this->hasOne(PromoCodeRedemption::class);
+    }
+
+    /**
+     * @return BelongsTo<PromoCode, $this>
+     */
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
     }
 
     /**

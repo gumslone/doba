@@ -32,6 +32,18 @@
         </div>
     @endforeach
 
+    @if ($booking->discount_total > 0)
+        {{-- Shown on its own line, never folded into the room price: a
+             guest who used a code is entitled to see what it took off. --}}
+        <div class="flex justify-between gap-4">
+            <dt class="text-neutral-500">
+                {{ __('promo.discount') }}
+                @if ($booking->promoCode) <span class="font-mono">{{ $booking->promoCode->code }}</span> @endif
+            </dt>
+            <dd class="text-right text-green-700">−{{ Money::format($booking->discount_total) }}</dd>
+        </div>
+    @endif
+
     <div class="flex justify-between gap-4 border-t border-neutral-200 pt-3 text-base">
         <dt class="font-medium">{{ __('booking.total') }}</dt>
         <dd class="text-right font-semibold">{{ Money::format($booking->total) }}</dd>
