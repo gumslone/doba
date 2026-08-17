@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminFrontDeskController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
+use App\Http\Controllers\Admin\AdminMailController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPromoCodeController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
@@ -116,6 +117,11 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
         Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
+
+        Route::get('mail', [AdminMailController::class, 'edit'])->name('admin.mail');
+        Route::put('mail', [AdminMailController::class, 'update'])->name('admin.mail.update');
+        Route::post('mail/test', [AdminMailController::class, 'test'])->name('admin.mail.test');
+        Route::post('mail/confirm', [AdminMailController::class, 'confirm'])->name('admin.mail.confirm');
 
         Route::get('update', [AdminUpdateController::class, 'index'])->name('admin.update');
         Route::post('update', [AdminUpdateController::class, 'run'])->name('admin.update.run');

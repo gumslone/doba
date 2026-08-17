@@ -94,7 +94,7 @@ return [
     'worker_title' => 'The queue worker',
     'worker_hint' => 'Confirmation emails are queued. Without a worker they are written and never sent.',
     'checklist_title' => 'Still to do',
-    'checklist_mail' => 'Configure mail in Settings and send yourself a test booking — unconfigured mail is how a booking system appears to work and silently fails at the only moment that matters.',
+    'checklist_mail' => 'Set up mail under Admin → Mail and send yourself the test message. Until you confirm it arrived, the admin will keep telling you mail is unconfirmed — because unconfigured mail is how a booking system appears to work perfectly and silently fails at the only moment that matters.',
     'checklist_payments' => 'Add a payment gateway, or keep taking bookings without online payment.',
     'checklist_tls' => 'Make sure the site is served over HTTPS.',
     'checklist_backup' => 'Download a backup from Admin → Update and keep it somewhere other than this server.',

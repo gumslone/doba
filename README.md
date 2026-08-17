@@ -575,6 +575,39 @@ vendor/bin/pint --test && vendor/bin/phpstan analyse --memory-limit=1G
 CI runs the suite against **both SQLite and MySQL** on every push — that matrix
 is the only thing that keeps the "portable" promise honest.
 
+## Mail
+
+Configured from the admin, not from `.env` — the person who needs to
+change it has a browser, not a shell. But the part that matters is not
+the form:
+
+**Mail is treated as broken until a human confirms a test message
+arrived.** It is the one subsystem that fails completely silently. SMTP
+accepts the message, the queue reports success, every page looks right,
+and the guest simply never receives their confirmation — nobody finds out
+until somebody arrives at the desk holding nothing. A green tick meaning
+"the server accepted it" is worse than no tick, because it stops anyone
+looking.
+
+So the test message carries a **code**, and confirming means typing that
+code back. A checkbox would be a thing people tick to make a warning go
+away; a code can only come from a message that actually arrived. Until
+that happens, every admin page carries a warning that cannot be
+dismissed. Changing any setting clears the confirmation, because a tick
+describing a configuration that no longer exists is worse than none.
+
+- The SMTP password is **encrypted at rest** — the settings table is in
+  every backup a hotelier downloads and emails to themselves.
+- Leaving the password blank keeps the stored one, so editing the sender
+  name does not silently empty the credential.
+- A half-configured transport is not applied: switching to SMTP with no
+  host would turn working output into a connection error.
+- The **SPF, DMARC and DKIM records** for the sending domain are printed
+  on the page. Without them a hotel's confirmations are quietly filed as
+  spam and nobody tells them. DMARC starts at `p=quarantine` rather than
+  `p=reject`, because publishing reject on day one with SPF slightly wrong
+  stops a hotel delivering its own confirmations.
+
 ## The front desk
 
 The screen a hotel stands in front of all morning, and where the admin

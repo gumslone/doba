@@ -33,6 +33,7 @@
             ['/admin/styles', __('admin.styles'), 'admin/styles*'],
         ],
         __('admin.group_system') => [
+            ['/admin/mail', __('admin.mail'), 'admin/mail*'],
             ['/admin/update', __('admin.update'), 'admin/update*'],
         ],
     ];
@@ -92,6 +93,17 @@
 
         <main class="min-w-0 flex-1 px-4 py-8 lg:px-8">
             <div class="mx-auto max-w-5xl">
+                {{-- Shown on every admin page until somebody confirms a test
+                     message arrived. Mail is the one subsystem that fails
+                     silently, so the warning is deliberately hard to ignore
+                     and deliberately not dismissible. --}}
+                @unless (app(App\Support\Mail\MailSettings::class)->isConfirmed() || request()->is('admin/mail*'))
+                    <p class="mb-6 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                        <a href="/admin/mail" class="font-medium underline">{{ __('admin.mail_unconfirmed') }}</a>
+                        — {{ __('admin.mail_unconfirmed_hint') }}
+                    </p>
+                @endunless
+
                 @if (session('saved') || session('status'))
                     <p class="mb-6 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800" role="status">
                         {{ session('saved') ?? session('status') }}

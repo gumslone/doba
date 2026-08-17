@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Support\Hotel\HotelSettings;
+use App\Support\Mail\MailSettings;
 use App\Support\Maintenance\Backups;
 use App\Support\Seo\Seo;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Throwable;
 
 class SeoServiceProvider extends ServiceProvider
 {
@@ -42,6 +45,21 @@ class SeoServiceProvider extends ServiceProvider
         Event::listen(RouteMatched::class, function (): void {
             $this->app->make(Seo::class)->reset();
             $this->app->make(HotelSettings::class)->refresh();
+        });
+
+        // The hotel's own mail configuration, pushed into the live config
+        // before anything sends. Applied on the queue too (MessageSending
+        // fires there as well) — a confirmation that goes out from a
+        // worker must use the same server the hotelier tested, not
+        // whatever .env happened to say when the worker booted.
+        Event::listen(MessageSending::class, function (): void {
+            try {
+                $this->app->make(MailSettings::class)->apply();
+            } catch (Throwable) {
+                // Before the first migration there is no settings table.
+                // Failing to read it must not stop the installer sending
+                // its own test message.
+            }
         });
 
         View::composer('*', function ($view): void {
