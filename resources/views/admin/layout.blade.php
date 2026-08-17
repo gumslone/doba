@@ -20,6 +20,7 @@
                 <a href="/admin/availability" @class(['underline' => request()->is('admin/availability*')])>{{ __('admin.availability') }}</a>
                 <a href="/admin/pages" @class(['underline' => request()->is('admin/pages*')])>{{ __('admin.pages') }}</a>
                 <a href="/admin/events" @class(['underline' => request()->is('admin/events*')])>{{ __('admin.events') }}</a>
+                <a href="/admin/channels" @class(['underline' => request()->is('admin/channels*')])>{{ __('admin.channels') }}</a>
                 <a href="/admin/invoices" @class(['underline' => request()->is('admin/invoices*')])>{{ __('admin.invoices') }}</a>
                 <a href="/admin/rate-plans" @class(['underline' => request()->is('admin/rate-plans*')])>{{ __('admin.rate_plans') }}</a>
                 <a href="/admin/extras" @class(['underline' => request()->is('admin/extras*')])>{{ __('admin.extras') }}</a>

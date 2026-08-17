@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminAvailabilityController;
+use App\Http\Controllers\Admin\AdminChannelController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IcalController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\RoomTypeController;
@@ -43,6 +45,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('robots.txt', [SitemapController::class, 'robots'])->name('robots');
+
+// Never localised and never in the sitemap: a machine subscribes to it,
+// and the token in the path is what stands in for a login (§9).
+Route::get('ical/{roomType}/{token}.ics', [IcalController::class, 'show'])
+    ->whereNumber('roomType')
+    ->name('ical');
 
 /*
 | Provider webhooks (§8). CSRF-exempt (see bootstrap/app.php) because the
@@ -90,6 +98,15 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
         Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
+
+        Route::get('channels', [AdminChannelController::class, 'index'])->name('admin.channels');
+        Route::get('channels/create', [AdminChannelController::class, 'create'])->name('admin.channels.create');
+        Route::post('channels', [AdminChannelController::class, 'store'])->name('admin.channels.store');
+        Route::get('channels/{feed}/edit', [AdminChannelController::class, 'edit'])->name('admin.channels.edit');
+        Route::put('channels/{feed}', [AdminChannelController::class, 'update'])->name('admin.channels.update');
+        Route::delete('channels/{feed}', [AdminChannelController::class, 'destroy'])->name('admin.channels.destroy');
+        Route::post('channels/{feed}/sync', [AdminChannelController::class, 'sync'])->name('admin.channels.sync');
+        Route::post('channels/review/{channelBooking}', [AdminChannelController::class, 'resolve'])->name('admin.channels.resolve');
 
         Route::get('invoices', [AdminInvoiceController::class, 'index'])->name('admin.invoices');
         Route::get('invoices/{invoice}.pdf', [AdminInvoiceController::class, 'download'])->name('admin.invoices.download');

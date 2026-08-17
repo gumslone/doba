@@ -19,11 +19,12 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 > availability & rate engine, the booking core (holds, locking, state
 > machine), **online payments** (Stripe, PayPal, LiqPay, crypto, manual),
 > events, extras & room inclusions, photo management with a maps block,
-> the guest booking funnel, and an interim admin with a WYSIWYG editor.
-> Still to come: channel/OTA sync, the installation wizard, the public partner API and the full
+> invoices, **two-way iCal channel sync**, the guest booking funnel, and an
+> interim admin with a WYSIWYG editor.
+> Still to come: the installation wizard, the public partner API and the full
 > Filament panel — all specified in
 > [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
-> The correctness-critical paths are covered by 210+ tests on both database
+> The correctness-critical paths are covered by 245+ tests on both database
 > engines, but the platform has not yet run a real hotel — treat it as
 > pre-release.
 
@@ -217,6 +218,49 @@ Everything below is implemented and covered by tests.
   name and a home address, and sequential numbers make a public URL trivially
   enumerable. The schema refuses to delete a booking that has been invoiced.
 
+### Channel sync (§9)
+
+Tier-1 two-way iCal, which is what an independent hotel actually runs.
+
+- **Export**: `GET /ical/{room_type}/{token}.ics` publishes every night the
+  room cannot be sold, merged into as few `VEVENT`s as possible and built
+  from `availability` rather than from bookings — a night closed by the
+  hotelier, sold direct or held by another channel all export identically,
+  because the OTA needs "not for sale", not why. The feed carries **no
+  guest data at all**: it is a subscription URL, fetched by whoever ends up
+  with it.
+- **Import**: `channels:sync` runs every 15 minutes, matches events on their
+  `UID` so a re-import is a no-op, and increments the same `booked` counter
+  a direct booking uses — under the same lock and the same CHECK
+  constraint, because an OTA guest occupies the room exactly as a direct
+  guest does. `DTEND` is read as **exclusive**, so the checkout night stays
+  sellable; reading it as the last night silently burns a night on every
+  imported booking.
+- **Removals get a guard, because they are the dangerous direction.**
+  Adding a spurious block costs one unsold night. Releasing a block that
+  was never cancelled sells a room an OTA has already promised, and the
+  hotel finds out when the guest arrives. So a removal must clear three
+  hurdles: the feed must have **parsed completely** (a truncated response
+  returns `null`, never an empty event list — a 200 carrying half a
+  calendar must not look like a quiet week), its **event count must be
+  plausible** against the last sync (40 → 38 is two cancellations, 40 → 3
+  is a truncated download), and the event must be **absent from three
+  consecutive good syncs**. A stay starting **within 7 days is never
+  auto-released** — it is flagged for staff, who release or keep it from
+  the admin queue.
+- **Staleness is itself an alert.** A feed with three consecutive errors or
+  no success in an hour is logged at error level and shown in red in the
+  admin: a dead sync and a quiet week look identical until two guests
+  arrive for one room.
+- **The import URL cannot be pointed at your own network.** It comes from a
+  form, so the fetcher resolves the host and refuses private, loopback and
+  link-local addresses — an admin session is the first thing an attacker
+  gets, and a URL fetcher that will follow `http://169.254.169.254/` on
+  request is an SSRF hole regardless of who filled the form in.
+- **The limitation is stated in the admin UI, not just here**: iCal syncs
+  availability only, with a 15–60 minute lag, and cannot push prices. Two
+  guests can still book the last room on two channels inside that window.
+
 ### Security (§14)
 
 - **No `unsafe-eval`, and therefore no expression-evaluating front-end
@@ -386,10 +430,11 @@ wizard and the public API, is in
 |---|---|---|
 | 1 | Foundation: config/theme layer, content model, i18n routing, **SEO layer**, CI | **done** |
 | 2 | Availability service, rate engine, holds + locking + reconciliation, calendar API | **done** · checkout funnel + admin availability grid next |
-| 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds) | **done** · invoices, extras, promo codes next |
+| 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds) | **done** · promo codes next |
 | — | Events, WYSIWYG admin, customizable styles, security headers | **done** |
+| — | Invoices, **iCal channel sync** | **done** |
 | 4 | First hotel live | planned |
-| 5 | iCal two-way channel sync, reports, multi-install deploy | planned |
+| 5 | Reports, multi-install deploy (iCal channel sync landed early) | planned |
 | 6 | Public REST API + webhooks, OpenAPI docs | planned |
 
 ## Contributing

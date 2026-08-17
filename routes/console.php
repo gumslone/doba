@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Schedule;
 */
 
 Schedule::command('holds:release')->everyMinute();
+Schedule::command('channels:sync')->everyFifteenMinutes()->withoutOverlapping();
 Schedule::command('availability:extend')->dailyAt('02:00');
 Schedule::command('doba:sitemap')->dailyAt('03:00');
 Schedule::command('doba:images')->dailyAt('03:30');

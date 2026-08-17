@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Str;
 
 /**
  * The sellable unit — a room *category*, not a physical room.
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  * @property int $base_occupancy
  * @property int $max_occupancy
  * @property int|null $default_rate
+ * @property string|null $ical_token
  */
 class RoomType extends Model implements HasMedia
 {
@@ -36,6 +38,28 @@ class RoomType extends Model implements HasMedia
         'extra_adult_price', 'extra_child_price', 'size_sqm', 'bed_setup',
         'default_rate', 'total_units', 'sort_order', 'is_active',
     ];
+
+    /**
+     * Deliberately absent from $fillable: the calendar token is the only
+     * credential on the export URL, so it is generated here and can never
+     * arrive from a request.
+     */
+    protected static function booted(): void
+    {
+        static::creating(static function (self $roomType): void {
+            $roomType->ical_token ??= Str::random(40);
+        });
+    }
+
+    /**
+     * The subscribable calendar URL handed to Booking.com or Airbnb.
+     */
+    public function icalUrl(): ?string
+    {
+        return $this->ical_token === null
+            ? null
+            : url("/ical/{$this->id}/{$this->ical_token}.ics");
+    }
 
     protected $casts = [
         'base_occupancy' => 'integer',
