@@ -66,6 +66,9 @@
 
 @php
     $brandingFonts = \App\Http\Controllers\Admin\StyleController::FONT_STACKS;
+    // The preset first, the hotelier's own picks second: choosing a look
+    // is a starting point, never a cage — their brand colour still wins.
+    $presetVars = \App\Support\Theme\StylePreset::tokens($hotel->get('branding.preset'));
     $brandingVars = array_filter([
         '--doba-primary' => $hotel->get('branding.color_primary'),
         '--doba-accent' => $hotel->get('branding.color_accent'),
@@ -75,10 +78,11 @@
     $brandingCss = (string) $hotel->get('branding.custom_css', '');
 @endphp
 
-@if ($brandingVars !== [])
-    {{-- Settings-driven styling (§3): colours and fonts are data, never a
-         theme file. Defaults live in app.css; only overrides are emitted. --}}
-    <style>:root{ @foreach ($brandingVars as $var => $value){{ $var }}:{{ $value }}; @endforeach }</style>
+@if ($presetVars !== [] || $brandingVars !== [])
+    {{-- Settings-driven styling (§3): colours, fonts and the whole style
+         preset are data, never a theme file. Defaults live in app.css;
+         only overrides are emitted, so the house look costs nothing. --}}
+    <style>:root{ @foreach (array_merge($presetVars, $brandingVars) as $var => $value){{ $var }}:{{ $value }}; @endforeach }</style>
 @endif
 
 @if ($brandingCss !== '')

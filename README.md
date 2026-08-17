@@ -366,15 +366,36 @@ sitemap line all disappear together. The demo seeder creates
 
 ## Theming & custom styles
 
-Two layers, deliberately separate:
+Three layers, deliberately separate:
 
-1. **Styles are settings.** `/admin/styles` edits brand colours, heading/body
+1. **Presets are complete looks — and still not a fork.** `/admin/styles`
+   offers eight: **Alpenhof** (alpine, warm paper, gold, near-square
+   corners), **Kontor** (urban monochrome, hard edges, heavy tight display
+   type, no shadows), **Marisol** (coastal, sand and teal, deep radii, pill
+   buttons), **Kalyna** (spa greens, restrained type), **Grand** (dark and
+   gilded, uppercase, the old grand hotel), **Nest** (hostel: flat colour,
+   black outlines, hard offset shadows), **Yamabuki** (ryokan: hairlines,
+   wide-tracked serif, a great deal of air) and **Residence** (aparthotel:
+   cool blues, built around a rate table). Each one is
+   a bundle of **design tokens** — colour, type scale, corner radii, section
+   rhythm, shadows — and every preset renders the *same markup*. That is the
+   entire point: the moment a look becomes a directory of Blade files, it
+   stops receiving the accessibility fix, the schema.org addition and the
+   security patch. A preset changes how the site looks and nothing about
+   what it is. Surfaces, brand-on-brand text colours, corner radii, type
+   scale and section rhythm are all tokens precisely so a **dark** preset
+   is possible without a second stylesheet — a hard-coded `#fff` panel is
+   what makes dark impossible, and a test now fails if one reappears.
+2. **Styles are settings.** `/admin/styles` edits brand colours, heading/body
    fonts and free-form custom CSS, stored in the database and emitted as CSS
    variables (`--doba-primary`, `--doba-accent`, `--doba-font-*`) on every
    public page. Fonts are a curated list of system stacks, so no webfont ever
    enters the critical path. Custom CSS is applied after the theme stylesheet;
-   `<` is escaped on output so it cannot break out of its style block.
-2. **Themes are structure.** Set `DOBA_THEME=<name>` and create
+   `<` is escaped on output so it cannot break out of its style block. These
+   are emitted *after* the preset, so a hotelier's own brand colour always
+   out-ranks the preset it started from — choosing a look is a starting
+   point, not a cage.
+3. **Themes are structure.** Set `DOBA_THEME=<name>` and create
    `resources/views/themes/<name>/`; any Blade file placed there overrides the
    same path in `themes/default`, file by file, everything else falls through.
    A theme override is for layout changes — the moment a theme exists only to

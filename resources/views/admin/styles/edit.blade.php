@@ -8,7 +8,38 @@
         @csrf
         @method('PUT')
 
+        {{-- Presets are token bundles, not theme forks: every one of them
+             renders the same markup, so a hotelier can change the whole
+             look and still receive every upstream fix. --}}
+        <fieldset class="rounded border border-neutral-200 bg-white p-4">
+            <legend class="px-1 text-sm font-medium">{{ __('admin.style_preset') }}</legend>
+            <p class="mb-4 text-xs text-neutral-500">{{ __('admin.style_preset_hint') }}</p>
+
+            <div class="grid gap-3 sm:grid-cols-2">
+                @foreach ($presets as $id => $preset)
+                    <label class="flex cursor-pointer items-start gap-3 rounded border border-neutral-200 p-3 hover:bg-neutral-50 has-[:checked]:border-neutral-900 has-[:checked]:bg-neutral-50">
+                        <input type="radio" name="preset" value="{{ $id }}" class="mt-1"
+                               data-swatch="{{ implode(',', $preset['swatch']) }}"
+                               @checked(old('preset', $current['preset']) === $id)>
+                        <span>
+                            <span class="flex items-center gap-2">
+                                <span class="font-medium">{{ $preset['label'] }}</span>
+                                <span class="flex overflow-hidden rounded-full border border-neutral-300">
+                                    @foreach ($preset['swatch'] as $colour)
+                                        <span class="block h-4 w-4" style="background: {{ $colour }}"></span>
+                                    @endforeach
+                                </span>
+                            </span>
+                            <span class="mt-0.5 block text-xs text-neutral-500">{{ __($preset['description']) }}</span>
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+            @error('preset') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+        </fieldset>
+
         <div class="grid gap-4 rounded border border-neutral-200 bg-white p-4 sm:grid-cols-2">
+            <p class="text-xs text-neutral-500 sm:col-span-2">{{ __('admin.style_override_hint') }}</p>
             <div>
                 <label for="color_primary" class="block text-sm font-medium">{{ __('admin.color_primary') }}</label>
                 <input type="color" id="color_primary" name="color_primary" value="{{ old('color_primary', $current['color_primary']) }}"

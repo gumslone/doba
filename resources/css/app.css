@@ -30,6 +30,18 @@
     --line: #e2ddd2;
 
     /*
+     * The raised surface behind cards, inputs and the booking bar. A token
+     * rather than a literal #fff because a dark preset exists: hard-coding
+     * white here is what makes a dark look impossible without forking the
+     * stylesheet, and the fork is the thing presets are meant to avoid.
+     */
+    --surface: #ffffff;
+
+    /* Text on the brand colours — grand's gold needs dark type on it. */
+    --on-primary: #ffffff;
+    --on-accent: #ffffff;
+
+    /*
      * Brand — only these two are written by Admin → Styles. Everything
      * derived from them below uses color-mix, so changing the primary
      * colour restyles hovers, tints and accents coherently instead of
@@ -47,8 +59,31 @@
     --danger: #9c3d2e;
 
     --radius: 3px;
+    --radius-lg: 3px;
     --doba-font-heading: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
     --doba-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    /*
+     * Shape and rhythm. Every one of these is overridden wholesale by a
+     * style preset (Admin → Styles), which is why the components below
+     * consume the token rather than the literal: a preset that could only
+     * change colours would be a palette, not a look.
+     */
+    --h1-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    --h1-weight: 400;
+    --h1-tracking: -.01em;
+    --h1-leading: 1.15;
+
+    --eyebrow-size: .72rem;
+    --eyebrow-tracking: .18em;
+    --eyebrow-transform: uppercase;
+
+    --btn-radius: var(--radius);
+    --btn-transform: none;
+    --btn-tracking: .02em;
+
+    --section-pad: 88px;
+    --grid-gap: 26px;
 
     --shadow: 0 1px 2px rgba(28, 35, 33, .06), 0 8px 24px rgba(28, 35, 33, .07);
     --shadow-lg: 0 2px 4px rgba(28, 35, 33, .06), 0 24px 56px rgba(28, 35, 33, .13);
@@ -68,12 +103,12 @@ body {
 
 h1, h2, h3, h4 {
     font-family: var(--doba-font-heading);
-    font-weight: 400;
+    font-weight: var(--h1-weight);
     line-height: 1.15;
-    letter-spacing: -.01em;
+    letter-spacing: var(--h1-tracking);
 }
 
-h1 { font-size: clamp(2.4rem, 5.5vw, 4.2rem); }
+h1 { font-size: var(--h1-size); line-height: var(--h1-leading); }
 h2 { font-size: clamp(1.8rem, 3.2vw, 2.6rem); }
 h3 { font-size: 1.3rem; }
 
@@ -107,15 +142,15 @@ summary:focus-visible {
     padding: 0 24px;
 }
 
-.section { padding: 88px 0; }
+.section { padding: var(--section-pad) 0; }
 .section--tint { background: var(--paper-2); }
 .section-head { max-width: 64ch; margin-bottom: 44px; }
 
 .eyebrow {
     font-family: var(--doba-font-body);
-    font-size: .72rem;
-    letter-spacing: .18em;
-    text-transform: uppercase;
+    font-size: var(--eyebrow-size);
+    letter-spacing: var(--eyebrow-tracking);
+    text-transform: var(--eyebrow-transform);
     color: var(--doba-accent);
     font-weight: 600;
     margin-bottom: .9rem;
@@ -135,9 +170,10 @@ summary:focus-visible {
     gap: .55em;
     font-size: .9rem;
     font-weight: 600;
-    letter-spacing: .02em;
+    letter-spacing: var(--btn-tracking);
+    text-transform: var(--btn-transform);
     padding: .85em 1.6em;
-    border-radius: var(--radius);
+    border-radius: var(--btn-radius);
     border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
@@ -145,11 +181,11 @@ summary:focus-visible {
     white-space: nowrap;
 }
 
-.btn--primary { background: var(--doba-primary); color: #fff; }
+.btn--primary { background: var(--doba-primary); color: var(--on-primary); }
 .btn--primary:hover { background: var(--doba-primary-hover); }
-.btn--gold { background: var(--doba-accent); color: #fff; }
+.btn--gold { background: var(--doba-accent); color: var(--on-accent); }
 .btn--gold:hover { background: var(--doba-accent-hover); }
-.btn--ghost { border-color: var(--line); background: #fff; color: var(--ink); }
+.btn--ghost { border-color: var(--line); background: var(--surface); color: var(--ink); }
 .btn--ghost:hover { border-color: var(--ink-faint); }
 .btn--block { width: 100%; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
@@ -262,9 +298,9 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 /* --- booking bar --- */
 .bookbar { position: relative; z-index: 40; margin-top: -46px; }
 .bookbar-card {
-    background: #fff;
+    background: var(--surface);
     box-shadow: var(--shadow-lg);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--line);
     padding: 18px;
     display: grid;
@@ -318,11 +354,11 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 .usp span { font-size: .8rem; color: var(--ink-faint); }
 
 /* --- rooms --- */
-.rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 26px; }
+.rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: var(--grid-gap); }
 .room {
-    background: #fff;
+    background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -371,14 +407,14 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 }
 
 /* --- calendar --- */
-.cal-shell { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow); }
+.cal-shell { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 26px; box-shadow: var(--shadow); }
 .cal-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
 .cal-nav { display: flex; gap: 8px; }
 .iconbtn {
     width: 38px;
     height: 38px;
     border: 1px solid var(--line);
-    background: #fff;
+    background: var(--surface);
     border-radius: var(--radius);
     cursor: pointer;
     display: grid;
@@ -421,7 +457,7 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 .day.is-out .p, .day.is-closed .p { display: none; }
 .day.is-cta { box-shadow: inset 0 -2px 0 var(--danger); }
 .day.in-range { background: var(--doba-accent-tint); }
-.day.is-start, .day.is-end { background: var(--doba-primary); color: #fff; }
+.day.is-start, .day.is-end { background: var(--doba-primary); color: var(--on-primary); }
 .day.is-start .p, .day.is-end .p { color: #cfe0d4; }
 .day.is-low::after {
     content: "";
@@ -463,7 +499,7 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 
 /* --- split feature --- */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
-.split-media { aspect-ratio: 5 / 4; border-radius: var(--radius); overflow: hidden; }
+.split-media { aspect-ratio: 5 / 4; border-radius: var(--radius-lg); overflow: hidden; }
 .split-media img { width: 100%; height: 100%; object-fit: cover; }
 .split.reverse .split-media { order: 2; }
 
@@ -521,7 +557,7 @@ footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9p
 .input {
     width: 100%;
     border: 1px solid var(--line);
-    background: #fff;
+    background: var(--surface);
     border-radius: var(--radius);
     padding: .7em .85em;
     font: inherit;
@@ -530,7 +566,7 @@ footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9p
 }
 .input:hover { border-color: var(--ink-faint); }
 .label { display: block; font-size: .8rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
-.card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px; }
 .notice { border-radius: var(--radius); padding: 14px 16px; font-size: .9rem; }
 .notice--ok { background: #eef5ef; border: 1px solid #cfe0d4; color: var(--ok); }
 .notice--warn { background: var(--doba-accent-tint); border: 1px solid #e3d5b8; color: #6b5220; }
@@ -571,7 +607,7 @@ footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9p
 .crumbs a:hover { color: var(--ink); }
 
 .gal { display: grid; grid-template-columns: 1fr 300px; gap: 12px; margin-top: 18px; }
-.gal-main { position: relative; aspect-ratio: 16 / 10; border-radius: var(--radius); overflow: hidden; background: var(--paper-2); }
+.gal-main { position: relative; aspect-ratio: 16 / 10; border-radius: var(--radius-lg); overflow: hidden; background: var(--paper-2); }
 .gal-main img { width: 100%; height: 100%; object-fit: cover; }
 .gal-badge {
     position: absolute; left: 16px; top: 16px;
@@ -608,7 +644,7 @@ footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9p
 .sim { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
 
 /* --- sticky booking card --- */
-.bcard { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.bcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
 .bcard-head {
     padding: 20px 22px; border-bottom: 1px solid var(--line); background: var(--paper);
     display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;

@@ -2,6 +2,7 @@ import 'trix';
 import initCalendars from './calendar';
 import initDisclosures from './disclosures';
 import initGrid from './grid';
+import { initStylePresets } from './styles-admin';
 
 /*
  * Plain DOM, deliberately.
@@ -17,6 +18,7 @@ const boot = () => {
     initCalendars();
     initDisclosures();
     initGrid();
+    initStylePresets();
 };
 
 if (document.readyState === 'loading') {

@@ -145,4 +145,7 @@ return [
     'name' => 'Name',
     'cancel' => 'Cancel',
     'room_type' => 'Room type',
+    'style_preset' => 'Style preset',
+    'style_preset_hint' => 'Each preset is a complete look — colours, type, corners, spacing and shadows. All of them render the same pages, so switching never forks your site away from future updates.',
+    'style_override_hint' => 'These override the preset. Leave them as they come and the preset decides.',
 ];
