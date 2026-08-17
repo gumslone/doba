@@ -518,10 +518,44 @@ vendor/bin/pint --test && vendor/bin/phpstan analyse --memory-limit=1G
 CI runs the suite against **both SQLite and MySQL** on every push — that matrix
 is the only thing that keeps the "portable" promise honest.
 
+## The front desk
+
+The screen a hotel stands in front of all morning, and where the admin
+now opens: **arriving**, **in the house**, **leaving today**, **checked
+out today** — the four questions actually asked at a desk, rather than a
+booking list to work them out from.
+
+- **Arrivals carry the time the guest gave.** Checkout asks for an
+  estimated arrival, and the desk sorts by it — so a 22:00 guest is a room
+  held rather than a room somebody wonders about at nine. Anyone who gave
+  no time sorts **last**: an unknown arrival is not an early one.
+- **In-house includes stays that began days ago.** An occupied room is
+  occupied whether or not the guest arrived this morning.
+- **Checked out today** is the housekeeping list: rooms free to clean and
+  resell, with the time each guest actually left.
+- **Late checkout is a request, never an answer.** A guest asks from their
+  manage link; the desk grants a time or declines, because the room may be
+  sold to somebody arriving at three. The two are separate columns
+  (`requested_checkout_time`, `checkout_time`) precisely so a form cannot
+  promise a room on the hotel's behalf, and the request surfaces in the
+  in-house list too — a guest asks the day before as often as the morning
+  of, and a request that only appears on the departure morning is one the
+  desk answers with the guest already standing there.
+- An impossible move — checking in a booking that is still pending —
+  returns the reason from the §6 state machine rather than a 500.
+
+Clock times are stored as plain strings, not datetimes: they are
+wall-clock at the property. A hotel that writes "14:00" on a booking means
+two in the afternoon there, whatever the server thinks its timezone is.
+The `check_in` / `check_out` **dates** stay dates, because inventory is
+counted in nights.
+
 ## Admin & editing
 
 An interim admin area lives at `/admin` (the full Filament panel replaces it
-later in phase 1). It edits **availability**, **rate plans**, **CMS pages**, **events**,
+later in phase 1), behind a **sidebar** grouping sections by what somebody is
+trying to do — the front desk in the morning, the website in the afternoon,
+the machinery rarely. It edits **availability**, **rate plans**, **CMS pages**, **events**,
 **extras** and **photos**, and lists **invoices** for download, with
 per-language tabs and a [Trix](https://trix-editor.org) WYSIWYG editor — clearing a
 language's title unpublishes that language: its URL, `hreflang` entry and

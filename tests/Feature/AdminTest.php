@@ -27,8 +27,9 @@ it('logs in with valid credentials and out again', function (): void {
     $this->post('/admin/login', ['email' => $user->email, 'password' => 'wrong'])
         ->assertSessionHasErrors('email');
 
+    // Lands on the front desk: the screen a hotel opens in the morning.
     $this->post('/admin/login', ['email' => $user->email, 'password' => 'secret-password'])
-        ->assertRedirect('/admin/pages');
+        ->assertRedirect('/admin/front-desk');
 
     $this->assertAuthenticatedAs($user);
 

@@ -31,7 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         $middleware->redirectGuestsTo('/admin/login');
-        $middleware->redirectUsersTo('/admin/pages');
+        // The screen a hotel opens in the morning, not the CMS.
+        $middleware->redirectUsersTo('/admin/front-desk');
 
         // Webhooks authenticate by provider signature, not by session.
         $middleware->validateCsrfTokens(except: ['webhooks/*']);

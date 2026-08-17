@@ -39,7 +39,10 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/admin/pages');
+        // The front desk, not the CMS: it is the screen a hotel opens
+        // in the morning. `intended` still wins, so a deep link survives
+        // the login it triggered.
+        return redirect()->intended('/admin/front-desk');
     }
 
     public function logout(Request $request): RedirectResponse

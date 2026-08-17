@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminAvailabilityController;
 use App\Http\Controllers\Admin\AdminChannelController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
+use App\Http\Controllers\Admin\AdminFrontDeskController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPromoCodeController;
@@ -109,6 +110,11 @@ Route::prefix('admin')->group(function (): void {
         Route::post('update/restore', [AdminUpdateController::class, 'restore'])->name('admin.update.restore');
         Route::get('update/backups/{name}', [AdminUpdateController::class, 'download'])->name('admin.update.download');
         Route::delete('update/backups/{stamp}', [AdminUpdateController::class, 'destroy'])->name('admin.update.backups.destroy');
+
+        Route::get('front-desk', [AdminFrontDeskController::class, 'index'])->name('admin.front-desk');
+        Route::post('front-desk/{booking}/check-in', [AdminFrontDeskController::class, 'checkIn'])->name('admin.front-desk.check-in');
+        Route::post('front-desk/{booking}/check-out', [AdminFrontDeskController::class, 'checkOut'])->name('admin.front-desk.check-out');
+        Route::post('front-desk/{booking}/departure-time', [AdminFrontDeskController::class, 'departureTime'])->name('admin.front-desk.departure-time');
 
         Route::get('venues', [AdminVenueController::class, 'index'])->name('admin.venues');
         Route::get('venues/create', [AdminVenueController::class, 'create'])->name('admin.venues.create');
@@ -217,6 +223,9 @@ foreach ($locales as $locale) {
             Route::get($booking.'/manage/{reference}/{token}', [BookingController::class, 'manage'])->name('booking.manage');
             Route::get($booking.'/manage/{reference}/{token}/invoice.pdf', [BookingController::class, 'invoice'])
                 ->name('booking.invoice');
+            Route::post($booking.'/manage/{reference}/{token}/late-checkout', [BookingController::class, 'requestLateCheckout'])
+                ->middleware('throttle:booking')
+                ->name('booking.late-checkout');
             Route::post($booking.'/manage/{reference}/{token}/cancel', [BookingController::class, 'cancel'])
                 ->middleware('throttle:booking')
                 ->name('booking.cancel');

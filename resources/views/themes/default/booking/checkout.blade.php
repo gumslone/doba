@@ -60,6 +60,30 @@
                     </div>
 
                     <div>
+                        <label for="arrival_time" class="block text-sm font-medium">{{ __('booking.arrival_time') }}</label>
+                        <select id="arrival_time" name="arrival_time"
+                                class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
+                            <option value="">{{ __('booking.arrival_time_unknown') }}</option>
+                            @php
+                                // From the house check-in time to midnight. A
+                                // guest arriving at 23:00 needs to be able to
+                                // say so — that is the whole point of asking.
+                                $slot = \Carbon\CarbonImmutable::createFromFormat('H:i', config('doba.checkin_from', '15:00'));
+                                $end = $slot->endOfDay();
+                            @endphp
+                            @while ($slot < $end)
+                                <option value="{{ $slot->format('H:i') }}" @selected(old('arrival_time') === $slot->format('H:i'))>
+                                    {{ $slot->format('H:i') }}
+                                </option>
+                                @php $slot = $slot->addMinutes(30); @endphp
+                            @endwhile
+                        </select>
+                        <p class="mt-1 text-sm text-neutral-500">
+                            {{ __('booking.arrival_time_hint', ['time' => config('doba.checkin_from')]) }}
+                        </p>
+                    </div>
+
+                    <div>
                         <label for="promo_code" class="block text-sm font-medium">{{ __('promo.label') }}</label>
                         <input type="text" id="promo_code" name="promo_code" maxlength="32"
                                value="{{ old('promo_code') }}" autocomplete="off" autocapitalize="characters"

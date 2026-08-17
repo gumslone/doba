@@ -15,6 +15,7 @@
     // the afternoon, the machinery rarely.
     $sections = [
         __('admin.group_today') => [
+            ['/admin/front-desk', __('admin.front_desk'), 'admin/front-desk*'],
             ['/admin/availability', __('admin.availability'), 'admin/availability*'],
             ['/admin/invoices', __('admin.invoices'), 'admin/invoices*'],
         ],
@@ -67,7 +68,7 @@
     <div class="lg:flex">
         <aside class="hidden w-60 shrink-0 border-r border-neutral-200 bg-white lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
             <div class="px-5 py-5">
-                <a href="/admin/availability" class="text-lg font-semibold">Doba</a>
+                <a href="/admin/front-desk" class="text-lg font-semibold">Doba</a>
             </div>
 
             <nav class="px-2 pb-4" aria-label="{{ __('admin.sections') }}">

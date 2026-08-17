@@ -30,15 +30,19 @@ class Booking extends Model
     protected $fillable = [
         'reference', 'manage_token', 'status', 'source', 'channel_reference',
         'check_in', 'check_out', 'nights', 'adults', 'children', 'children_ages',
+        'arrival_time', 'requested_checkout_time', 'checkout_time',
         'currency', 'subtotal', 'extras_total', 'discount_total', 'tax_total',
         'city_tax', 'total', 'deposit_due', 'paid_amount', 'balance_due',
         'promo_code_id', 'locale', 'guest_id', 'guest_notes', 'internal_notes',
         'cancellation_reason', 'cancelled_at', 'confirmed_at',
+        'checked_in_at', 'checked_out_at',
         'ip_address', 'user_agent',
     ];
 
     protected $casts = [
         'status' => BookingStatus::class,
+        'checked_in_at' => 'immutable_datetime',
+        'checked_out_at' => 'immutable_datetime',
         'check_in' => AsDateString::class,
         'check_out' => AsDateString::class,
         'nights' => 'integer',
@@ -72,6 +76,37 @@ class Booking extends Model
     public function rooms(): HasMany
     {
         return $this->hasMany(BookingRoom::class);
+    }
+
+    /**
+     * When this guest is due to leave.
+     *
+     * The agreed time if the hotel granted a later one, otherwise the
+     * house checkout. Never the *requested* time: a request that nobody
+     * has answered is not an agreement, and a desk that reads it as one
+     * hands a room to a guest who is still in it.
+     */
+    public function departureTime(): string
+    {
+        return $this->checkout_time ?: (string) config('doba.checkout_until', '11:00');
+    }
+
+    /**
+     * A later checkout the guest has asked for and nobody has answered.
+     */
+    public function hasPendingCheckoutRequest(): bool
+    {
+        return $this->requested_checkout_time !== null
+            && $this->requested_checkout_time !== $this->checkout_time;
+    }
+
+    /**
+     * Is the hotel keeping this room past the house checkout?
+     */
+    public function hasLateCheckout(): bool
+    {
+        return $this->checkout_time !== null
+            && $this->checkout_time > (string) config('doba.checkout_until', '11:00');
     }
 
     /**

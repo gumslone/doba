@@ -331,6 +331,16 @@ class BookingService
                 $booking->guest?->increment('total_spent', $booking->total);
             }
 
+            // Stamped here rather than derived from the history: the desk
+            // asks "who is in the house right now" on every page load.
+            if ($to === BookingStatus::CheckedIn) {
+                $booking->checked_in_at = CarbonImmutable::now();
+            }
+
+            if ($to === BookingStatus::CheckedOut) {
+                $booking->checked_out_at = CarbonImmutable::now();
+            }
+
             if ($to === BookingStatus::Cancelled) {
                 $booking->cancelled_at = now();
                 $booking->cancellation_reason = $reason;

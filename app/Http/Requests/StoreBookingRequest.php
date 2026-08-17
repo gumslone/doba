@@ -28,6 +28,7 @@ class StoreBookingRequest extends FormRequest
             'country' => ['nullable', 'string', 'size:2'],
             'guest_notes' => ['nullable', 'string', 'max:2000'],
             'promo_code' => ['nullable', 'string', 'max:32'],
+            'arrival_time' => ['nullable', 'date_format:H:i'],
 
             'extras' => ['nullable', 'array'],
             'extras.*' => ['nullable', 'integer', 'min:0', 'max:99'],

@@ -206,6 +206,13 @@ class BookingController extends Controller
             $booking->forceFill(['guest_notes' => $notes])->save();
         }
 
+        // An estimate, and stored as one. A guest who says 22:00 gets a
+        // room held rather than a desk wondering at nine whether to resell
+        // it.
+        if ($arrival = ($validated['arrival_time'] ?? null)) {
+            $booking->forceFill(['arrival_time' => $arrival])->save();
+        }
+
         if ($extras = array_filter($validated['extras'] ?? [])) {
             $bookings->addExtras($booking, array_map('intval', $extras));
         }
@@ -299,6 +306,35 @@ class BookingController extends Controller
             // Never let a shared proxy keep a copy of somebody's invoice.
             'Cache-Control' => 'private, no-store',
         ]);
+    }
+
+    /**
+     * Ask for a later checkout.
+     *
+     * Recorded as a request, never applied: late checkout depends on who
+     * is arriving that afternoon, and a form that simply granted it would
+     * be promising a room the hotel may have already sold.
+     */
+    public function requestLateCheckout(Request $request, string $reference, string $token): RedirectResponse
+    {
+        $validated = $request->validate([
+            'requested_checkout_time' => ['required', 'date_format:H:i'],
+        ]);
+
+        $booking = $this->findByToken($reference, $token);
+        $url = Localization::route('booking.manage', compact('reference', 'token'));
+
+        if (in_array($booking->status, [BookingStatus::Cancelled, BookingStatus::CheckedOut, BookingStatus::NoShow], true)) {
+            return redirect($url)->with('booking_error', __('booking.error_not_changeable'));
+        }
+
+        if ($validated['requested_checkout_time'] <= (string) config('doba.checkout_until', '11:00')) {
+            return redirect($url)->with('booking_error', __('booking.late_checkout_not_later'));
+        }
+
+        $booking->forceFill(['requested_checkout_time' => $validated['requested_checkout_time']])->save();
+
+        return redirect($url)->with('booking_requested', true);
     }
 
     public function cancel(string $reference, string $token, BookingService $bookings): RedirectResponse

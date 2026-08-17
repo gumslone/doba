@@ -30,6 +30,53 @@
             @include('booking._summary')
         </div>
 
+        <dl class="mt-6 grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+                <dt class="text-neutral-500">{{ __('booking.arrival_time') }}</dt>
+                <dd>{{ $booking->arrival_time ?? __('booking.arrival_time_unknown') }}</dd>
+            </div>
+            <div>
+                <dt class="text-neutral-500">{{ __('booking.departure_time') }}</dt>
+                <dd>
+                    {{ $booking->departureTime() }}
+                    @if ($booking->hasLateCheckout())
+                        <span class="text-green-700">· {{ __('booking.late_checkout_granted') }}</span>
+                    @endif
+                </dd>
+            </div>
+        </dl>
+
+        @if (session('booking_requested'))
+            <p class="mt-6 rounded border border-green-200 bg-green-50 p-4 text-green-800" role="status">
+                {{ __('booking.late_checkout_requested_notice') }}
+            </p>
+        @endif
+
+        @if ($booking->hasPendingCheckoutRequest())
+            <p class="mt-4 rounded border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
+                {{ __('booking.late_checkout_pending', ['time' => $booking->requested_checkout_time]) }}
+            </p>
+        @elseif (! $booking->hasLateCheckout() && in_array($booking->status, [BookingStatus::Confirmed, BookingStatus::CheckedIn], true))
+            <form method="POST"
+                  action="{{ Localization::route('booking.late-checkout', ['reference' => $booking->reference, 'token' => $token]) }}"
+                  class="mt-6 flex flex-wrap items-end gap-3 rounded-lg border border-neutral-200 p-5">
+                @csrf
+                <div>
+                    <label for="requested_checkout_time" class="block text-sm font-medium">
+                        {{ __('booking.request_late_checkout') }}
+                    </label>
+                    <input type="time" id="requested_checkout_time" name="requested_checkout_time" required
+                           min="{{ config('doba.checkout_until') }}"
+                           class="mt-1 rounded border border-neutral-300 px-3 py-2">
+                </div>
+                <button type="submit" class="rounded border border-neutral-300 px-5 py-2.5 hover:bg-neutral-50">
+                    {{ __('booking.request') }}
+                </button>
+                {{-- Said before they ask, not after we refuse. --}}
+                <p class="w-full text-sm text-neutral-500">{{ __('booking.late_checkout_hint') }}</p>
+            </form>
+        @endif
+
         @if ($booking->invoice)
             <p class="mt-6">
                 <a href="{{ Localization::route('booking.invoice', ['reference' => $booking->reference, 'token' => $token]) }}"
