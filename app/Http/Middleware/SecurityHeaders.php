@@ -55,7 +55,7 @@ class SecurityHeaders
         // HSTS only where HTTPS is real: sent over local HTTP it would be
         // ignored, but sent from a misconfigured proxy it could lock a
         // domain out of plain HTTP for a year.
-        if ($request->secure()) {
+        if ($request->secure() && config('doba.security.hsts', true)) {
             $headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
 

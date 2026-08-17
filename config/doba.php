@@ -147,4 +147,21 @@ return [
         'price_range' => env('DOBA_PRICE_RANGE', '€€'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Security headers
+    |--------------------------------------------------------------------------
+    |
+    | HSTS is on wherever HTTPS is real, which is right for a hotel serving
+    | its own domain. Turn it off where the install does NOT own the domain
+    | it answers on — a preview or demo running under someone else's
+    | wildcard host, where `includeSubDomains` would assert a year of
+    | policy over a domain that is not yours to set it for.
+    |
+    */
+
+    'security' => [
+        'hsts' => (bool) env('DOBA_HSTS', true),
+    ],
+
 ];

@@ -1,0 +1,32 @@
+{
+    "name": "Doba",
+    "build": { "dockerfile": "Dockerfile" },
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+    },
+    "onCreateCommand": "bash .devcontainer/setup.sh",
+    "postAttachCommand": {
+        "doba": "php artisan serve --host=0.0.0.0 --port=8000"
+    },
+    "forwardPorts": [8000],
+    "portsAttributes": {
+        "8000": {
+            "label": "Doba",
+            "onAutoForward": "openPreview"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "onecentlin.laravel-blade",
+                "EditorConfig.EditorConfig"
+            ],
+            "settings": {
+                "editor.formatOnSave": false,
+                "files.eol": "\n"
+            }
+        }
+    },
+    "remoteUser": "vscode"
+}

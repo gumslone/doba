@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/gumslone/doba/actions/workflows/ci.yml/badge.svg)](https://github.com/gumslone/doba/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/gumslone/doba)
 
 **Doba** is an open-source hotel booking system built on Laravel: a public,
 multilingual, server-rendered website with a direct-booking engine, an
@@ -342,6 +343,35 @@ Tier-1 two-way iCal, which is what an independent hotel actually runs.
 - MySQL 8 **or** SQLite 3.35+
 - Apache 2.4 with `mod_rewrite` + php-fpm in production (see
   [`docs/architecture.md` §15](docs/architecture.md))
+
+## Try it without installing anything
+
+[**Open in GitHub Codespaces**](https://codespaces.new/gumslone/doba) — the
+whole thing boots in a browser tab: PHP 8.4, SQLite, migrations, the demo
+hotel, the front-end build, and the site on port 8000. Roughly two minutes
+cold, seconds from a prebuild. It is the real application, not a mock-up —
+the booking funnel, the admin, the availability grid, the PDF invoices and
+the iCal feeds all work.
+
+Two details the dev container gets right, because both would otherwise make
+the demo lie about the thing it is demonstrating:
+
+- **`APP_URL` is set to the forwarded Codespaces host**, not `localhost`.
+  Every canonical tag, `hreflang` href, sitemap entry, iCal feed URL and
+  payment return URL is generated from it, and an SEO demo whose canonical
+  tags all point at `localhost` demonstrates the opposite of the point.
+- **HSTS is switched off there** (`DOBA_HSTS=false`). A Codespace answers on
+  `*.app.github.dev`, a domain this install does not own, and
+  `Strict-Transport-Security` with `includeSubDomains` would assert a year of
+  policy over somebody else's wildcard host. Every other security header
+  stays exactly as it is in production.
+
+The seeded admin is `admin@example.com` / `password` at `/admin`. Set
+`DOBA_ADMIN_EMAIL` and `DOBA_ADMIN_PASSWORD` before seeding anything you
+intend to make public.
+
+> GitHub Pages cannot host this: Pages serves static files, and Doba needs
+> PHP, a database and writable storage. Codespaces runs the real thing.
 
 ## Quick start
 
