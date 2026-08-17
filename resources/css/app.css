@@ -643,8 +643,14 @@ footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9p
 .facts span { display: inline-flex; align-items: center; gap: 8px; }
 .facts svg { color: var(--doba-moss); flex: none; }
 
-.block { margin-top: 44px; }
-.block h2 { margin-bottom: 16px; }
+/*
+ * NOT `.block`: that is Tailwind's display utility, and a component class
+ * of the same name silently added 44px above every `class="block …"` form
+ * label on the contact page and the checkout. A component may not own a
+ * name the utility layer already uses.
+ */
+.stack { margin-top: 44px; }
+.stack h2 { margin-bottom: 16px; }
 
 .tbl { width: 100%; border-collapse: collapse; font-size: .88rem; margin-top: 4px; }
 .tbl th, .tbl td { text-align: left; padding: 11px 0; border-bottom: 1px solid var(--line); }

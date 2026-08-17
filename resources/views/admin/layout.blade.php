@@ -2,7 +2,40 @@
     The pre-Filament admin shell. Deliberately outside the theme system:
     a hotel's theme must never be able to restyle (or break) the tools
     used to fix the hotel's theme.
+
+    A sidebar rather than a top bar because the section list outgrew one
+    line: thirteen links across the top wrapped, truncated, and reordered
+    themselves as the window changed, which is exactly when a hotelier
+    misclicks. A vertical list has room to group, room to grow, and holds
+    its position.
 --}}
+@php
+    // Grouped by what somebody is trying to do, not by what the code
+    // happens to be called: the front desk in the morning, the website in
+    // the afternoon, the machinery rarely.
+    $sections = [
+        __('admin.group_today') => [
+            ['/admin/availability', __('admin.availability'), 'admin/availability*'],
+            ['/admin/invoices', __('admin.invoices'), 'admin/invoices*'],
+        ],
+        __('admin.group_selling') => [
+            ['/admin/rate-plans', __('admin.rate_plans'), 'admin/rate-plans*'],
+            ['/admin/extras', __('admin.extras'), 'admin/extras*'],
+            ['/admin/promo-codes', __('admin.promo_codes'), 'admin/promo-codes*'],
+            ['/admin/channels', __('admin.channels'), 'admin/channels*'],
+        ],
+        __('admin.group_website') => [
+            ['/admin/pages', __('admin.pages'), 'admin/pages*'],
+            ['/admin/events', __('admin.events'), 'admin/events*'],
+            ['/admin/venues', __('admin.venues'), 'admin/venues*'],
+            ['/admin/photos', __('admin.photos'), 'admin/photos*'],
+            ['/admin/styles', __('admin.styles'), 'admin/styles*'],
+        ],
+        __('admin.group_system') => [
+            ['/admin/update', __('admin.update'), 'admin/update*'],
+        ],
+    ];
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,49 +46,68 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-neutral-100 text-neutral-900 antialiased">
-    <header class="border-b border-neutral-200 bg-white">
-        <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <nav class="flex items-center gap-5 text-sm font-medium">
-                <span class="font-semibold">Doba</span>
-                <a href="/admin/availability" @class(['underline' => request()->is('admin/availability*')])>{{ __('admin.availability') }}</a>
-                <a href="/admin/pages" @class(['underline' => request()->is('admin/pages*')])>{{ __('admin.pages') }}</a>
-                <a href="/admin/events" @class(['underline' => request()->is('admin/events*')])>{{ __('admin.events') }}</a>
-                <a href="/admin/venues" @class(['underline' => request()->is('admin/venues*')])>{{ __('admin.venues') }}</a>
-                <a href="/admin/promo-codes" @class(['underline' => request()->is('admin/promo-codes*')])>{{ __('admin.promo_codes') }}</a>
-                <a href="/admin/channels" @class(['underline' => request()->is('admin/channels*')])>{{ __('admin.channels') }}</a>
-                <a href="/admin/invoices" @class(['underline' => request()->is('admin/invoices*')])>{{ __('admin.invoices') }}</a>
-                <a href="/admin/rate-plans" @class(['underline' => request()->is('admin/rate-plans*')])>{{ __('admin.rate_plans') }}</a>
-                <a href="/admin/extras" @class(['underline' => request()->is('admin/extras*')])>{{ __('admin.extras') }}</a>
-                <a href="/admin/photos" @class(['underline' => request()->is('admin/photos*')])>{{ __('admin.photos') }}</a>
-                <a href="/admin/update" @class(['underline' => request()->is('admin/update*')])>{{ __('admin.update') }}</a>
-                <a href="/admin/styles" @class(['underline' => request()->is('admin/styles*')])>{{ __('admin.styles') }}</a>
+    {{--
+        Plain <details> for the mobile toggle. No framework, no JavaScript
+        at all: the §14 CSP forbids 'unsafe-eval', and a navigation that
+        stops working when a script fails to load is a navigation that
+        strands somebody in an admin panel.
+    --}}
+    <details class="group border-b border-neutral-200 bg-white lg:hidden" id="admin-nav">
+        <summary class="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold">
+            <span>Doba</span>
+            <span class="text-neutral-500 group-open:hidden">{{ __('admin.menu') }}</span>
+            <span class="hidden text-neutral-500 group-open:inline">{{ __('admin.close') }}</span>
+        </summary>
+
+        <nav class="px-2 pb-4" aria-label="{{ __('admin.sections') }}">
+            @include('admin.partials.nav-sections', ['sections' => $sections])
+        </nav>
+    </details>
+
+    <div class="lg:flex">
+        <aside class="hidden w-60 shrink-0 border-r border-neutral-200 bg-white lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
+            <div class="px-5 py-5">
+                <a href="/admin/availability" class="text-lg font-semibold">Doba</a>
+            </div>
+
+            <nav class="px-2 pb-4" aria-label="{{ __('admin.sections') }}">
+                @include('admin.partials.nav-sections', ['sections' => $sections])
             </nav>
-            <div class="flex items-center gap-4 text-sm">
-                <a href="/" target="_blank" class="text-neutral-500 hover:underline">{{ __('admin.view_site') }}</a>
+
+            <div class="mt-auto space-y-1 border-t border-neutral-200 px-2 py-4 text-sm">
+                <a href="/" target="_blank" rel="noopener"
+                   class="block rounded px-3 py-1.5 text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900">
+                    {{ __('admin.view_site') }} ↗
+                </a>
                 <form method="POST" action="/admin/logout">
                     @csrf
-                    <button type="submit" class="text-neutral-500 hover:underline">{{ __('admin.logout') }}</button>
+                    <button type="submit"
+                            class="block w-full rounded px-3 py-1.5 text-left text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900">
+                        {{ __('admin.logout') }}
+                    </button>
                 </form>
             </div>
-        </div>
-    </header>
+        </aside>
 
-    <main class="mx-auto max-w-5xl px-4 py-8">
-        @if (session('saved'))
-            <p class="mb-6 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800" role="status">
-                {{ session('saved') }}
-            </p>
-        @endif
+        <main class="min-w-0 flex-1 px-4 py-8 lg:px-8">
+            <div class="mx-auto max-w-5xl">
+                @if (session('saved') || session('status'))
+                    <p class="mb-6 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800" role="status">
+                        {{ session('saved') ?? session('status') }}
+                    </p>
+                @endif
 
-        @if ($errors->any())
-            <ul class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        @endif
+                @if ($errors->any())
+                    <ul class="mb-6 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                @endif
 
-        @yield('content')
-    </main>
+                @yield('content')
+            </div>
+        </main>
+    </div>
 </body>
 </html>

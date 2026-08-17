@@ -77,13 +77,13 @@
                 </div>
 
                 @if ($description = $roomType->t('description'))
-                    <section class="block">
+                    <section class="stack">
                         <div class="prose lede" style="max-width:70ch">{!! $description !!}</div>
                     </section>
                 @endif
 
                 @if ($inclusions !== [])
-                    <section class="block">
+                    <section class="stack">
                         <h2>{{ __('extras.includes') }}</h2>
                         <div style="display:grid;gap:26px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
                             @foreach ($inclusions as $category => $amenities)
@@ -107,7 +107,7 @@
                     </section>
                 @endif
 
-                <section class="block">
+                <section class="stack">
                     <h2>{{ __('common.occupancy') }}</h2>
                     <table class="tbl">
                         <tbody>
@@ -136,7 +136,7 @@
                 </section>
 
                 @if ($ratePlans !== [])
-                    <section class="block">
+                    <section class="stack">
                         <h2>{{ __('booking.rates_title') }}</h2>
                         <p class="lede" style="margin-bottom:16px">{{ __('booking.rates_lede') }}</p>
 
@@ -173,7 +173,7 @@
                 @endif
 
                 @if ($extras->isNotEmpty())
-                    <section class="block">
+                    <section class="stack">
                         <h2>{{ __('extras.title') }}</h2>
                         <p class="lede" style="margin-bottom:16px">{{ __('extras.intro') }}</p>
 
@@ -200,13 +200,13 @@
                     </section>
                 @endif
 
-                <section class="block" id="cal">
+                <section class="stack" id="cal">
                     <h2>{{ __('booking.availability') }}</h2>
                     <p class="lede" style="margin-bottom:16px">{{ __('booking.calendar_lede') }}</p>
                     @include('booking._calendar', ['roomTypes' => collect([$roomType])])
                 </section>
 
-                <section class="block">
+                <section class="stack">
                     <h2>{{ __('common.good_to_know') }}</h2>
                     <div class="pol">
                         <div>
@@ -227,7 +227,7 @@
                 </section>
 
                 @if ($similar->isNotEmpty())
-                    <section class="block">
+                    <section class="stack">
                         <h2>{{ __('common.similar_rooms') }}</h2>
                         <div class="sim">
                             @foreach ($similar as $other)

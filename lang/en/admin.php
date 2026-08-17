@@ -233,4 +233,11 @@ return [
     'restore_uploads_done' => 'Photos restored.',
     'restore_uploads_failed' => 'The photos could not be restored.',
     'restore_manual' => 'This database must be restored by hand: :command',
+    'menu' => 'Menu',
+    'close' => 'Close',
+    'sections' => 'Sections',
+    'group_today' => 'Today',
+    'group_selling' => 'Selling',
+    'group_website' => 'Website',
+    'group_system' => 'System',
 ];

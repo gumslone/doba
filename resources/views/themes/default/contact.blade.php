@@ -85,7 +85,7 @@
         </form>
 
         @if ($mapEmbed = Maps::embed($hotel))
-            <div class="block">
+            <div class="stack">
                 <h2>{{ __('contact.map_title') }}</h2>
 
                 {{-- Click-to-load: nothing is requested from Google until the

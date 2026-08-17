@@ -148,3 +148,24 @@ it('floats the footer free of the brand where the brand is too light for it', fu
     expect($html)->toContain('--footer-bg:#0d0b09')
         ->toContain('--footer-on:#f2ece1');
 });
+
+it('never lets a component class collide with a Tailwind utility', function (): void {
+    $css = file_get_contents(base_path('resources/css/app.css'));
+
+    preg_match_all('/^\.([a-z][a-z0-9-]*)\s*[,{]/m', $css, $matches);
+
+    // Tailwind's own utility names. A component that owns one of these
+    // applies its styling to every element that used the utility — which
+    // is how `.block { margin-top: 44px }` put 44px above every
+    // `class="block text-sm"` form label on the contact page.
+    $utilities = [
+        'block', 'inline', 'flex', 'grid', 'hidden', 'table', 'contents',
+        'container', 'static', 'fixed', 'absolute', 'relative', 'sticky',
+        'border', 'rounded', 'shadow', 'transition', 'truncate', 'sr-only',
+        'italic', 'underline', 'uppercase', 'visible', 'invisible',
+    ];
+
+    $collisions = array_values(array_intersect(array_unique($matches[1]), $utilities));
+
+    expect($collisions)->toBe([]);
+});
