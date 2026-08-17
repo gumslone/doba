@@ -261,12 +261,25 @@ class BookingController extends Controller
             // A hold is not a booking. The partner needs to know exactly
             // how long they have to pay or confirm before the room goes
             // back on sale (§17).
-            'hold_expires_at' => $booking->status === BookingStatus::Pending
-                ? $booking->holds()->whereNull('released_at')->max('expires_at')
-                : null,
+            // Parsed rather than passed through: max() hands back whatever
+            // the driver stores, and a field that is ISO 8601 on one
+            // database and "2026-09-07 12:00:00" on another is a field a
+            // partner cannot parse.
+            'hold_expires_at' => $this->holdExpiry($booking),
             'created_at' => $booking->created_at?->toIso8601String(),
             'updated_at' => $booking->updated_at?->toIso8601String(),
         ];
+    }
+
+    protected function holdExpiry(Booking $booking): ?string
+    {
+        if ($booking->status !== BookingStatus::Pending) {
+            return null;
+        }
+
+        $expiry = $booking->holds()->whereNull('released_at')->max('expires_at');
+
+        return $expiry === null ? null : CarbonImmutable::parse($expiry)->toIso8601String();
     }
 
     protected function client(Request $request): ApiClient

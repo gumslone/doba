@@ -140,6 +140,15 @@ jobs:
           echo "composer install failed after 5 attempts"
           exit 1
 
+      # Its own step rather than only inside the suite: a stale
+      # public/openapi.json is a partner reading a contract the code no
+      # longer honours, and that deserves to fail by name.
+      - name: Check the committed OpenAPI spec is current
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan doba:openapi --check
+
       - name: Check code style
         run: vendor/bin/pint --test
 

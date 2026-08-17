@@ -22,10 +22,9 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 > events, extras & room inclusions, photo management with a maps block,
 > invoices, **two-way iCal channel sync**, the guest booking funnel, and an
 > interim admin with a WYSIWYG editor.
-> Still to come: the installation wizard, the public partner API and the full
-> Filament panel — all specified in
+> Still to come: the full Filament panel — specified in
 > [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
-> The correctness-critical paths are covered by 285+ tests on both database
+> The correctness-critical paths are covered by 415+ tests on both database
 > engines, but the platform has not yet run a real hotel — treat it as
 > pre-release.
 
@@ -635,6 +634,34 @@ thinks is free, and a guest finds that bug rather than we do.
   partner's bug report is one lookup from an answer rather than a request
   to reproduce.
 
+The full integration guide is **[`docs/api.md`](docs/api.md)**.
+
+### The spec is hand-written, and the code is tested against it
+
+`resources/api/openapi.yaml` is the source of truth, generated into
+`public/openapi.json` — so every installation serves its own machine-readable
+contract at `https://<hotel>/openapi.json`.
+
+Generating that file from the controllers would guarantee it always matched
+the code, and would therefore never once tell us the code had changed in a
+way a partner cares about. **A generated spec cannot be violated, so it
+cannot warn.** So the spec is written by hand and the code is checked against
+it: every documented response is closed — every field required, no extras
+allowed — which means adding, renaming or retyping a field in a controller
+turns CI red until somebody writes down what changed.
+
+The same tests assert that every route is documented, that no documented
+route is imaginary, and that each operation's declared scope is **the one its
+middleware actually enforces** — documentation about permissions that nothing
+checks is worse than none, because a partner requests the scope the docs name
+and then gets a `403` they cannot explain.
+
+Writing the spec found three bugs on its own, which is the argument for
+writing it: a hotel with no address filled in sent `"address": []` instead of
+`{}`, an untranslated room type did the same with its names, and
+`hold_expires_at` was whatever string the database driver happened to store —
+ISO 8601 on one engine, `2026-09-07 12:00:00` on another.
+
 ## Reports
 
 Occupancy, ADR, RevPAR, channel mix and pace — with a CSV export, because
@@ -838,7 +865,7 @@ wizard and the public API, is in
 | — | Invoices, **iCal channel sync**, promo codes, eight style presets, **restaurant & menu** | **done** |
 | 4 | First hotel live | planned |
 | 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
-| 6 | Public REST API + ARI push + webhooks **done**; OpenAPI docs next | in progress |
+| 6 | Public REST API + ARI push + webhooks + **OpenAPI 3.1 contract** | **done** |
 
 ## Contributing
 

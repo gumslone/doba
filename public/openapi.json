@@ -1,0 +1,1763 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Doba Partner API",
+        "version": "1.0",
+        "summary": "Availability, rates and bookings for one hotel.",
+        "description": "The read-and-write interface a channel manager, a metasearch partner or\nthe hotel's own tooling integrates against.\n\nThree rules run through the whole of it:\n\n- **Money is integer minor units plus a currency**, never a decimal\n  string. `{\"amount\": 12500, \"currency\": \"EUR\"}` is 125.00 EUR, and a\n  partner cannot lose a cent parsing it as a float.\n- **A date is a date.** `check_in` is `2026-09-07`, not a timestamp in\n  somebody's timezone. Only genuine instants (`created_at`,\n  `hold_expires_at`) are RFC 3339.\n- **Nothing here decides whether a room is free.** Every endpoint calls\n  the same services the hotel's own website does, so the API and the\n  website can never disagree about a night.\n\nErrors are RFC 9457 `application/problem+json`. Integrate against\n`type` — those URIs are part of the contract and will not change. The\n`title` is for a human reading a log and may be reworded at any time.\n",
+        "license": {
+            "name": "AGPL-3.0-or-later",
+            "identifier": "AGPL-3.0-or-later"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://{host}/api/v1",
+            "description": "A Doba installation.",
+            "variables": {
+                "host": {
+                    "default": "example.com"
+                }
+            }
+        }
+    ],
+    "security": [
+        {
+            "ApiKeyId": [],
+            "ApiSecret": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Hotel",
+            "description": "What this property is and what it sells."
+        },
+        {
+            "name": "Availability",
+            "description": "What is free, at what price, and pushing that back."
+        },
+        {
+            "name": "Bookings",
+            "description": "Taking, reading and cancelling stays."
+        },
+        {
+            "name": "Webhooks",
+            "description": "Being told, instead of polling."
+        }
+    ],
+    "paths": {
+        "/hotel": {
+            "get": {
+                "operationId": "getHotel",
+                "summary": "Property details",
+                "description": "Discovery. A partner calls this once at setup to learn the\ncurrency, the locales and the booking window it must respect.\n",
+                "tags": [
+                    "Hotel"
+                ],
+                "x-doba-scope": "hotel:read",
+                "responses": {
+                    "200": {
+                        "description": "The property.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Hotel"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            }
+        },
+        "/room-types": {
+            "get": {
+                "operationId": "listRoomTypes",
+                "summary": "Room types on sale",
+                "description": "Only active types, in the hotel's own display order. `code` is the\nidentifier every other endpoint takes — names are translated and\nchange, codes do not.\n",
+                "tags": [
+                    "Hotel"
+                ],
+                "x-doba-scope": "hotel:read",
+                "responses": {
+                    "200": {
+                        "description": "The room types.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/RoomType"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            }
+        },
+        "/availability": {
+            "get": {
+                "operationId": "getAvailability",
+                "summary": "Nightly availability and price",
+                "description": "The raw calendar, night by night. `available` already has holds\ndeducted — it is what a new booking could actually take, not the\nallotment.\n\nNights the hotel has never opened simply do not appear. An absent\nnight is not a bookable one.\n",
+                "tags": [
+                    "Availability"
+                ],
+                "x-doba-scope": "availability:read",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "description": "Inclusive. At most 370 days after `from`.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "room_type",
+                        "in": "query",
+                        "required": false,
+                        "description": "Restrict to one room type code.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "One entry per room type.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AvailabilityCalendar"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationFailed"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "pushAvailability",
+                "summary": "Push availability and restrictions",
+                "description": "An **idempotent range write**, which is why it is `PUT`. Sending\nthe identical body twice changes nothing the first call did not —\nthese are not increments, and a partner whose push timed out can\nsimply send it again.\n\n`weekdays` is a bitmask (Monday = 1, Tuesday = 2 … Sunday = 64),\nso \"Saturdays in July, minimum stay three\" is one entry rather\nthan five.\n\nNights where the requested allotment is below what is already sold\nand held are **refused individually** and returned in `refused`.\nThe rest of the push still applies: one oversold night in a six\nmonth range should not throw the range away.\n",
+                "tags": [
+                    "Availability"
+                ],
+                "x-doba-scope": "availability:write",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "updates"
+                                ],
+                                "properties": {
+                                    "updates": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "maxItems": 200,
+                                        "items": {
+                                            "$ref": "#/components/schemas/AvailabilityUpdate"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Applied, possibly with refusals.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AriResult"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationFailed"
+                    }
+                }
+            }
+        },
+        "/rates": {
+            "put": {
+                "operationId": "pushRates",
+                "summary": "Push nightly prices",
+                "description": "Idempotent range write, as with availability. Prices are minor\nunits.\n\nA price cannot be pushed per rate plan. In Doba a rate plan is an\nadjustment off the room's price rather than an independent price,\nso a per-plan push would be stored and never read — sending\n`rate_plan` is refused with `rate-plan-not-pushable` rather than\nsilently ignored.\n",
+                "tags": [
+                    "Availability"
+                ],
+                "x-doba-scope": "rates:write",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "updates"
+                                ],
+                                "properties": {
+                                    "updates": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "maxItems": 200,
+                                        "items": {
+                                            "$ref": "#/components/schemas/RateUpdate"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Applied, possibly with refusals.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AriResult"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "description": "Invalid, or a per-plan price was pushed.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/search": {
+            "get": {
+                "operationId": "searchStays",
+                "summary": "Bookable stays for a set of dates",
+                "description": "The same search the website's own funnel runs — minimum stay,\nclosed-to-arrival, closures and occupancy limits all applied. A\nroom type that appears here is bookable for these exact dates.\n",
+                "tags": [
+                    "Availability"
+                ],
+                "x-doba-scope": "availability:read",
+                "parameters": [
+                    {
+                        "name": "check_in",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "check_out",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "adults",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20
+                        }
+                    },
+                    {
+                        "name": "children",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookable offers. An empty `data` means sold out, not an error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SearchResult"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationFailed"
+                    }
+                }
+            }
+        },
+        "/bookings": {
+            "get": {
+                "operationId": "listBookings",
+                "summary": "Bookings, cursor-paginated",
+                "description": "The pull endpoint a channel manager polls. Page with `next_cursor`\nuntil it is `null`.\n\nCursor rather than offset on purpose: offset pagination over a\ntable that is being written to while you page through it skips\nrows and repeats others, and a partner loses bookings without ever\nseeing an error.\n",
+                "tags": [
+                    "Bookings"
+                ],
+                "x-doba-scope": "bookings:read",
+                "parameters": [
+                    {
+                        "name": "updated_since",
+                        "in": "query",
+                        "required": false,
+                        "description": "Only bookings changed at or after this instant.",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/BookingStatus"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 50
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "required": false,
+                        "description": "The `next_cursor` from the previous page.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "One page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "data",
+                                        "next_cursor"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Booking"
+                                            }
+                                        },
+                                        "next_cursor": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "description": "`null` on the last page."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationFailed"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "createBooking",
+                "summary": "Take a booking",
+                "description": "Goes through the same service, the same row locks and the same\nrestriction checks as the website's own checkout.\n\n**`Idempotency-Key` is required.** A partner whose request times\nout will retry, and an endpoint that cannot tell a retry from a\nsecond booking sells the room twice. Retrying with the same key\nreplays the original response byte for byte and carries\n`Idempotent-Replay: true`. Reusing a key with a *different* body\nis a bug in the caller and is refused with\n`idempotency-key-reused` rather than hidden behind a replay.\n\nThe booking is created `pending` and holds inventory until\n`hold_expires_at`.\n",
+                "tags": [
+                    "Bookings"
+                ],
+                "x-doba-scope": "bookings:write",
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Unique per booking attempt, reused verbatim on retry.",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BookingRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Booked, or a replay of the original response.",
+                        "headers": {
+                            "Idempotent-Replay": {
+                                "description": "Present and `true` when this is a replay rather than a new booking.",
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "true"
+                                    ]
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BookingEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The `Idempotency-Key` header is missing.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "409": {
+                        "description": "`no-availability` — the stay went while the partner was\ndeciding; the first unavailable night is in `date`.\n`idempotency-key-reused` — same key, different body.\n",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationFailed"
+                    }
+                }
+            }
+        },
+        "/bookings/{reference}": {
+            "get": {
+                "operationId": "getBooking",
+                "summary": "One booking",
+                "tags": [
+                    "Bookings"
+                ],
+                "x-doba-scope": "bookings:read",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/BookingReference"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The booking.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BookingEnvelope"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/bookings/{reference}/cancel": {
+            "post": {
+                "operationId": "cancelBooking",
+                "summary": "Cancel a booking",
+                "description": "`refund` is computed from the cancellation policy **snapshotted on\nthe booking when it was taken**, never from today's rate plan: the\nguest is owed what they agreed to, even if the hotel has since\nchanged its terms.\n\n`paid` comes back alongside it because a refund is capped at what\nwas actually taken — a bare `0` on a booking that was never\ncharged reads like a forfeited stay.\n\nA booking that has already been cancelled, or that the guest has\nchecked out of, is refused with `not-cancellable`.\n",
+                "tags": [
+                    "Bookings"
+                ],
+                "x-doba-scope": "bookings:cancel",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/BookingReference"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cancelled.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CancellationResult"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "description": "`not-cancellable` — this booking is past the point of cancelling.",
+                        "content": {
+                            "application/problem+json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Problem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/webhooks": {
+            "get": {
+                "operationId": "listWebhooks",
+                "summary": "Your webhook subscriptions",
+                "description": "Scoped to the calling key: a partner sees only the endpoints it\nregistered, never another partner's URL.\n",
+                "tags": [
+                    "Webhooks"
+                ],
+                "x-doba-scope": "bookings:read",
+                "responses": {
+                    "200": {
+                        "description": "Your endpoints.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/WebhookEndpoint"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "createWebhook",
+                "summary": "Subscribe to events",
+                "description": "Returns a signing secret **once**. It is not readable afterwards;\nan endpoint whose secret is lost has to be replaced.\n\nEvery delivery carries `X-Signature: t=<unix>,v1=<hex>`, where the\nhex is `HMAC-SHA256(secret, \"<t>.<raw body>\")`. The timestamp is\ninside the signed string, so a delivery captured and replayed\nhours later fails verification even though the body is identical —\nreject anything with a `t` older than your tolerance.\n\nDeliveries are **at least once and may arrive out of order**.\nDedupe on `event_id`, and ignore an event whose `updated_at` is\nolder than what you have already stored, or you will eventually\nresurrect a cancelled booking. An endpoint that fails 20 times\nrunning is disabled.\n",
+                "tags": [
+                    "Webhooks"
+                ],
+                "x-doba-scope": "bookings:read",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "url",
+                                    "events"
+                                ],
+                                "properties": {
+                                    "url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "maxLength": 2048,
+                                        "description": "`https` only. A payload carries guest names and stay\ndates, and signing it does not stop anyone reading it.\n"
+                                    },
+                                    "events": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {
+                                            "$ref": "#/components/schemas/WebhookEvent"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Subscribed. The only time `secret` is ever returned.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "data"
+                                    ],
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "id",
+                                                "url",
+                                                "events",
+                                                "secret"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "url": {
+                                                    "type": "string",
+                                                    "format": "uri"
+                                                },
+                                                "events": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/WebhookEvent"
+                                                    }
+                                                },
+                                                "secret": {
+                                                    "type": "string",
+                                                    "description": "Shown once. Store it now."
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationFailed"
+                    }
+                }
+            }
+        },
+        "/webhooks/{webhook}": {
+            "delete": {
+                "operationId": "deleteWebhook",
+                "summary": "Unsubscribe",
+                "tags": [
+                    "Webhooks"
+                ],
+                "x-doba-scope": "bookings:read",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/WebhookId"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Gone. No body."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        },
+        "/webhooks/{webhook}/test": {
+            "post": {
+                "operationId": "testWebhook",
+                "summary": "Send a test delivery",
+                "description": "Queues a real, really-signed `webhook.test` delivery, so a partner\ncan prove their signature check works before a booking depends on\nit. `202`, because the delivery is queued rather than sent inline.\n",
+                "tags": [
+                    "Webhooks"
+                ],
+                "x-doba-scope": "bookings:read",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/WebhookId"
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Queued.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "event_id"
+                                    ],
+                                    "properties": {
+                                        "event_id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "ApiKeyId": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Api-Key-Id",
+                "description": "The public half of the key pair, `dk_…`."
+            },
+            "ApiSecret": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Api-Secret",
+                "description": "The secret half, shown once when the key is issued and stored\nhashed. There is no recovery path on purpose: a key the admin can\nread back is a key that leaks with a database backup.\n"
+            }
+        },
+        "parameters": {
+            "BookingReference": {
+                "name": "reference",
+                "in": "path",
+                "required": true,
+                "description": "The booking reference, as returned when it was taken.",
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "WebhookId": {
+                "name": "webhook",
+                "in": "path",
+                "required": true,
+                "schema": {
+                    "type": "integer"
+                }
+            }
+        },
+        "responses": {
+            "Unauthorized": {
+                "description": "Missing, unknown, revoked or expired credentials. Deliberately\nidentical whether the key id is unknown or the secret is wrong:\ntelling a caller which half they got right is an oracle for\nguessing the other.\n",
+                "content": {
+                    "application/problem+json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Problem"
+                        }
+                    }
+                }
+            },
+            "Forbidden": {
+                "description": "The key is valid but lacks the scope for this route, or is calling\nfrom an address outside its allowlist. Distinct from `401` on\npurpose — a partner whose egress address changed needs to know\nthat, not rotate a key that was fine.\n",
+                "content": {
+                    "application/problem+json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Problem"
+                        }
+                    }
+                }
+            },
+            "NotFound": {
+                "description": "No such resource.",
+                "content": {
+                    "application/problem+json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Problem"
+                        }
+                    }
+                }
+            },
+            "ValidationFailed": {
+                "description": "The request is not valid; `errors` is keyed by field.",
+                "content": {
+                    "application/problem+json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Problem"
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "Money": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "amount",
+                    "currency"
+                ],
+                "description": "Integer minor units and an ISO 4217 code. `{\"amount\": 12500,\n\"currency\": \"EUR\"}` is 125.00 EUR. Never a decimal string, so a\npartner cannot parse it as a float, multiply it by three nights\nand book a stay for 374.99999999.\n",
+                "properties": {
+                    "amount": {
+                        "type": "integer"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                    }
+                }
+            },
+            "Problem": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "type",
+                    "title",
+                    "status"
+                ],
+                "description": "RFC 9457. Branch on `type` — those URIs are the contract. `title`\nis for a human reading a log and may be reworded at any time.\n",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "integer"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "description": "Field name to messages. Present on `validation-failed`.",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "The first unavailable night. Present on `no-availability`."
+                    }
+                }
+            },
+            "Hotel": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "name",
+                    "locales",
+                    "default_locale",
+                    "currency",
+                    "timezone",
+                    "check_in_from",
+                    "check_out_until",
+                    "address",
+                    "booking_window_days",
+                    "hold_minutes"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "locales": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "default_locale": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "check_in_from": {
+                        "type": "string",
+                        "examples": [
+                            "15:00"
+                        ]
+                    },
+                    "check_out_until": {
+                        "type": "string",
+                        "examples": [
+                            "11:00"
+                        ]
+                    },
+                    "address": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "description": "Keys the hotel has not filled in are absent.",
+                        "properties": {
+                            "street": {
+                                "type": "string"
+                            },
+                            "postal_code": {
+                                "type": "string"
+                            },
+                            "city": {
+                                "type": "string"
+                            },
+                            "country": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "booking_window_days": {
+                        "type": "integer",
+                        "description": "How far ahead a stay may be booked."
+                    },
+                    "hold_minutes": {
+                        "type": "integer",
+                        "description": "How long an unconfirmed booking holds its inventory."
+                    }
+                }
+            },
+            "RoomType": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "code",
+                    "names",
+                    "slugs",
+                    "base_occupancy",
+                    "max_occupancy",
+                    "total_units",
+                    "size_sqm",
+                    "default_rate",
+                    "amenities",
+                    "images"
+                ],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "The stable identifier. Names are translated, codes are not."
+                    },
+                    "names": {
+                        "type": "object",
+                        "description": "Locale to name.",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "slugs": {
+                        "type": "object",
+                        "description": "Locale to URL slug.",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "base_occupancy": {
+                        "type": "integer"
+                    },
+                    "max_occupancy": {
+                        "type": "integer"
+                    },
+                    "total_units": {
+                        "type": "integer"
+                    },
+                    "size_sqm": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "default_rate": {
+                        "$ref": "#/components/schemas/Money"
+                    },
+                    "amenities": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "url",
+                                "width",
+                                "height"
+                            ],
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "format": "uri"
+                                },
+                                "width": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                },
+                                "height": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "AvailabilityCalendar": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "room_type",
+                    "nights"
+                ],
+                "properties": {
+                    "room_type": {
+                        "type": "string"
+                    },
+                    "nights": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AvailabilityNight"
+                        }
+                    }
+                }
+            },
+            "AvailabilityNight": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "date",
+                    "available",
+                    "price",
+                    "min_stay",
+                    "max_stay",
+                    "closed",
+                    "closed_to_arrival",
+                    "closed_to_departure"
+                ],
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "available": {
+                        "type": "integer",
+                        "description": "Units a new booking could take. Holds already deducted."
+                    },
+                    "price": {
+                        "$ref": "#/components/schemas/Money"
+                    },
+                    "min_stay": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "max_stay": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "closed": {
+                        "type": "boolean"
+                    },
+                    "closed_to_arrival": {
+                        "type": "boolean",
+                        "description": "A stay may span this night but not begin on it."
+                    },
+                    "closed_to_departure": {
+                        "type": "boolean",
+                        "description": "A stay may span this night but not end on it."
+                    }
+                }
+            },
+            "AvailabilityUpdate": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "room_type",
+                    "from",
+                    "to"
+                ],
+                "description": "Fields left out are left alone.",
+                "properties": {
+                    "room_type": {
+                        "type": "string"
+                    },
+                    "from": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "to": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Inclusive."
+                    },
+                    "weekdays": {
+                        "$ref": "#/components/schemas/WeekdayMask"
+                    },
+                    "allotment": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 5000
+                    },
+                    "closed": {
+                        "type": "boolean"
+                    },
+                    "closed_to_arrival": {
+                        "type": "boolean"
+                    },
+                    "closed_to_departure": {
+                        "type": "boolean"
+                    },
+                    "min_stay": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 255
+                    },
+                    "max_stay": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 255
+                    }
+                }
+            },
+            "RateUpdate": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "room_type",
+                    "from",
+                    "to",
+                    "price"
+                ],
+                "properties": {
+                    "room_type": {
+                        "type": "string"
+                    },
+                    "from": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "to": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Inclusive."
+                    },
+                    "weekdays": {
+                        "$ref": "#/components/schemas/WeekdayMask"
+                    },
+                    "price": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100000000,
+                        "description": "Minor units, like every other amount here."
+                    },
+                    "rate_plan": {
+                        "type": "string",
+                        "description": "Refused with `rate-plan-not-pushable`. Documented so the\nrefusal is not a surprise: a plan is an adjustment off the\nroom price, so a per-plan price would be stored and never\nread.\n"
+                    }
+                }
+            },
+            "WeekdayMask": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 127,
+                "description": "Bitmask. Monday 1, Tuesday 2, Wednesday 4, Thursday 8, Friday 16,\nSaturday 32, Sunday 64. Weekends are 96; every day, 127, is the\ndefault.\n"
+            },
+            "AriResult": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "nights_updated",
+                    "refused"
+                ],
+                "properties": {
+                    "nights_updated": {
+                        "type": "integer"
+                    },
+                    "refused": {
+                        "type": "array",
+                        "description": "Nights left untouched because the requested allotment was\nbelow what is already sold and held. The rest of the push\nstill applied.\n",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "room_type",
+                                "date"
+                            ],
+                            "properties": {
+                                "room_type": {
+                                    "type": "string"
+                                },
+                                "date": {
+                                    "type": "string",
+                                    "format": "date"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "SearchResult": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "check_in",
+                    "check_out",
+                    "nights",
+                    "data"
+                ],
+                "properties": {
+                    "check_in": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "check_out": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "nights": {
+                        "type": "integer"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Offer"
+                        }
+                    }
+                }
+            },
+            "Offer": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "room_type",
+                    "total",
+                    "per_night",
+                    "units_left",
+                    "rate_plans"
+                ],
+                "properties": {
+                    "room_type": {
+                        "type": "string"
+                    },
+                    "total": {
+                        "$ref": "#/components/schemas/Money",
+                        "description": "The whole stay on the default plan, not one night."
+                    },
+                    "per_night": {
+                        "$ref": "#/components/schemas/Money"
+                    },
+                    "units_left": {
+                        "type": "integer"
+                    },
+                    "rate_plans": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "code",
+                                "total",
+                                "refundable",
+                                "cancellation_hours"
+                            ],
+                            "properties": {
+                                "code": {
+                                    "type": "string"
+                                },
+                                "total": {
+                                    "$ref": "#/components/schemas/Money"
+                                },
+                                "refundable": {
+                                    "type": "boolean"
+                                },
+                                "cancellation_hours": {
+                                    "type": [
+                                        "integer",
+                                        "null"
+                                    ],
+                                    "description": "Free cancellation up to this many hours before arrival."
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "BookingStatus": {
+                "type": "string",
+                "enum": [
+                    "pending",
+                    "confirmed",
+                    "checked_in",
+                    "checked_out",
+                    "cancelled",
+                    "no_show"
+                ]
+            },
+            "WebhookEvent": {
+                "type": "string",
+                "enum": [
+                    "booking.created",
+                    "booking.updated",
+                    "booking.cancelled",
+                    "payment.succeeded",
+                    "payment.refunded",
+                    "availability.changed"
+                ]
+            },
+            "BookingRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "room_type",
+                    "check_in",
+                    "check_out",
+                    "adults",
+                    "guest"
+                ],
+                "properties": {
+                    "room_type": {
+                        "type": "string"
+                    },
+                    "check_in": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "check_out": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "adults": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 20
+                    },
+                    "children": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 20
+                    },
+                    "units": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 20
+                    },
+                    "rate_plan": {
+                        "type": "string"
+                    },
+                    "promo_code": {
+                        "type": "string",
+                        "maxLength": 32
+                    },
+                    "locale": {
+                        "type": "string"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "description": "The guest's own request, shown to the front desk."
+                    },
+                    "guest": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "email",
+                            "first_name",
+                            "last_name"
+                        ],
+                        "properties": {
+                            "email": {
+                                "type": "string",
+                                "format": "email",
+                                "maxLength": 254
+                            },
+                            "first_name": {
+                                "type": "string",
+                                "maxLength": 120
+                            },
+                            "last_name": {
+                                "type": "string",
+                                "maxLength": 120
+                            },
+                            "phone": {
+                                "type": "string",
+                                "maxLength": 64
+                            },
+                            "country": {
+                                "type": "string",
+                                "minLength": 2,
+                                "maxLength": 2,
+                                "description": "ISO 3166-1 alpha-2."
+                            }
+                        }
+                    }
+                }
+            },
+            "BookingEnvelope": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "data"
+                ],
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Booking"
+                    }
+                }
+            },
+            "CancellationResult": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "data",
+                    "refund",
+                    "paid"
+                ],
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/Booking"
+                    },
+                    "refund": {
+                        "$ref": "#/components/schemas/Money",
+                        "description": "From the policy snapshotted on the booking, not today's."
+                    },
+                    "paid": {
+                        "$ref": "#/components/schemas/Money",
+                        "description": "What was actually taken. A refund cannot exceed it."
+                    }
+                }
+            },
+            "Booking": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "reference",
+                    "status",
+                    "source",
+                    "check_in",
+                    "check_out",
+                    "nights",
+                    "adults",
+                    "children",
+                    "rooms",
+                    "guest",
+                    "subtotal",
+                    "extras_total",
+                    "discount_total",
+                    "total",
+                    "balance_due",
+                    "hold_expires_at",
+                    "created_at",
+                    "updated_at"
+                ],
+                "properties": {
+                    "reference": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/BookingStatus"
+                    },
+                    "source": {
+                        "type": "string",
+                        "description": "Where it came from — `direct`, `api`, `ical`, or a channel's\nown name. Not an enum: connecting a new channel must not be a\nbreaking change.\n"
+                    },
+                    "check_in": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "check_out": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "nights": {
+                        "type": "integer"
+                    },
+                    "adults": {
+                        "type": "integer"
+                    },
+                    "children": {
+                        "type": "integer"
+                    },
+                    "rooms": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "room_type",
+                                "price",
+                                "refundable"
+                            ],
+                            "properties": {
+                                "room_type": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "price": {
+                                    "$ref": "#/components/schemas/Money"
+                                },
+                                "refundable": {
+                                    "type": "boolean",
+                                    "description": "Snapshotted when booked, not read from today's plan."
+                                }
+                            }
+                        }
+                    },
+                    "guest": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "first_name",
+                            "last_name",
+                            "email"
+                        ],
+                        "properties": {
+                            "first_name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "last_name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        }
+                    },
+                    "subtotal": {
+                        "$ref": "#/components/schemas/Money"
+                    },
+                    "extras_total": {
+                        "$ref": "#/components/schemas/Money"
+                    },
+                    "discount_total": {
+                        "$ref": "#/components/schemas/Money"
+                    },
+                    "total": {
+                        "$ref": "#/components/schemas/Money"
+                    },
+                    "balance_due": {
+                        "$ref": "#/components/schemas/Money"
+                    },
+                    "hold_expires_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "When a `pending` booking stops holding its inventory. `null`\nonce confirmed — a hold is not a booking, and a partner needs\nto know exactly how long it has.\n"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "Deliveries can arrive out of order. Ignore an event older than\nwhat you have stored, or you will resurrect a cancelled\nbooking.\n"
+                    }
+                }
+            },
+            "WebhookEndpoint": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "id",
+                    "url",
+                    "events",
+                    "active",
+                    "consecutive_failures"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "events": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WebhookEvent"
+                        }
+                    },
+                    "active": {
+                        "type": "boolean",
+                        "description": "Set false automatically after 20 consecutive failures."
+                    },
+                    "consecutive_failures": {
+                        "type": "integer"
+                    }
+                }
+            }
+        }
+    }
+}

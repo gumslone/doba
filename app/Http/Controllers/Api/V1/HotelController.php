@@ -26,7 +26,10 @@ class HotelController extends Controller
             'timezone' => config('app.timezone'),
             'check_in_from' => config('doba.checkin_from'),
             'check_out_until' => config('doba.checkout_until'),
-            'address' => array_filter([
+            // Cast, because array_filter on a hotel that has filled in
+            // none of its address returns [], and `"address": []` breaks
+            // a partner that quite reasonably parses it as an object.
+            'address' => (object) array_filter([
                 'street' => $hotel->get('contact.street'),
                 'postal_code' => $hotel->get('contact.postal_code'),
                 'city' => $hotel->get('contact.city'),
@@ -48,8 +51,10 @@ class HotelController extends Controller
         return response()->json([
             'data' => array_map(static fn (RoomType $type): array => [
                 'code' => $type->code,
-                'names' => $type->translations->pluck('name', 'locale'),
-                'slugs' => $type->translations->pluck('slug', 'locale'),
+                // Same reason as the address above: an untranslated room
+                // type would otherwise send `"names": []`.
+                'names' => (object) $type->translations->pluck('name', 'locale')->all(),
+                'slugs' => (object) $type->translations->pluck('slug', 'locale')->all(),
                 'base_occupancy' => $type->base_occupancy,
                 'max_occupancy' => $type->max_occupancy,
                 'total_units' => $type->total_units,
