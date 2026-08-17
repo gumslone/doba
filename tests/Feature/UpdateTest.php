@@ -72,6 +72,16 @@ function onDisk(Closure $callback): void
         DB::connection('backup_source')->statement('create table rooms (id integer primary key, code text)');
         DB::connection('backup_source')->insert("insert into rooms (code) values ('DBL')");
 
+        // A real install's database carries this table, and EnsureInstalled
+        // reads it on every request — without it the scratch database looks
+        // like an uninstalled copy and the admin redirects to the wizard.
+        DB::connection('backup_source')->statement(
+            'create table installations (id integer primary key, steps_completed text, locale text, version text, installed_at datetime, created_at datetime, updated_at datetime)'
+        );
+        DB::connection('backup_source')->insert(
+            "insert into installations (locale, installed_at) values ('en', datetime('now'))"
+        );
+
         $callback();
     } finally {
         DB::purge('backup_source');

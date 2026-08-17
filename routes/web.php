@@ -21,6 +21,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\IcalController;
+use App\Http\Controllers\Install\InstallController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\RoomTypeController;
@@ -47,6 +48,18 @@ use Illuminate\Support\Facades\Route;
 | first, prefix-less default last.
 |
 */
+
+/*
+| The first-run wizard (§16). Outside every locale group: it runs before
+| there are locales, a database or a user, and EnsureInstalled 404s the
+| whole prefix the moment an install completes.
+*/
+Route::middleware('web')->group(function (): void {
+    Route::get('install', [InstallController::class, 'index'])->name('install');
+    Route::post('install', [InstallController::class, 'authenticate'])->name('install.authenticate');
+    Route::get('install/{step}', [InstallController::class, 'step'])->name('install.step');
+    Route::post('install/{step}', [InstallController::class, 'submit'])->name('install.submit');
+});
 
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('robots.txt', [SitemapController::class, 'robots'])->name('robots');

@@ -396,7 +396,43 @@ intend to make public.
 > GitHub Pages cannot host this: Pages serves static files, and Doba needs
 > PHP, a database and writable storage. Codespaces runs the real thing.
 
-## Quick start
+## Installing
+
+Open the site in a browser. An uninstalled copy sends every URL to
+**`/install`** and walks through it: language, a blocking server check,
+the database, the hotel, your account, your rooms, done. Nothing needs a
+shell — which is the point, because most people running this do not have
+one.
+
+- **The wizard is unauthenticated by definition**, because there is nobody
+  to authenticate against yet. So it prints the path of
+  `storage/install-token.txt` and asks for what is inside: whoever can
+  read a file on the server is exactly the person entitled to install onto
+  it. The token is written on first load, so a fresh clone is never even
+  briefly open, and it is deleted when the install completes.
+- **The server check is blocking** — no "continue anyway". Each failure
+  carries the fix, not just the fact. The hotelier who clicks past a
+  missing `intl` is not the one who can diagnose the site that half-works
+  a month later.
+- **Every step is resumable.** A browser crash at step 5 resumes at step 5.
+  Progress lives in the session until the database step creates somewhere
+  durable to keep it.
+- **The rooms step makes the calendar live immediately** — from a template
+  or your own list. A hotelier who finishes, opens the dashboard and sees
+  an empty calendar concludes the software is broken.
+- **Once installed, `/install` returns 404** — not a redirect, not an
+  "already installed" page. A scanner should learn nothing.
+- **Two independent markers** record the install: `storage/installed.lock`
+  and a database row. They fail differently — a deploy that rsyncs
+  `storage/` wipes the file, a restored backup carries a row for a
+  filesystem nobody set up — so installed means *both*. When they disagree
+  the wizard opens in **repair mode** and says what is missing, rather than
+  offering a fresh install that would migrate over live reservations.
+
+`php artisan doba:update` and *Admin → Update* handle everything after
+that. See [Updating](#updating).
+
+## Quick start (developers)
 
 ```bash
 git clone https://github.com/gumslone/doba.git && cd doba

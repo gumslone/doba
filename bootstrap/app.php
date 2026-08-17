@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Models\Redirect;
@@ -39,6 +40,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // §14 response headers on every route — web, api and webhooks alike.
         $middleware->append(SecurityHeaders::class);
+
+        // Prepended, so an uninstalled copy answers the wizard rather than
+        // whatever a half-configured route would have done — and so an
+        // installed one 404s /install before anything else looks at it.
+        $middleware->prepend(EnsureInstalled::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         /*

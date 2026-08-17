@@ -179,6 +179,23 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Installation markers
+    |--------------------------------------------------------------------------
+    |
+    | Where the two "this copy is installed" markers live. The lock file
+    | is configurable because `storage/` is ephemeral on some hosts — a
+    | platform that rebuilds the container between deploys would otherwise
+    | send a live hotel back to the install wizard.
+    |
+    */
+
+    'install' => [
+        'lock_path' => env('DOBA_INSTALL_LOCK', storage_path('installed.lock')),
+        'token_path' => env('DOBA_INSTALL_TOKEN', storage_path('install-token.txt')),
+    ],
+
     'backups' => [
         'keep' => (int) env('DOBA_BACKUP_KEEP', 10),
         'uploads' => (bool) env('DOBA_BACKUP_UPLOADS', true),

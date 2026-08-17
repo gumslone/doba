@@ -7,6 +7,7 @@ namespace App\Support\Hotel;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 /**
  * The $hotel object shared with every view.
@@ -50,12 +51,32 @@ class HotelSettings
      */
     public function all(): array
     {
-        return $this->values ??= Cache::rememberForever(
+        if ($this->values !== null) {
+            return $this->values;
+        }
+
+        try {
+            return $this->values = $this->load();
+        } catch (Throwable) {
+            // A settings read must not be what breaks a fresh clone before
+            // the first migration has run — the installer (§16) serves the
+            // wizard through the same layout, and the DEFAULT CACHE STORE
+            // IS THE DATABASE, so even asking the cache throws when there
+            // is no database yet. Guarding only the query inside the cache
+            // closure was guarding the wrong layer: the copy that shipped
+            // 500'd every page of a fresh install, wizard included.
+            return $this->values = [];
+        }
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    protected function load(): array
+    {
+        return Cache::rememberForever(
             self::CACHE_KEY,
             static function (): array {
-                // A settings read must not be what breaks a fresh clone before
-                // the first migration has run — the installer (§16) serves the
-                // wizard through the same layout.
                 if (! Setting::tableExists()) {
                     return [];
                 }

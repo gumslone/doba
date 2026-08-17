@@ -2,11 +2,40 @@
 
 declare(strict_types=1);
 
+use App\Support\Install\Installer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(function (): void {
+        // The suite is a hotel that is already running. Without this,
+        // EnsureInstalled would send every request in every test to the
+        // wizard — which is exactly what it should do to a fresh copy,
+        // and exactly what these tests are not about.
+        //
+        // The markers live under storage/framework/testing so a test run
+        // never writes an installed.lock into the developer's own copy.
+        $lock = storage_path('framework/testing/installed.lock');
+
+        File::ensureDirectoryExists(dirname($lock));
+        config([
+            'doba.install.lock_path' => $lock,
+            'doba.install.token_path' => storage_path('framework/testing/install-token.txt'),
+        ]);
+
+        File::put($lock, 'testing');
+
+        DB::table('installations')->insert([
+            'steps_completed' => json_encode(Installer::STEPS),
+            'locale' => 'en',
+            'installed_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    })
     ->in('Feature');
 
 /**
