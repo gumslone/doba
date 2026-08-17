@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Support\Hotel\HotelSettings;
+use App\Support\Maintenance\DatabaseBackup;
 use App\Support\Seo\Seo;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Blade;
@@ -19,6 +20,10 @@ class SeoServiceProvider extends ServiceProvider
         // Scoped, not singleton: settings belong to a request, and an
         // instance that outlives one serves yesterday's hotel name.
         $this->app->scoped(HotelSettings::class);
+
+        // The backup directory is configuration, not something the
+        // container can guess from a type hint.
+        $this->app->bind(DatabaseBackup::class, static fn (): DatabaseBackup => DatabaseBackup::make());
 
         // One SEO bag per request: a controller fills it in, the layout
         // renders it. Scoped rather than singleton so a queued job or an

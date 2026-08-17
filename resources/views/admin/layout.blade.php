@@ -27,6 +27,7 @@
                 <a href="/admin/rate-plans" @class(['underline' => request()->is('admin/rate-plans*')])>{{ __('admin.rate_plans') }}</a>
                 <a href="/admin/extras" @class(['underline' => request()->is('admin/extras*')])>{{ __('admin.extras') }}</a>
                 <a href="/admin/photos" @class(['underline' => request()->is('admin/photos*')])>{{ __('admin.photos') }}</a>
+                <a href="/admin/update" @class(['underline' => request()->is('admin/update*')])>{{ __('admin.update') }}</a>
                 <a href="/admin/styles" @class(['underline' => request()->is('admin/styles*')])>{{ __('admin.styles') }}</a>
             </nav>
             <div class="flex items-center gap-4 text-sm">

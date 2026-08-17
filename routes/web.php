@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPromoCodeController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
+use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVenueController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\PhotoController;
@@ -101,6 +102,12 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('availability', [AdminAvailabilityController::class, 'index'])->name('admin.availability');
         Route::put('availability', [AdminAvailabilityController::class, 'update'])->name('admin.availability.update');
+
+        Route::get('update', [AdminUpdateController::class, 'index'])->name('admin.update');
+        Route::post('update', [AdminUpdateController::class, 'run'])->name('admin.update.run');
+        Route::post('update/backup', [AdminUpdateController::class, 'backup'])->name('admin.update.backup');
+        Route::get('update/backups/{name}', [AdminUpdateController::class, 'download'])->name('admin.update.download');
+        Route::delete('update/backups/{name}', [AdminUpdateController::class, 'destroy'])->name('admin.update.backups.destroy');
 
         Route::get('venues', [AdminVenueController::class, 'index'])->name('admin.venues');
         Route::get('venues/create', [AdminVenueController::class, 'create'])->name('admin.venues.create');

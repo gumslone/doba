@@ -402,6 +402,55 @@ Useful URLs on the running site:
 | `/sitemap.xml` | every translated URL with reciprocal alternates |
 | `/robots.txt` | funnel disallows + sitemap reference |
 
+## Updating
+
+Two ways in, one code path — because the people running this are often on
+shared hosting with no shell, and an update path that assumes SSH is one
+most of them cannot take. They stop updating, including past the security
+fixes.
+
+**From the browser:** *Admin → Update* shows the version, what is waiting
+to be applied, and a button. Typing `UPDATE` is required, because it
+migrates a live hotel's reservations.
+
+**From a shell:** `php artisan doba:update` (or `--check` to see what it
+would do and change nothing).
+
+Both run the same sequence, in this order:
+
+1. **snapshot the database** — before anything is touched. If the snapshot
+   fails, nothing else happens. Migrating a hotel's reservations with no
+   way back is the outcome this whole path exists to prevent.
+2. close the site — a guest must not meet a half-migrated schema
+3. migrate
+4. rebuild the config, route and view caches, signal queue workers
+5. reopen
+
+If a migration fails, SQLite is **restored automatically** — the snapshot
+is a whole-file copy and the file it replaces is the one the failed
+migration just left half-written. MySQL is not: restoring over a partially
+migrated database is a decision with consequences, and an automatic
+restore that itself fails leaves nobody able to say what state the data is
+in. There the site stays closed and you get the exact `mysql <` command. A
+hotel that is down is recoverable; a hotel taking bookings against a
+broken schema is not.
+
+Snapshots use `VACUUM INTO` on SQLite and `mysqldump --single-transaction`
+on MySQL — both consistent against a live database with writers
+mid-transaction, which a `cp` of a WAL database is emphatically not.
+
+### Getting the new code onto the server
+
+Each release ships a **tarball carrying `vendor/` and the built assets**, so
+no Composer and no Node are needed on the server. Extract it over the
+install — your `.env`, database and uploads are untouched — then run the
+update. The workflow smoke-tests every tarball by extracting it, migrating
+and booting it before attaching it to the release, because a release that
+cannot boot is worse than no release.
+
+With a git checkout and a toolchain, the usual `git pull && composer
+install --no-dev && npm ci && npm run build && php artisan doba:update`.
+
 ## Commands
 
 ```bash

@@ -1,0 +1,141 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g. v0.3.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  tarball:
+    name: Build the release tarball
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, pdo_sqlite, mbstring, intl, gd, zip, curl, openssl
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # The whole point of the tarball: a hotelier on shared hosting has
+      # neither Composer nor Node, so the release carries vendor/ and the
+      # built assets rather than asking them to produce those on the server.
+      - name: Install PHP dependencies
+        run: |
+          for attempt in 1 2 3 4 5; do
+            composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress && exit 0
+            echo "composer install failed (attempt ${attempt}); retrying in $((attempt * 20))s"
+            sleep $((attempt * 20))
+          done
+          exit 1
+
+      - name: Build front-end assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Stamp the version
+        run: echo "${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}" > VERSION
+
+      - name: Release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          Download the tarball, extract it over your install, then open
+          **Admin → Update** and press *Run the update*. It snapshots your
+          database first and puts the snapshot back if anything fails.
+
+          With a shell: `php artisan doba:update`.
+
+          The tarball carries `vendor/` and the built assets, so no Composer
+          or Node is needed on the server. Your `.env`, database and uploads
+          are untouched by extracting it.
+          NOTES
+
+      - name: Pack
+        run: |
+          VERSION="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          STAGE="$(mktemp -d)/doba"
+          mkdir -p "$STAGE"
+
+          # Everything the app needs to run, and nothing that only matters
+          # to somebody developing it. .env is deliberately absent: a
+          # release must never carry keys, and extracting over an install
+          # must never overwrite the one it already has.
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.devcontainer' \
+            --exclude 'node_modules' \
+            --exclude 'tests' \
+            --exclude 'phpunit.xml' \
+            --exclude 'phpstan.neon' \
+            --exclude '.env' \
+            --exclude '.env.example' \
+            --exclude 'database/database.sqlite' \
+            --exclude 'public/storage' \
+            --exclude 'storage/app/backups' \
+            --exclude 'storage/logs/*' \
+            --exclude 'storage/framework/cache/data/*' \
+            --exclude 'storage/framework/sessions/*' \
+            --exclude 'storage/framework/views/*' \
+            ./ "$STAGE/"
+
+          # .env.example ships under a name that cannot clobber a live
+          # .env when somebody extracts with a wildcard.
+          cp .env.example "$STAGE/env.example"
+
+          tar -czf "doba-${VERSION}.tar.gz" -C "$(dirname "$STAGE")" doba
+          sha256sum "doba-${VERSION}.tar.gz" > "doba-${VERSION}.tar.gz.sha256"
+
+          ls -la doba-*.tar.gz*
+
+      # Proves the artefact actually runs before anyone downloads it: a
+      # release tarball that cannot boot is worse than no release.
+      - name: Smoke-test the tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          TEST="$(mktemp -d)"
+          tar -xzf "doba-${VERSION}.tar.gz" -C "$TEST"
+          cd "$TEST/doba"
+          cp env.example .env
+          php artisan key:generate --force
+          touch database/database.sqlite
+          php artisan migrate --force
+          php artisan doba:update --check
+          php -r 'exit(is_file("public/build/manifest.json") ? 0 : 1);' || (echo "built assets missing"; exit 1)
+          echo "Tarball boots and migrates."
+
+      # gh is preinstalled on the runner, so the release step adds no
+      # third-party action to download — which is exactly the dependency
+      # that fails when GitHub is rate-limiting.
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+
+          gh release view "$VERSION" >/dev/null 2>&1 \
+            || gh release create "$VERSION" --title "$VERSION" --notes-file release-notes.md
+
+          gh release upload "$VERSION" \
+            "doba-${VERSION}.tar.gz" \
+            "doba-${VERSION}.tar.gz.sha256" \
+            --clobber
+
