@@ -31,6 +31,27 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 
 ---
 
+## Demo imagery
+
+A public repository cannot carry real hotel photographs — they are
+someone's licensed work — but a hotel site with no images demonstrates
+nothing and hides every image bug. The demo ships **illustrated scenes as
+SVG**: a lake at dusk, a forest path, an interior in the evening. Eight of
+them cost 28 KB, stay crisp at any size, and are obviously illustrations
+rather than photographs — a placeholder that is plainly a placeholder is
+honest, where a blurred rectangle is merely useless.
+
+Each slot names the scene it wants rather than taking the next file in the
+directory, because the alt text already tells a screen reader what the
+picture is; the picture has to actually be that, or the alt text is a lie
+told to the people who most depend on it.
+
+The derivative generator skips SVG — a vector image is already every size,
+and `srcset` is correctly omitted while the intrinsic dimensions are still
+emitted so nothing shifts as the page loads. **Uploads still refuse SVG**
+(jpg, png and webp only): serving our own scenes does not widen what a
+hotelier can put on their site, because an uploaded SVG can carry script.
+
 ## Screenshots
 
 The demo hotel below is what `migrate --seed` produces — real rooms, rates,

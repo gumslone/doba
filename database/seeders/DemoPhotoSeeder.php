@@ -8,38 +8,29 @@ use App\Models\Gallery;
 use App\Models\Media;
 use App\Models\RoomType;
 use App\Support\Media\DerivativeGenerator;
-use GdImage;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 /**
- * Demo photography, generated rather than shipped.
+ * Demo imagery: illustrated scenes, shipped as SVG.
  *
  * A public repository cannot carry real hotel photographs — they are
  * someone's licensed work — but a hotel site with no images demonstrates
- * nothing and hides every image bug. So these are synthetic: soft
- * gradients with a horizon and a few shapes, sized like real photos, run
- * through the same DerivativeGenerator as a genuine upload. They exist to
- * prove the pipeline (srcset, dimensions, cover selection, LCP) end to
- * end, not to look like the Alps.
+ * nothing and hides every image bug.
+ *
+ * These are drawn scenes rather than the gradients that used to live
+ * here: mountains at dusk, a city skyline, a lake, an interior. Vector,
+ * so 26 of them cost 19 KB and stay crisp at any size, and obviously
+ * illustrations rather than photographs — a placeholder that is plainly a
+ * placeholder is honest, where a blurred rectangle is merely useless.
+ *
+ * They carry no scripts and no external references, and uploads still
+ * refuse SVG (jpg/png/webp only), so nothing here widens what a hotelier
+ * can put on their own site.
  */
 class DemoPhotoSeeder extends Seeder
 {
-    /**
-     * Palettes chosen to read as "hotel photography" at a glance: dusk over
-     * water, morning light, warm interior, forest, stone, evening.
-     *
-     * @var array<int,array{0:array{int,int,int},1:array{int,int,int}}>
-     */
-    protected const PALETTES = [
-        [[86, 122, 160], [206, 224, 236]],   // lake at dusk
-        [[224, 206, 178], [246, 240, 228]],  // morning light
-        [[142, 108, 84], [232, 214, 190]],   // warm interior
-        [[74, 104, 86], [198, 216, 196]],    // forest
-        [[122, 122, 130], [226, 226, 230]],  // stone
-        [[92, 78, 110], [214, 202, 224]],    // evening
-    ];
-
     public function run(): void
     {
         $generator = app(DerivativeGenerator::class);
@@ -54,22 +45,28 @@ class DemoPhotoSeeder extends Seeder
         }
 
         $house = [
-            ['lake-at-dusk', 0, ['en' => 'The hotel terrace above the lake at dusk', 'de' => 'Die Hotelterrasse über dem See in der Abenddämmerung']],
-            ['breakfast-room', 1, ['en' => 'The breakfast room in morning light', 'de' => 'Der Frühstücksraum im Morgenlicht']],
-            ['lounge', 2, ['en' => 'The lounge with its open fireplace', 'de' => 'Die Lounge mit offenem Kamin']],
-            ['garden', 3, ['en' => 'The garden path down to the water', 'de' => 'Der Gartenweg hinunter zum Wasser']],
-            ['spa', 4, ['en' => 'The spa and its stone plunge pool', 'de' => 'Das Spa mit steinernem Tauchbecken']],
-            ['terrace-evening', 5, ['en' => 'The terrace on a summer evening', 'de' => 'Die Terrasse an einem Sommerabend']],
+            ['lake-at-dusk', 'lake-at-dusk', ['en' => 'The lake below the hotel at dusk', 'de' => 'Der See unterhalb des Hotels in der Abenddämmerung']],
+            ['breakfast-room', 'misty-hills', ['en' => 'The hills behind the house on a misty morning', 'de' => 'Die Hügel hinter dem Haus an einem nebligen Morgen']],
+            ['lounge', 'interior-evening', ['en' => 'The lounge in the evening', 'de' => 'Die Lounge am Abend']],
+            ['garden', 'forest-cabin', ['en' => 'The forest path behind the hotel', 'de' => 'Der Waldweg hinter dem Hotel']],
+            ['spa', 'shore', ['en' => 'The shore a short walk from the house', 'de' => 'Das Ufer, wenige Schritte vom Haus']],
+            ['terrace-evening', 'water-at-night', ['en' => 'The water at night from the terrace', 'de' => 'Das Wasser bei Nacht von der Terrasse']],
         ];
 
-        foreach ($house as $index => [$slug, $palette, $alt]) {
-            $this->attach($gallery, "galleries/{$gallery->id}/{$slug}.jpg", $palette, $alt, $index, $generator);
+        foreach ($house as $index => [$slug, $scene, $alt]) {
+            $this->attach($gallery, "galleries/{$gallery->id}/{$slug}.svg", $scene, $alt, $index, $generator);
         }
 
         $rooms = [
-            'DBL' => [['double-room', 0, ['en' => 'The double room with its lake-facing balcony', 'de' => 'Das Doppelzimmer mit Balkon zum See']], ['double-bath', 2, ['en' => 'The bathroom of the double room', 'de' => 'Das Bad des Doppelzimmers']]],
-            'JSUITE' => [['junior-suite', 2, ['en' => 'The junior suite seating area', 'de' => 'Der Sitzbereich der Junior-Suite']], ['junior-view', 3, ['en' => 'The mountain view from the junior suite', 'de' => 'Der Bergblick aus der Junior-Suite']]],
-            'SGL' => [['single-room', 4, ['en' => 'The single room on the quiet side', 'de' => 'Das Einzelzimmer auf der ruhigen Seite']]],
+            'DBL' => [
+                ['double-room', 'room-interior', ['en' => 'The double room', 'de' => 'Das Doppelzimmer']],
+                ['double-view', 'lake-at-dusk', ['en' => 'The view from the double room', 'de' => 'Der Blick aus dem Doppelzimmer']],
+            ],
+            'JSUITE' => [
+                ['junior-suite', 'interior-evening', ['en' => 'The junior suite in the evening', 'de' => 'Die Junior-Suite am Abend']],
+                ['junior-view', 'misty-hills', ['en' => 'The view from the junior suite', 'de' => 'Der Blick aus der Junior-Suite']],
+            ],
+            'SGL' => [['single-room', 'room-interior', ['en' => 'The single room on the quiet side', 'de' => 'Das Einzelzimmer auf der ruhigen Seite']]],
         ];
 
         foreach ($rooms as $code => $photos) {
@@ -79,8 +76,8 @@ class DemoPhotoSeeder extends Seeder
                 continue;
             }
 
-            foreach ($photos as $index => [$slug, $palette, $alt]) {
-                $this->attach($roomType, "room-types/{$roomType->id}/{$slug}.jpg", $palette, $alt, $index, $generator);
+            foreach ($photos as $index => [$slug, $scene, $alt]) {
+                $this->attach($roomType, "room-types/{$roomType->id}/{$slug}.svg", $scene, $alt, $index, $generator);
             }
         }
     }
@@ -91,15 +88,16 @@ class DemoPhotoSeeder extends Seeder
     protected function attach(
         object $subject,
         string $path,
-        int $palette,
+        string $sceneName,
         array $alt,
         int $index,
         DerivativeGenerator $generator,
     ): void {
         $disk = Storage::disk('public');
+        $scene = $this->scene($sceneName);
 
         if (! $disk->exists($path)) {
-            $disk->put($path, $this->render(1600, 1067, $palette, $index));
+            $disk->put($path, $scene['svg']);
         }
 
         /** @var Media $media */
@@ -108,127 +106,43 @@ class DemoPhotoSeeder extends Seeder
             'alt' => $alt,
             'sort_order' => $index,
             'is_cover' => $index === 0,
+            // Taken from the viewBox. Every <img> needs them to reserve its
+            // box — the CLS half of the Core Web Vitals budget (§11) —
+            // and an SVG has no raster header to read them out of.
+            'width' => $scene['width'],
+            'height' => $scene['height'],
         ]);
 
         $generator->generate($media);
     }
 
     /**
-     * A stylised alpine landscape: graded sky, low sun, layered ridges
-     * receding into haze, and a lake reflecting them.
+     * Load the named scene and read its intrinsic size.
      *
-     * Deliberately illustrative rather than photo-imitating — a placeholder
-     * that is obviously a placeholder is honest, while an abstract blur is
-     * merely useless. Every element is seeded so a six-photo gallery reads
-     * as six different views rather than one image six times.
+     * Each image names the scene it wants rather than taking whatever the
+     * next file happens to be. The alt text already tells a screen reader
+     * what the picture is — "the garden path down to the water" — so the
+     * picture has to actually be that, or the alt text is a lie told to
+     * the people who most depend on it.
+     *
+     * @return array{svg:string,width:int,height:int}
      */
-    protected function render(int $width, int $height, int $palette, int $seed): string
+    protected function scene(string $scene): array
     {
-        [$top, $bottom] = self::PALETTES[$palette % count(self::PALETTES)];
+        $file = __DIR__.'/scenes/'.$scene.'.svg';
 
-        $image = imagecreatetruecolor($width, $height);
-        imageantialias($image, true);
-
-        $horizon = (int) round($height * (0.60 + 0.05 * sin($seed * 1.3)));
-
-        // Sky: smoothstep so the light pools near the horizon the way it
-        // does at dusk, instead of ramping linearly like a CSS gradient.
-        for ($y = 0; $y < $horizon; $y++) {
-            $t = $y / max(1, $horizon - 1);
-            $e = $t * $t * (3 - 2 * $t);
-
-            imageline($image, 0, $y, $width, $y, imagecolorallocate(
-                $image,
-                (int) round($top[0] + ($bottom[0] - $top[0]) * $e),
-                (int) round($top[1] + ($bottom[1] - $top[1]) * $e),
-                (int) round($top[2] + ($bottom[2] - $top[2]) * $e),
-            ));
+        if (! is_file($file)) {
+            throw new RuntimeException("No demo scene [{$scene}].");
         }
 
-        // Low sun, warm against every palette.
-        $sunX = (int) round($width * (0.22 + 0.55 * (($seed * 7) % 10) / 9));
-        $sunY = (int) round($horizon * 0.68);
-        $sunR = (int) round($width * 0.055);
+        $svg = (string) file_get_contents($file);
 
-        for ($r = $sunR * 4; $r > 0; $r -= 4) {
-            $alpha = (int) max(0, min(127, 118 - 96 * (1 - $r / ($sunR * 4))));
-            imagefilledellipse($image, $sunX, $sunY, $r * 2, $r * 2,
-                imagecolorallocatealpha($image, 255, 238, 206, $alpha));
-        }
+        preg_match('/viewBox="0 0 ([\d.]+) ([\d.]+)"/', $svg, $box);
 
-        // Three ridges, each paler and flatter than the one behind it.
-        for ($layer = 0; $layer < 3; $layer++) {
-            $depth = (1 + $layer) / 4;
-            $base = $horizon - (int) round($height * (0.16 - 0.05 * $layer));
-            $amplitude = $height * (0.13 - 0.03 * $layer);
-
-            $points = [];
-
-            for ($x = 0; $x <= $width; $x += 16) {
-                $u = $x / $width;
-                $ridge = sin($u * (3.1 + $layer + $seed * 0.4) + $seed + $layer * 2.2)
-                    + 0.45 * sin($u * (7.3 + $layer * 2) + $seed * 1.7);
-
-                $points[] = $x;
-                $points[] = (int) round($base - $amplitude * $ridge);
-            }
-
-            array_push($points, $width, $height, 0, $height);
-
-            imagefilledpolygon($image, $points, imagecolorallocate(
-                $image,
-                (int) round($top[0] * (1 - $depth) + 250 * $depth * 0.55),
-                (int) round($top[1] * (1 - $depth) + 250 * $depth * 0.55),
-                (int) round($top[2] * (1 - $depth) + 250 * $depth * 0.60),
-            ));
-        }
-
-        // Water: the sky's lower half, darkened, with horizontal glare.
-        imagefilledrectangle($image, 0, $horizon, $width, $height,
-            imagecolorallocate($image,
-                (int) round($top[0] * 0.72 + $bottom[0] * 0.28),
-                (int) round($top[1] * 0.72 + $bottom[1] * 0.28),
-                (int) round($top[2] * 0.74 + $bottom[2] * 0.26),
-            ));
-
-        for ($y = $horizon; $y < $height; $y++) {
-            $fade = ($y - $horizon) / max(1, $height - $horizon);
-
-            if ((int) round(sin($y * 0.55 + $seed) * 2) !== 0) {
-                continue;
-            }
-
-            imageline($image, 0, $y, $width, $y,
-                imagecolorallocatealpha($image, 255, 250, 240, (int) round(96 + 30 * $fade)));
-        }
-
-        // The sun's reflected column.
-        imagefilledrectangle($image, $sunX - $sunR, $horizon, $sunX + $sunR, $height,
-            imagecolorallocatealpha($image, 255, 240, 212, 112));
-
-        imagefilter($image, IMG_FILTER_SMOOTH, 6);
-
-        // Edge vignette: concentric 1px frames, each nearly transparent, so
-        // the corners fall off the way a lens does.
-        for ($i = 0; $i < 26; $i++) {
-            imagerectangle($image, $i, $i, $width - 1 - $i, $height - 1 - $i,
-                imagecolorallocatealpha($image, 20, 24, 34, 118));
-        }
-
-        return $this->encode($image);
-    }
-
-    protected function encode(GdImage $image): string
-    {
-        ob_start();
-
-        try {
-            imagejpeg($image, null, 86);
-
-            return (string) ob_get_contents();
-        } finally {
-            ob_end_clean();
-            imagedestroy($image);
-        }
+        return [
+            'svg' => $svg,
+            'width' => (int) round((float) ($box[1] ?? 1440)),
+            'height' => (int) round((float) ($box[2] ?? 900)),
+        ];
     }
 }

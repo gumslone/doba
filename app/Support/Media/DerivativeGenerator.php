@@ -38,6 +38,14 @@ final class DerivativeGenerator
             return 0;
         }
 
+        // An SVG is already every size. Resizing one to 480px would throw
+        // away the only advantage it has, and GD cannot read it anyway —
+        // so it is served as it is, and ResponsiveImage emits no srcset,
+        // which is the correct markup for a resolution-independent image.
+        if (str_ends_with(strtolower($media->path), '.svg')) {
+            return 0;
+        }
+
         $source = $this->decode((string) $disk->get($media->path));
 
         if ($source === null) {

@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Models\Gallery;
 use App\Models\Media;
 use App\Models\RoomType;
+use App\Models\User;
 use App\Support\Media\DerivativeGenerator;
 use App\Support\Media\ResponsiveImage;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 function makeTestImage(int $width, int $height): string
@@ -120,4 +123,49 @@ it('processes every media row from the artisan command', function (): void {
 
     Storage::disk('public')->assertExists('rooms/a-480.webp');
     Storage::disk('public')->assertExists('rooms/b-480.webp');
+});
+
+it('serves an SVG as it is, without trying to resize it', function (): void {
+    Storage::fake('public');
+    Storage::disk('public')->put('galleries/1/scene.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600"><rect width="800" height="600"/></svg>');
+
+    $gallery = Gallery::create(['code' => 'test']);
+    $media = $gallery->media()->create([
+        'path' => 'galleries/1/scene.svg',
+        'disk' => 'public',
+        'width' => 800,
+        'height' => 600,
+    ]);
+
+    // An SVG is already every size. Resizing one throws away its only
+    // advantage, and GD cannot read it in any case.
+    expect(app(DerivativeGenerator::class)->generate($media))->toBe(0)
+        ->and(Storage::disk('public')->files('galleries/1'))->toBe(['galleries/1/scene.svg']);
+
+    // And no srcset, which is the correct markup for a
+    // resolution-independent image — but the intrinsic size is still
+    // emitted, so the box is reserved and nothing shifts (§11).
+    $attributes = ResponsiveImage::attributes($media->fresh());
+
+    // attributes() drops empties, so a missing srcset is an absent key.
+    expect($attributes)->not->toHaveKey('srcset')
+        ->and($attributes['width'])->toBe(800)
+        ->and($attributes['height'])->toBe(600);
+});
+
+it('still refuses an SVG upload', function (): void {
+    Storage::fake('public');
+
+    // Serving our own scenes does not widen what a hotelier can put on
+    // their site: an uploaded SVG can carry script, and the pipeline
+    // takes jpg, png and webp only.
+    $gallery = Gallery::create(['code' => 'test']);
+
+    $this->actingAs(User::factory()->create())
+        ->post('/admin/photos/gallery:'.$gallery->id, [
+            'photos' => [UploadedFile::fake()->create('scene.svg', 4, 'image/svg+xml')],
+        ])
+        ->assertSessionHasErrors('photos.0');
+
+    expect($gallery->media()->count())->toBe(0);
 });
