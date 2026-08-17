@@ -613,6 +613,24 @@ thinks is free, and a guest finds that bug rather than we do.
 - **Cursor pagination** on the pull endpoint. Offset pagination over a
   table being actively written to skips rows and repeats others, and a
   partner paging through it loses bookings without ever seeing an error.
+- **ARI push** — `PUT /availability` and `PUT /rates`, `PUT` meant
+  literally: these are **idempotent range writes, not increments**, so a
+  channel manager whose push timed out can send the identical body again
+  and change nothing. Both take a weekday mask, so "Saturdays in July,
+  minimum stay three" is one call rather than thirty-one. The writes go
+  through the same code the admin grid uses, which **refuses to set an
+  allotment below what is already booked and held** — and answers `200`
+  listing exactly which nights it refused, because a six-month push should
+  not be thrown away over one oversold night.
+- **Outbound webhooks**, signed `X-Signature: t=…,v1=…` where the
+  timestamp is *inside* the signed string, so a captured delivery replayed
+  an hour later fails verification even though the body is byte-identical.
+  Queued with backoff (1m, 5m, 30m, 2h, 6h, 24h); every attempt is logged;
+  twenty consecutive failures disables the endpoint. **Delivery is
+  at-least-once and can arrive out of order** — every payload carries an
+  `event_id` and the resource's `updated_at`, and a receiver that ignores
+  them will eventually resurrect a cancelled booking. Endpoints must be
+  `https`: signing a payload does not stop anyone reading it.
 - Every response carries **`X-Request-Id`**, logged with the request, so a
   partner's bug report is one lookup from an answer rather than a request
   to reproduce.
@@ -820,7 +838,7 @@ wizard and the public API, is in
 | — | Invoices, **iCal channel sync**, promo codes, eight style presets, **restaurant & menu** | **done** |
 | 4 | First hotel live | planned |
 | 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
-| 6 | Public REST API **done** (read + bookings); webhooks and OpenAPI docs next | in progress |
+| 6 | Public REST API + ARI push + webhooks **done**; OpenAPI docs next | in progress |
 
 ## Contributing
 

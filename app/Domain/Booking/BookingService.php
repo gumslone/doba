@@ -16,6 +16,7 @@ use App\Models\Guest;
 use App\Models\PromoCode;
 use App\Models\RatePlan;
 use App\Models\RoomType;
+use App\Support\Webhooks\Webhooks;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -71,7 +72,7 @@ class BookingService
 
         $bookingLocale = $locale ?? app()->getLocale();
 
-        return DB::transaction(function () use (
+        $booking = DB::transaction(function () use (
             $roomType, $checkIn, $checkOut, $nights, $guestData,
             $adults, $children, $units, $sessionId, $bookingLocale, $ratePlan, $promoCode
         ): Booking {
@@ -209,6 +210,33 @@ class BookingService
 
             return $booking;
         }, attempts: 3);
+
+        app(Webhooks::class)->emit('booking.created', $this->webhookPayload($booking));
+
+        return $booking;
+    }
+
+    /**
+     * What a partner is told when a booking changes.
+     *
+     * Deliberately small, and deliberately carrying `updated_at`:
+     * delivery is at-least-once and can arrive out of order, so a
+     * receiver has to be able to tell a stale event from a current one
+     * (§17). A partner that ignores it will eventually resurrect a
+     * cancelled booking.
+     *
+     * @return array<string,mixed>
+     */
+    protected function webhookPayload(Booking $booking): array
+    {
+        return [
+            'reference' => $booking->reference,
+            'status' => $booking->status->value,
+            'check_in' => $booking->check_in->toDateString(),
+            'check_out' => $booking->check_out->toDateString(),
+            'total' => ['amount' => $booking->total, 'currency' => $booking->currency],
+            'updated_at' => $booking->updated_at?->toIso8601String(),
+        ];
     }
 
     /**
@@ -367,6 +395,14 @@ class BookingService
         // it: a queued job picked up before the commit would find no
         // booking, and neither a mail nor an invoice failure may roll back
         // a confirmed, paid stay (§13).
+        // Emitted after the commit, like the mail: a partner that reacts
+        // by calling back must find the booking in the state we told them
+        // about (§13).
+        app(Webhooks::class)->emit(
+            $to === BookingStatus::Cancelled ? 'booking.cancelled' : 'booking.updated',
+            $this->webhookPayload($booking),
+        );
+
         if ($booking->status === BookingStatus::Confirmed) {
             // The invoice is issued first so the mail can carry it.
             app(InvoiceBuilder::class)->issue($booking);

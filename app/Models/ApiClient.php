@@ -32,7 +32,9 @@ class ApiClient extends Model
     public const SCOPES = [
         'hotel:read',
         'availability:read',
+        'availability:write',
         'rates:read',
+        'rates:write',
         'bookings:read',
         'bookings:write',
         'bookings:cancel',
@@ -57,6 +59,14 @@ class ApiClient extends Model
         'revoked_at' => 'immutable_datetime',
         'last_used_at' => 'immutable_datetime',
     ];
+
+    /**
+     * @return HasMany<WebhookEndpoint, $this>
+     */
+    public function webhookEndpoints(): HasMany
+    {
+        return $this->hasMany(WebhookEndpoint::class);
+    }
 
     /**
      * @return HasMany<ApiIdempotencyKey, $this>

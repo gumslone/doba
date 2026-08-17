@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\CalendarController;
+use App\Http\Controllers\Api\V1\AriController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
 use App\Http\Controllers\Api\V1\BookingController as ApiBookingController;
 use App\Http\Controllers\Api\V1\HotelController;
+use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Middleware\ApiRequestId;
 use App\Http\Middleware\AuthenticateApiClient;
 use Illuminate\Support\Facades\Route;
@@ -60,9 +62,26 @@ Route::prefix('v1')
             Route::get('bookings/{reference}', [ApiBookingController::class, 'show']);
         });
 
+        // ARI push: idempotent range writes, so a retried push changes
+        // nothing the first one did not.
+        Route::put('availability', [AriController::class, 'availability'])
+            ->middleware(AuthenticateApiClient::class.':availability:write');
+
+        Route::put('rates', [AriController::class, 'rates'])
+            ->middleware(AuthenticateApiClient::class.':rates:write');
+
         Route::post('bookings', [ApiBookingController::class, 'store'])
             ->middleware(AuthenticateApiClient::class.':bookings:write');
 
         Route::post('bookings/{reference}/cancel', [ApiBookingController::class, 'cancel'])
             ->middleware(AuthenticateApiClient::class.':bookings:cancel');
+
+        // A partner manages only its own subscriptions: one key cannot
+        // read another's URL or point their events elsewhere.
+        Route::middleware(AuthenticateApiClient::class.':bookings:read')->group(function (): void {
+            Route::get('webhooks', [WebhookController::class, 'index']);
+            Route::post('webhooks', [WebhookController::class, 'store']);
+            Route::delete('webhooks/{webhook}', [WebhookController::class, 'destroy']);
+            Route::post('webhooks/{webhook}/test', [WebhookController::class, 'test']);
+        });
     });

@@ -258,6 +258,12 @@ class BookingController extends Controller
             'discount_total' => Wire::money($booking->discount_total),
             'total' => Wire::money($booking->total),
             'balance_due' => Wire::money($booking->balance_due),
+            // A hold is not a booking. The partner needs to know exactly
+            // how long they have to pay or confirm before the room goes
+            // back on sale (§17).
+            'hold_expires_at' => $booking->status === BookingStatus::Pending
+                ? $booking->holds()->whereNull('released_at')->max('expires_at')
+                : null,
             'created_at' => $booking->created_at?->toIso8601String(),
             'updated_at' => $booking->updated_at?->toIso8601String(),
         ];
