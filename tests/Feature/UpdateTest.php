@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Support\Maintenance\Backups;
+use App\Support\Maintenance\FreshHealth;
+use App\Support\Maintenance\HealthCheck;
 use App\Support\Maintenance\Updater;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Artisan;
@@ -160,11 +162,11 @@ it('stops before touching anything when the snapshot itself fails', function ():
     $backup->shouldReceive('isSupported')->andReturnTrue();
     $backup->shouldReceive('create')->andThrow(new RuntimeException('disk full'));
 
-    $result = (new Updater($backup))->run();
+    $result = (new Updater($backup, app(HealthCheck::class), app(FreshHealth::class)))->run();
 
     expect($result->ok)->toBeFalse()
         ->and($result->error)->toContain('disk full')
-        ->and($result->steps[0])->toContain('nothing was changed')
+        ->and(implode(' ', $result->steps))->toContain('nothing was changed')
         // Never taken down, because nothing was ever going to happen.
         ->and(app()->isDownForMaintenance())->toBeFalse();
 });
@@ -401,4 +403,113 @@ it('runs a nightly backup that says so loudly when it cannot', function (): void
     // configured — the hotel believes it has copies.
     expect(Artisan::call('doba:backup'))->toBe(1)
         ->and(Artisan::output())->toContain('mysqldump was not found');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Pre-flight and post-flight (§15)
+|--------------------------------------------------------------------------
+*/
+
+function brokenCheck(string $detail = 'PHP 8.2, and this release needs 8.4.'): array
+{
+    return [['key' => 'php', 'status' => HealthCheck::CRITICAL, 'label' => 'PHP version', 'detail' => $detail]];
+}
+
+function healthyCheck(): array
+{
+    return [['key' => 'php', 'status' => HealthCheck::OK, 'label' => 'PHP version', 'detail' => 'Fine.']];
+}
+
+/**
+ * A stand-in for the second process, injected rather than faked.
+ *
+ * Process::fake() cannot be used here: `config:cache` boots a fresh
+ * application internally, which re-points every facade at a new container
+ * and takes the fake with it. A dependency held on the object survives
+ * that; facade state does not.
+ *
+ * @param  array<int,array<string,string>>|null  $checks  null = no second process could be started
+ */
+function stubFresh(?array $checks): FreshHealth
+{
+    $stub = Mockery::mock(FreshHealth::class);
+    $stub->shouldReceive('check')->andReturn($checks);
+
+    return $stub;
+}
+
+it('refuses to start on an installation that is not in a state to be updated', function (): void {
+    $health = Mockery::mock(HealthCheck::class);
+    $health->shouldReceive('all')->andReturn(brokenCheck());
+
+    $backup = Mockery::mock(Backups::class);
+    $backup->shouldNotReceive('create');
+
+    $result = (new Updater($backup, $health, stubFresh(null)))->run();
+
+    expect($result->ok)->toBeFalse()
+        ->and($result->error)->toContain('nothing was changed')
+        // The actionable sentence, kept where a hotelier will read it
+        // rather than buried in the transcript.
+        ->and($result->failedChecks[0]['detail'])->toContain('needs 8.4')
+        // And the site was never taken down, because nothing was ever
+        // going to happen to it.
+        ->and(app()->isDownForMaintenance())->toBeFalse();
+});
+
+it('updates anyway when an operator says so out loud', function (): void {
+    $health = Mockery::mock(HealthCheck::class);
+    $health->shouldReceive('all')->andReturn(brokenCheck());
+
+    $result = (new Updater(app(Backups::class), $health, stubFresh(healthyCheck())))
+        ->run(withBackup: false, force: true);
+
+    expect($result->ok)->toBeTrue()
+        ->and(implode(' ', $result->steps))->toContain('as asked');
+});
+
+it('leaves the site closed when it does not serve after the update', function (): void {
+    $health = Mockery::mock(HealthCheck::class);
+    $health->shouldReceive('all')->andReturn(healthyCheck());
+
+    $result = (new Updater(app(Backups::class), $health, stubFresh(brokenCheck('Every page returns 500.'))))
+        ->run(withBackup: false);
+
+    // A migration reporting success proves the schema changed and nothing
+    // else. If the site does not answer afterwards, reopening it would
+    // put a broken hotel in front of guests.
+    expect($result->ok)->toBeFalse()
+        ->and($result->error)->toContain('not serving')
+        ->and($result->failedChecks[0]['detail'])->toContain('500')
+        ->and(app()->isDownForMaintenance())->toBeTrue();
+
+    Artisan::call('up');
+});
+
+it('says which process verified it, because an in-process check cannot see a fresh cache', function (): void {
+    $health = Mockery::mock(HealthCheck::class);
+    $health->shouldReceive('all')->andReturn(healthyCheck());
+
+    $verified = (new Updater(app(Backups::class), $health, stubFresh(healthyCheck())))->run(withBackup: false);
+
+    expect($verified->ok)->toBeTrue()
+        ->and(implode(' ', $verified->steps))->toContain('fresh process');
+
+    // And when no second process can be started — a shared host with
+    // proc_open disabled — it still verifies, and says which of the two
+    // weaker answers it got rather than passing one off as the other.
+    $fellBack = (new Updater(app(Backups::class), $health, stubFresh(null)))->run(withBackup: false);
+
+    expect($fellBack->ok)->toBeTrue()
+        ->and(implode(' ', $fellBack->steps))->toContain('Verified in this process');
+});
+
+it('reports an unhealthy installation from the command line', function (): void {
+    $health = Mockery::mock(HealthCheck::class);
+    $health->shouldReceive('all')->andReturn(brokenCheck());
+    app()->instance(HealthCheck::class, $health);
+
+    expect(Artisan::call('doba:health'))->toBe(1)
+        ->and(Artisan::output())->toContain('needs 8.4');
 });

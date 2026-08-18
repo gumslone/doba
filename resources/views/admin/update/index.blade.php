@@ -29,6 +29,38 @@
         <p class="mb-6 rounded border border-red-200 bg-red-50 p-4 text-red-900">{{ session('update_error') }}</p>
     @endif
 
+    {{-- Read before the button, not discovered by pressing it. An update
+         applied to an install that was already broken cannot be told apart
+         from an update that broke it. --}}
+    <section class="mb-8 rounded border border-neutral-200 bg-white p-5">
+        <h2 class="font-medium">{{ __('admin.health') }}</h2>
+
+        <ul class="mt-3 space-y-2 text-sm">
+            @foreach ($checks as $check)
+                <li class="flex gap-3">
+                    <span @class([
+                        'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-xs font-medium',
+                        'bg-green-100 text-green-800' => $check['status'] === 'ok',
+                        'bg-amber-100 text-amber-900' => $check['status'] === 'warning',
+                        'bg-red-100 text-red-800' => $check['status'] === 'critical',
+                    ])>
+                        {{ __('admin.health_'.$check['status']) }}
+                    </span>
+                    <span>
+                        <span class="font-medium">{{ $check['label'] }}</span>
+                        <span class="text-neutral-600">— {{ $check['detail'] }}</span>
+                    </span>
+                </li>
+            @endforeach
+        </ul>
+
+        @unless ($healthy)
+            <p class="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-900">
+                {{ __('admin.health_blocked') }}
+            </p>
+        @endunless
+    </section>
+
     <section class="mb-8 rounded border border-neutral-200 bg-white p-5">
         <h2 class="font-medium">{{ __('admin.pending_migrations') }}</h2>
 
@@ -61,7 +93,7 @@
                        class="mt-1 rounded border border-neutral-300 px-3 py-2 font-mono">
                 @error('confirm') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
             </div>
-            <button type="submit" @disabled(! $backupSupported)
+            <button type="submit" @disabled(! $backupSupported || ! $healthy)
                     class="rounded bg-neutral-900 px-5 py-2.5 text-white disabled:cursor-not-allowed disabled:opacity-40">
                 {{ __('admin.run_update') }}
             </button>
@@ -75,7 +107,7 @@
             <h2 class="font-medium">{{ __('admin.backups') }}</h2>
             <form method="POST" action="/admin/update/backup">
                 @csrf
-                <button type="submit" @disabled(! $backupSupported)
+                <button type="submit" @disabled(! $backupSupported || ! $healthy)
                         class="rounded border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50 disabled:opacity-40">
                     {{ __('admin.take_backup') }}
                 </button>

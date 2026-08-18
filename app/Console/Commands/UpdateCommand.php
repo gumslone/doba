@@ -21,7 +21,8 @@ class UpdateCommand extends Command
 {
     protected $signature = 'doba:update
                             {--no-backup : Skip the database snapshot (you are on your own)}
-                            {--check : Report what an update would do, and change nothing}';
+                            {--check : Report what an update would do, and change nothing}
+                            {--force : Update even though the pre-flight checks failed}';
 
     protected $description = 'Back up, migrate and rebuild caches after deploying new code';
 
@@ -32,6 +33,10 @@ class UpdateCommand extends Command
         $pending = $updater->pendingMigrations();
 
         if ($this->option('check')) {
+            // The health report comes first: whether an update is needed
+            // matters less than whether this copy could survive one.
+            $this->call('doba:health');
+
             $this->line($pending === []
                 ? 'No migrations pending — this install is up to date.'
                 : sprintf('%d migration(s) pending:', count($pending)));
@@ -58,7 +63,7 @@ class UpdateCommand extends Command
             return self::FAILURE;
         }
 
-        $result = $updater->run($withBackup);
+        $result = $updater->run($withBackup, (bool) $this->option('force'));
 
         foreach ($result->steps as $step) {
             $this->line('  '.$step);
@@ -67,6 +72,18 @@ class UpdateCommand extends Command
         if (! $result->ok) {
             $this->newLine();
             $this->error('Update failed: '.$result->error);
+
+            if ($result->failedChecks !== []) {
+                $this->newLine();
+                $this->line('What is wrong:');
+
+                foreach ($result->failedChecks as $check) {
+                    $this->line(sprintf('  · <fg=red>%s</> — %s', $check['label'], $check['detail']));
+                }
+
+                $this->newLine();
+                $this->line('Fix these and run it again, or use --force if you are certain.');
+            }
 
             if ($result->restoreCommand !== null) {
                 $this->newLine();

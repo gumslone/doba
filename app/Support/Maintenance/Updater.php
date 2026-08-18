@@ -20,18 +20,34 @@ use Throwable;
  *
  * The order is deliberate:
  *
- *   1. snapshot the database — before anything is touched
+ *   0. check the install can serve, and can run this release — before a
+ *      single thing is touched
+ *   1. snapshot the database
  *   2. close the site — a guest must not meet a half-migrated schema
  *   3. migrate
  *   4. rebuild caches, restart workers
- *   5. reopen
+ *   5. check it still serves — in a NEW process, so the caches just
+ *      written are actually read
+ *   6. reopen, and only then
  *
- * and step 5 happens even when step 3 throws, except when leaving the site
- * shut is the safer answer.
+ * Step 0 exists because an update applied to an install that was already
+ * broken cannot be told apart from an update that broke it. Step 5 exists
+ * because a migration reporting success proves the schema changed, and
+ * nothing else: a route cache pointing at a controller that moved passes
+ * every migration and 500s every guest.
+ *
+ * When step 5 fails the site stays closed. That is the whole trade: a
+ * hotel that is closed for maintenance is recoverable in a minute, and a
+ * hotel that is open and throwing 500 at everyone looking for a room is
+ * not — nobody finds out until the phone stops ringing.
  */
 class Updater
 {
-    public function __construct(protected Backups $backup) {}
+    public function __construct(
+        protected Backups $backup,
+        protected HealthCheck $health,
+        protected FreshHealth $fresh,
+    ) {}
 
     /**
      * Migrations that exist in the code but not yet in the database.
@@ -69,11 +85,35 @@ class Updater
      * @param  bool  $withBackup  false only when the caller has said so out loud
      * @return UpdateResult what happened, step by step
      */
-    public function run(bool $withBackup = true): UpdateResult
+    public function run(bool $withBackup = true, bool $force = false): UpdateResult
     {
         $result = new UpdateResult;
         $pending = $this->pendingMigrations();
         $result->pending = $pending;
+
+        // Before anything is touched. An update is not the moment to
+        // discover that this host is a PHP version behind, that storage/
+        // went read-only in a hosting migration, or that the site has in
+        // fact been down since Tuesday.
+        $checks = $this->health->all();
+        $failed = HealthCheck::failures($checks);
+
+        if ($failed !== [] && ! $force) {
+            $result->failedChecks = $failed;
+            $result->fail('This installation is not in a state to be updated, so nothing was changed.');
+
+            foreach ($failed as $check) {
+                $result->step($check['label'].': '.$check['detail']);
+            }
+
+            return $result;
+        }
+
+        if ($failed !== []) {
+            $result->step(sprintf('Ignoring %d failed check(s), as asked.', count($failed)));
+        }
+
+        $result->step('Pre-flight checks passed.');
 
         if ($withBackup) {
             try {
@@ -131,6 +171,26 @@ class Updater
                 $result->step("Pruned {$removed} old backup(s).");
             }
 
+            // The check that decides whether this hotel reopens.
+            $after = $this->verify();
+            $result->failedChecks = HealthCheck::failures($after['checks']);
+
+            if ($result->failedChecks !== []) {
+                $result->fail('The update ran, but the site is not serving afterwards.');
+
+                foreach ($result->failedChecks as $check) {
+                    $result->step($check['label'].': '.$check['detail']);
+                }
+
+                $this->recover($result);
+
+                return $result;
+            }
+
+            $result->step($after['fresh']
+                ? 'Verified in a fresh process: the site serves.'
+                : 'Verified in this process: the site serves. (A separate process could not be started, so the rebuilt caches were not re-read — if pages fail, run `php artisan optimize:clear`.)');
+
             $result->ok = true;
         } catch (Throwable $e) {
             Log::error('Update failed.', ['error' => $e->getMessage()]);
@@ -160,6 +220,26 @@ class Updater
      * exact command — a hotel that is down is recoverable; a hotel taking
      * bookings against a broken schema is not.
      */
+    /**
+     * Ask whether the site serves — from a new process if we can get one.
+     *
+     * A shared host with proc_open disabled cannot, so this falls back to
+     * checking in-process and reports which of the two it managed. The
+     * weaker answer is worth having; pretending it is the stronger one is
+     * not, because an in-process check cannot see the caches this update
+     * just wrote.
+     *
+     * @return array{checks:array<int,array{key:string,status:string,label:string,detail:string}>,fresh:bool}
+     */
+    protected function verify(): array
+    {
+        $checks = $this->fresh->check();
+
+        return $checks === null
+            ? ['checks' => $this->health->all(), 'fresh' => false]
+            : ['checks' => $checks, 'fresh' => true];
+    }
+
     protected function recover(UpdateResult $result): void
     {
         if ($result->backupPath === null) {

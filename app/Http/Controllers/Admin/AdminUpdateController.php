@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Maintenance\Backups;
+use App\Support\Maintenance\HealthCheck;
 use App\Support\Maintenance\Updater;
 use App\Support\Version;
 use Illuminate\Contracts\View\View;
@@ -28,14 +29,21 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class AdminUpdateController extends Controller
 {
-    public function index(Updater $updater, Backups $backup): View
+    public function index(Updater $updater, Backups $backup, HealthCheck $health): View
     {
+        $checks = $health->all();
+
         return view('admin.update.index', [
             'version' => Version::current(),
             'pending' => $updater->pendingMigrations(),
             'backupSupported' => $backup->isSupported(),
             'backupReason' => $backup->unsupportedReason(),
             'backups' => $backup->sets(),
+            // Shown above the button, not discovered by pressing it. A
+            // hotelier whose host is a PHP version behind should read that
+            // sentence before the update, not in the wreckage after one.
+            'checks' => $checks,
+            'healthy' => HealthCheck::passed($checks),
         ]);
     }
 
@@ -56,6 +64,7 @@ class AdminUpdateController extends Controller
         $result = $updater->run();
 
         return redirect('/admin/update')->with([
+            'update_checks' => $result->failedChecks,
             'update_result' => $result->steps,
             'update_ok' => $result->ok,
             'update_error' => $result->error,

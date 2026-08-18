@@ -28,6 +28,17 @@ class UpdateResult
     /** @var array<int,string> */
     public array $pending = [];
 
+    /**
+     * The health checks that stopped the update, if any.
+     *
+     * Kept apart from the step transcript because they are the actionable
+     * part: "PHP 8.2, needs 8.4" is a sentence a hotelier can take to
+     * their host, and it should not be buried in a list of what happened.
+     *
+     * @var array<int,array{key:string,status:string,label:string,detail:string}>
+     */
+    public array $failedChecks = [];
+
     /** @var array<int,string> */
     public array $steps = [];
 
