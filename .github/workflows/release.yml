@@ -131,8 +131,19 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
 
+          # A 0.x tag publishes as a pre-release, so GitHub's "Latest
+          # release" badge never points at software that has not earned
+          # it. Decided from the number rather than remembered per tag:
+          # the one release somebody forgets to mark is the one a hotel
+          # installs on a Friday. From v1.0.0 on this drops away by
+          # itself.
+          FLAGS=()
+          case "$VERSION" in
+            v0.*) FLAGS+=(--prerelease) ;;
+          esac
+
           gh release view "$VERSION" >/dev/null 2>&1 \
-            || gh release create "$VERSION" --title "$VERSION" --notes-file release-notes.md
+            || gh release create "$VERSION" --title "$VERSION" --notes-file release-notes.md "${FLAGS[@]}"
 
           gh release upload "$VERSION" \
             "doba-${VERSION}.tar.gz" \
