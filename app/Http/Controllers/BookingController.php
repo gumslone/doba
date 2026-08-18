@@ -12,6 +12,7 @@ use App\Domain\Invoicing\InvoiceRenderer;
 use App\Domain\Payments\GatewayRegistry;
 use App\Domain\Payments\PaymentService;
 use App\Enums\BookingStatus;
+use App\Http\Middleware\CaptureReferral;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\PromoCode;
@@ -200,6 +201,15 @@ class BookingController extends Controller
             // Someone else took the last room while this guest typed.
             return redirect(Localization::route('booking.search', $this->stayQuery($stay)))
                 ->with('booking_error', __('booking.error_just_taken'));
+        }
+
+        // Who sent this guest, if anyone did (§21). Stamped on the
+        // booking so the channel-mix report can answer the only question
+        // that decides whether a listing is worth keeping: did it bring
+        // anybody? Without it the answer defaults to whoever argues
+        // loudest.
+        if ($referral = $request->session()->pull(CaptureReferral::SESSION_KEY)) {
+            $booking->forceFill(['source' => 'ref:'.$referral])->save();
         }
 
         if ($notes = ($validated['guest_notes'] ?? null)) {

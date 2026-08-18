@@ -28,3 +28,8 @@ if (($backupAt = config('doba.backups.nightly_at')) !== null && $backupAt !== ''
     Schedule::command('doba:backup')->dailyAt((string) $backupAt)->withoutOverlapping();
 }
 Schedule::command('doba:images')->dailyAt('03:30');
+
+// Nightly, and only when the hotel has opted in (§21). A property that
+// changes its photos and never says so sits in the directory looking like
+// it did last year.
+Schedule::command('doba:directory:announce')->dailyAt('04:00')->withoutOverlapping();

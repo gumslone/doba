@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\CaptureReferral;
 use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
@@ -19,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function (): void {
+            // Outside both groups: see routes/directory.php for why.
+            require __DIR__.'/../routes/directory.php';
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // SetLocale is applied per locale route group with the locale as a
@@ -40,6 +45,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // §14 response headers on every route — web, api and webhooks alike.
         $middleware->append(SecurityHeaders::class);
+
+        // Only on the site a guest browses: an aggregator's `?ref=` has to
+        // survive them changing their dates twice before they book (§21).
+        $middleware->web(append: CaptureReferral::class);
 
         // Prepended, so an uninstalled copy answers the wizard rather than
         // whatever a half-configured route would have done — and so an

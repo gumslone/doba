@@ -25,6 +25,7 @@
             ['/admin/extras', __('admin.extras'), 'admin/extras*'],
             ['/admin/promo-codes', __('admin.promo_codes'), 'admin/promo-codes*'],
             ['/admin/channels', __('admin.channels'), 'admin/channels*'],
+            ['/admin/directory', __('admin.directory'), 'admin/directory*'],
         ],
         __('admin.group_website') => [
             ['/admin/pages', __('admin.pages'), 'admin/pages*'],

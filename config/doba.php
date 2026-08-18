@@ -202,4 +202,40 @@ return [
         'nightly_at' => env('DOBA_BACKUP_AT', '03:15'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Directory listing (§21)
+    |--------------------------------------------------------------------------
+    |
+    | Doba installs are separate hotels on separate domains with separate
+    | databases, and that is the point. But a guest looking for "somewhere
+    | in the Tyrol in September" has nowhere to look, because there is no
+    | list of them — which is the one thing a group of independent hotels
+    | loses by not being on a portal.
+    |
+    | So an install can publish a machine-readable description of itself
+    | and let an aggregator find it. Two things make that safe:
+    |
+    |  - It is OFF until a hotelier turns it on. Listing a business
+    |    without asking is not a default anyone gets to choose for them.
+    |  - It publishes only what is already on the public website. No guest
+    |    data, no bookings, no counts of how badly a month is selling.
+    |
+    | And the aggregator never takes the booking. It links into the
+    | hotel's own funnel, which is the entire reason this software exists.
+    |
+    */
+
+    'directory' => [
+        'enabled' => (bool) env('DOBA_DIRECTORY', false),
+
+        // Where to announce. A hotel can point this at a regional or
+        // association-run hub instead; nothing here assumes one operator.
+        'hub' => env('DOBA_DIRECTORY_HUB', 'https://directory.doba.dev'),
+
+        // How many nights of live quoting an aggregator may ask for at
+        // once, and how far ahead. A bounded answer beats a timeout.
+        'max_nights' => (int) env('DOBA_DIRECTORY_MAX_NIGHTS', 30),
+    ],
+
 ];

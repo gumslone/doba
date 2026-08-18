@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\AdminApiClientController;
 use App\Http\Controllers\Admin\AdminAvailabilityController;
 use App\Http\Controllers\Admin\AdminChannelController;
+use App\Http\Controllers\Admin\AdminDirectoryController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminFrontDeskController;
@@ -67,6 +68,9 @@ Route::middleware('web')->group(function (): void {
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
+// Directory listing (§21) lives in routes/directory.php, registered
+// without the web group: see the note there.
+
 // Never localised and never in the sitemap: a machine subscribes to it,
 // and the token in the path is what stands in for a login (§9).
 Route::get('ical/{roomType}/{token}.ics', [IcalController::class, 'show'])
@@ -123,6 +127,10 @@ Route::prefix('admin')->group(function (): void {
         Route::get('api', [AdminApiClientController::class, 'index'])->name('admin.api');
         Route::post('api', [AdminApiClientController::class, 'store'])->name('admin.api.store');
         Route::delete('api/{api}', [AdminApiClientController::class, 'destroy'])->name('admin.api.destroy');
+
+        Route::get('directory', [AdminDirectoryController::class, 'edit'])->name('admin.directory');
+        Route::post('directory', [AdminDirectoryController::class, 'update'])->name('admin.directory.update');
+        Route::post('directory/announce', [AdminDirectoryController::class, 'announce'])->name('admin.directory.announce');
 
         Route::get('mail', [AdminMailController::class, 'edit'])->name('admin.mail');
         Route::put('mail', [AdminMailController::class, 'update'])->name('admin.mail.update');
