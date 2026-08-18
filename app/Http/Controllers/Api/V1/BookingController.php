@@ -22,6 +22,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 /**
  * Bookings over the API (§17).
@@ -48,30 +49,97 @@ class BookingController extends Controller
             );
         }
 
+        $key = trim($key);
         $hash = hash('sha256', json_encode($request->all()) ?: '');
+
+        // Claimed BEFORE the booking is attempted, not written after it.
+        // Looking the key up and then inserting it leaves the two a whole
+        // transaction apart, and a retry arriving in that gap finds
+        // nothing, books a second room, and only then collides on the
+        // unique index — one key, two rooms, and a 500 for the caller
+        // that did nothing wrong.
+        if (! ApiIdempotencyKey::claim($client->id, $key, $hash)) {
+            return $this->replay($client, $key, $hash);
+        }
+
+        try {
+            $response = $this->attempt($request, $bookings, $client);
+        } catch (Throwable $e) {
+            // The claim outlives nothing. A request that died owes the
+            // partner the ability to try again with the same key.
+            ApiIdempotencyKey::release($client->id, $key);
+
+            throw $e;
+        }
+
+        if ($response->getStatusCode() >= 400) {
+            // Nothing was created, so the key is not spent: a partner
+            // that fixes its payload, or waits for a night to free up,
+            // may reuse it. Remembering a failure would make one bad
+            // request permanently unrepeatable.
+            ApiIdempotencyKey::release($client->id, $key);
+
+            return $response;
+        }
+
+        ApiIdempotencyKey::complete($client->id, $key, $response->getStatusCode(), (string) $response->getContent());
+
+        return $response;
+    }
+
+    /**
+     * Somebody else holds this key: replay them, or tell them why not.
+     */
+    protected function replay(ApiClient $client, string $key, string $hash): Response
+    {
         $existing = ApiIdempotencyKey::query()
             ->where('api_client_id', $client->id)
             ->where('key', $key)
             ->first();
 
-        if ($existing !== null) {
-            if (! hash_equals($existing->request_hash, $hash)) {
-                // Same key, different body. That is a bug in the caller,
-                // and replaying the old response would hide it.
-                return Problem::conflict(
-                    'idempotency-key-reused',
-                    'This Idempotency-Key was already used for a different request.',
-                );
-            }
-
-            // Returned verbatim, byte for byte: a partner that checksums
-            // or diffs responses must see the same one it saw before.
-            return response($existing->response, $existing->status, [
-                'Content-Type' => 'application/json',
-                'Idempotent-Replay' => 'true',
-            ]);
+        if ($existing === null) {
+            // Claimed and released between our INSERT and this SELECT.
+            // Rare, and not worth guessing about: say "try again".
+            return $this->inProgress();
         }
 
+        if (! hash_equals($existing->request_hash, $hash)) {
+            // Same key, different body. That is a bug in the caller,
+            // and replaying the old response would hide it.
+            return Problem::conflict(
+                'idempotency-key-reused',
+                'This Idempotency-Key was already used for a different request.',
+            );
+        }
+
+        if ($existing->isInFlight()) {
+            // The first request is still working. There is no honest
+            // answer yet — inventing one, or waiting for it, is how a
+            // timed-out retry turns into a second booking.
+            return $this->inProgress();
+        }
+
+        // Returned verbatim, byte for byte: a partner that checksums
+        // or diffs responses must see the same one it saw before.
+        return response($existing->response, (int) $existing->status, [
+            'Content-Type' => 'application/json',
+            'Idempotent-Replay' => 'true',
+        ]);
+    }
+
+    protected function inProgress(): Response
+    {
+        return Problem::conflict(
+            'idempotency-key-in-progress',
+            'An earlier request with this Idempotency-Key is still being processed. Retry in a moment.',
+        )->header('Retry-After', '2');
+    }
+
+    /**
+     * The booking itself, once this request owns the key.
+     */
+    protected function attempt(Request $request, BookingService $bookings, ApiClient $client): Response
+    {
         $validator = validator($request->all(), [
             'room_type' => ['required', 'string', 'exists:room_types,code'],
             'check_in' => ['required', 'date_format:Y-m-d'],
@@ -138,17 +206,11 @@ class BookingController extends Controller
             'internal_notes' => $client->sandbox ? 'Created by a sandbox API key.' : null,
         ])->save();
 
-        $body = (string) json_encode(['data' => $this->present($booking->fresh())]);
-
-        ApiIdempotencyKey::query()->create([
-            'api_client_id' => $client->id,
-            'key' => $key,
-            'request_hash' => $hash,
-            'status' => 201,
-            'response' => $body,
-        ]);
-
-        return response($body, 201, ['Content-Type' => 'application/json']);
+        return response(
+            (string) json_encode(['data' => $this->present($booking->fresh())]),
+            201,
+            ['Content-Type' => 'application/json'],
+        );
     }
 
     /**

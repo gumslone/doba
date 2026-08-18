@@ -346,6 +346,13 @@ paths:
         is a bug in the caller and is refused with
         `idempotency-key-reused` rather than hidden behind a replay.
 
+        The key is claimed **before** the booking is attempted, so a retry
+        that overtakes its own original is told
+        `idempotency-key-in-progress` rather than quietly taking a second
+        room. A request that creates nothing — a validation failure, a
+        night that had just gone — gives its key back, so you can fix the
+        payload and reuse it.
+
         The booking is created `pending` and holds inventory until
         `hold_expires_at`.
       tags: [Bookings]
@@ -383,6 +390,15 @@ paths:
             `no-availability` — the stay went while the partner was
             deciding; the first unavailable night is in `date`.
             `idempotency-key-reused` — same key, different body.
+            `idempotency-key-in-progress` — an earlier request with this
+            key has not finished yet. Retry after `Retry-After` seconds
+            and you will get its response: there is no honest answer to
+            give before it exists, and inventing one is how a timed-out
+            retry becomes a second booking.
+          headers:
+            Retry-After:
+              description: Seconds to wait, on `idempotency-key-in-progress`.
+              schema: { type: string }
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }

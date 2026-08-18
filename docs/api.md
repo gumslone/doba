@@ -95,6 +95,7 @@ RFC 9457, `application/problem+json`:
 | `validation-failed` | 422 | `errors` is keyed by field. Fix and resend. |
 | `no-availability` | 409 | The stay went while you were deciding. `date` names the first night that failed — re-search. |
 | `idempotency-key-reused` | 409 | You sent the same key with a different body. That is a bug on your side. |
+| `idempotency-key-in-progress` | 409 | An earlier request with this key has not finished. Wait `Retry-After` seconds and retry — you will get its response. |
 | `not-cancellable` | 409 | Already cancelled, or the guest has checked out. |
 | `rate-plan-not-pushable` | 422 | See [Pushing rates](#pushing-availability-and-rates). |
 
@@ -111,6 +112,12 @@ that cannot tell a retry from a second booking sells the room twice.
   `Idempotent-Replay: true`. Safe to retry as often as you like.
 - Same key, different body → `409 idempotency-key-reused`. Replaying the old
   response there would hide a real bug in your client.
+- Same key, first request still running → `409 idempotency-key-in-progress`
+  with a `Retry-After`. The key is claimed before the booking is attempted, so
+  a retry that overtakes its own original is refused rather than served a
+  second room. Wait and retry; you will get the original response.
+- A request that created nothing — bad payload, night gone — **gives the key
+  back**. Fix it and reuse the same key.
 
 A new booking is `pending` and holds its inventory until `hold_expires_at`.
 That is a hold, not a booking: if it is not confirmed or paid by then, the room

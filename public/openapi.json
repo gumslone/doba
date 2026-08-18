@@ -473,7 +473,7 @@
             "post": {
                 "operationId": "createBooking",
                 "summary": "Take a booking",
-                "description": "Goes through the same service, the same row locks and the same\nrestriction checks as the website's own checkout.\n\n**`Idempotency-Key` is required.** A partner whose request times\nout will retry, and an endpoint that cannot tell a retry from a\nsecond booking sells the room twice. Retrying with the same key\nreplays the original response byte for byte and carries\n`Idempotent-Replay: true`. Reusing a key with a *different* body\nis a bug in the caller and is refused with\n`idempotency-key-reused` rather than hidden behind a replay.\n\nThe booking is created `pending` and holds inventory until\n`hold_expires_at`.\n",
+                "description": "Goes through the same service, the same row locks and the same\nrestriction checks as the website's own checkout.\n\n**`Idempotency-Key` is required.** A partner whose request times\nout will retry, and an endpoint that cannot tell a retry from a\nsecond booking sells the room twice. Retrying with the same key\nreplays the original response byte for byte and carries\n`Idempotent-Replay: true`. Reusing a key with a *different* body\nis a bug in the caller and is refused with\n`idempotency-key-reused` rather than hidden behind a replay.\n\nThe key is claimed **before** the booking is attempted, so a retry\nthat overtakes its own original is told\n`idempotency-key-in-progress` rather than quietly taking a second\nroom. A request that creates nothing — a validation failure, a\nnight that had just gone — gives its key back, so you can fix the\npayload and reuse it.\n\nThe booking is created `pending` and holds inventory until\n`hold_expires_at`.\n",
                 "tags": [
                     "Bookings"
                 ],
@@ -540,7 +540,15 @@
                         "$ref": "#/components/responses/Forbidden"
                     },
                     "409": {
-                        "description": "`no-availability` — the stay went while the partner was\ndeciding; the first unavailable night is in `date`.\n`idempotency-key-reused` — same key, different body.\n",
+                        "description": "`no-availability` — the stay went while the partner was\ndeciding; the first unavailable night is in `date`.\n`idempotency-key-reused` — same key, different body.\n`idempotency-key-in-progress` — an earlier request with this\nkey has not finished yet. Retry after `Retry-After` seconds\nand you will get its response: there is no honest answer to\ngive before it exists, and inventing one is how a timed-out\nretry becomes a second booking.\n",
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait, on `idempotency-key-in-progress`.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
                         "content": {
                             "application/problem+json": {
                                 "schema": {
