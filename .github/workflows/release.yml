@@ -122,6 +122,41 @@ jobs:
           php -r 'exit(is_file("public/build/manifest.json") ? 0 : 1);' || (echo "built assets missing"; exit 1)
           echo "Tarball boots and migrates."
 
+      # The two installers ship as release assets, so they are proven
+      # against the exact tarball they will install — the web installer
+      # in particular is the artefact nobody exercises in development,
+      # which is exactly how it would rot.
+      - name: Smoke-test install.sh against this tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          OUT="$(mktemp -d)/hotel"
+          DOBA_TARBALL="$PWD/doba-${VERSION}.tar.gz" DOBA_DIR="$OUT" DOBA_URL="https://hotel.example"             bash scripts/install.sh </dev/null
+          test -f "$OUT/artisan"
+          grep -q '^APP_ENV=production' "$OUT/.env"
+          grep -q '^APP_KEY=base64:' "$OUT/.env"
+          echo "install.sh installs this tarball."
+
+      - name: Smoke-test the web installer against this tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          DOCROOT="$(mktemp -d)"
+          cp "doba-${VERSION}.tar.gz" "doba-${VERSION}.tar.gz.sha256" scripts/doba-installer.php "$DOCROOT/"
+          printf '[{"tag_name":"%s","prerelease":true,"assets":[{"browser_download_url":"http://127.0.0.1:8932/doba-%s.tar.gz"},{"browser_download_url":"http://127.0.0.1:8932/doba-%s.tar.gz.sha256"}]}]'             "$VERSION" "$VERSION" "$VERSION" > "$DOCROOT/releases.json"
+
+          # Several workers, or the installer deadlocks downloading from
+          # the same single-threaded server that is running it.
+          PHP_CLI_SERVER_WORKERS=4 DOBA_RELEASES_URL=http://127.0.0.1:8932/releases.json             php -S 127.0.0.1:8932 -t "$DOCROOT" >/dev/null 2>&1 &
+          sleep 1
+
+          curl -sf http://127.0.0.1:8932/doba-installer.php >/dev/null
+          TOKEN="$(cat "$DOCROOT/doba-installer-token.txt")"
+          curl -sf -m 120 -X POST -d "token=${TOKEN}&url=https://hotel.example"             http://127.0.0.1:8932/doba-installer.php | grep -q 'install wizard'
+
+          test -f "$DOCROOT/artisan"
+          test ! -f "$DOCROOT/doba-installer.php"
+          grep -q '^APP_ENV=production' "$DOCROOT/.env"
+          echo "The web installer installs this tarball, and deletes itself."
+
       # gh is preinstalled on the runner, so the release step adds no
       # third-party action to download — which is exactly the dependency
       # that fails when GitHub is rate-limiting.
@@ -148,5 +183,7 @@ jobs:
           gh release upload "$VERSION" \
             "doba-${VERSION}.tar.gz" \
             "doba-${VERSION}.tar.gz.sha256" \
+            scripts/install.sh \
+            scripts/doba-installer.php \
             --clobber
 

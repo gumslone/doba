@@ -418,7 +418,34 @@ intend to make public.
 
 ## Installing
 
-Open the site in a browser. An uninstalled copy sends every URL to
+Three ways onto a server, all ending at the same wizard:
+
+**No shell at all** — download `doba-installer.php` from the
+[latest release](https://github.com/gumslone/doba/releases), upload that
+one file by FTP, open it in a browser. It checks the server, downloads
+the newest release, verifies the checksum, unpacks it around itself,
+writes a bootable `.env` and deletes itself. It proves you own the server
+the same way the wizard does: by asking for the contents of a token file
+it just wrote next to itself.
+
+**With a shell** —
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/gumslone/doba/main/scripts/install.sh | bash
+```
+
+Same steps, one command; `DOBA_DIR` and `DOBA_URL` override the
+questions. Both installers configure only what Laravel needs to boot —
+everything a hotelier actually decides is asked once, in the wizard,
+by the same code either way. And both verify the tarball's SHA-256
+before extracting a byte: the release workflow smoke-tests each
+installer against the exact tarball it publishes, so a release whose
+installers cannot install it never ships.
+
+**As a developer** — clone and build; see
+[Quick start](#quick-start-developers).
+
+Then open the site in a browser. An uninstalled copy sends every URL to
 **`/install`** and walks through it: language, a blocking server check,
 the database, the hotel, your account, your rooms, done. Nothing needs a
 shell — which is the point, because most people running this do not have
