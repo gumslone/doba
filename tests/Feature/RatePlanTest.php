@@ -87,10 +87,14 @@ it('honours every eligibility bound inclusively', function (): void {
         ->and($longStay->isEligible($this->checkIn, 5))->toBeTrue()   // inclusive
         // Booked 14 days out: too late for a 30-day early bird…
         ->and($early->isEligible($this->checkIn, 2))->toBeFalse()
-        // …but eligible exactly 30 days out, not 31.
-        ->and($early->isEligible(CarbonImmutable::today()->addDays(30), 2))->toBeTrue()
+        // …but eligible exactly 30 days out, not 31. Counted from the
+        // HOTEL's today, as isEligible itself counts: from 22:00 UTC a
+        // Berlin hotel is already on tomorrow's date, and a UTC-framed
+        // "exactly 30" here failed every summer evening between 22:00
+        // and midnight — in CI, on whichever runs drew that window.
+        ->and($early->isEligible(CarbonImmutable::today(config('doba.timezone'))->addDays(30), 2))->toBeTrue()
         ->and($lastMinute->isEligible($this->checkIn, 2))->toBeFalse()
-        ->and($lastMinute->isEligible(CarbonImmutable::today()->addDays(3), 2))->toBeTrue();
+        ->and($lastMinute->isEligible(CarbonImmutable::today(config('doba.timezone'))->addDays(3), 2))->toBeTrue();
 });
 
 it('bounds the validity window by the stay, not the booking date', function (): void {
