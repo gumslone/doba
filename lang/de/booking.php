@@ -119,4 +119,14 @@ return [
     'late_checkout_requested_notice' => 'Vielen Dank — Ihre Anfrage liegt uns vor, wir bestätigen sie.',
     'late_checkout_not_later' => 'Das ist nicht später als unser üblicher Checkout.',
     'error_not_changeable' => 'Diese Buchung kann nicht mehr geändert werden.',
+
+    'balance_title' => 'Restbetrag bezahlen',
+    'balance_intro' => 'Buchung :reference — der offene Rest Ihres Aufenthalts.',
+    'paid_so_far' => 'Bereits bezahlt',
+    'balance_due' => 'Noch offen',
+    'balance_open' => 'Für diesen Aufenthalt sind noch :amount offen.',
+    'pay_balance_now' => 'Jetzt bezahlen',
+    'balance_at_desk' => 'Sie können den Betrag bei der Anreise an der Rezeption begleichen.',
+    'back_to_manage' => 'Zurück zu Ihrer Buchung',
+    'error_balance_unpayable' => 'Derzeit ist online nichts zu bezahlen.',
 ];

@@ -97,6 +97,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Lifecycle mail (§13)
+    |--------------------------------------------------------------------------
+    |
+    | The two messages a good front desk sends by hand and a tired one
+    | forgets: "we are looking forward to you" a few days out — carrying
+    | the balance still owed and a link to settle it — and a thank-you
+    | the morning after departure. Both are sent by doba:guest-mail on
+    | the scheduler, both stamp the booking so a rerun cannot repeat
+    | them, and neither sends while outgoing mail is unconfirmed.
+    |
+    */
+
+    'guest_mail' => [
+        // Days before arrival. 0 switches the pre-arrival mail off.
+        'pre_arrival_days' => (int) env('DOBA_MAIL_PRE_ARRIVAL_DAYS', 3),
+        'post_stay' => (bool) env('DOBA_MAIL_POST_STAY', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | SEO
     |--------------------------------------------------------------------------
     |

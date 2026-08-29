@@ -10,6 +10,7 @@ use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Support\Webhooks\Webhooks;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -71,6 +72,57 @@ class PaymentService
         }
 
         return $payment;
+    }
+
+    /**
+     * Start collecting what is still owed on a booking the guest holds.
+     *
+     * The deposit's counterpart, with different rules because the moment
+     * is different: the booking is already confirmed, so no inventory
+     * hangs on this payment and failure costs nothing but patience.
+     *
+     * The idempotency key carries the AMOUNT. Retrying the same balance
+     * reuses the key end to end, so neither our table nor the provider
+     * can double-charge — but a balance that has changed since (an extra
+     * added, a partial payment landed) mints a fresh intent rather than
+     * charging yesterday's number.
+     */
+    public function initiateBalance(PaymentGateway $gateway, Booking $booking): Payment
+    {
+        if (! in_array($booking->status, [BookingStatus::Confirmed, BookingStatus::CheckedIn], true)) {
+            throw new InvalidArgumentException(
+                "Booking {$booking->reference} is {$booking->status->value}; only a confirmed or checked-in stay has a balance to collect."
+            );
+        }
+
+        if ($booking->balance_due <= 0) {
+            throw new InvalidArgumentException("Booking {$booking->reference} has nothing left to pay.");
+        }
+
+        if ($gateway->name() === 'manual') {
+            // Manual means the desk settles it. A pending row that nothing
+            // will ever confirm is not a payment, it is a loose end.
+            throw new InvalidArgumentException('The manual gateway settles balances at the desk, not online.');
+        }
+
+        $amount = $booking->balance_due;
+        $idempotencyKey = "doba-{$booking->reference}-balance-{$amount}";
+
+        $gatewayPayment = $gateway->createPayment($booking, $amount, $idempotencyKey);
+
+        return Payment::query()->updateOrCreate(
+            ['idempotency_key' => $idempotencyKey],
+            [
+                'booking_id' => $booking->id,
+                'gateway' => $gateway->name(),
+                'gateway_payment_id' => $gatewayPayment->gatewayPaymentId,
+                'type' => 'balance',
+                'status' => PaymentStatus::Pending,
+                'amount' => $amount,
+                'currency' => $booking->currency,
+                'payload' => $gatewayPayment->raw,
+            ]
+        );
     }
 
     /**
@@ -154,6 +206,11 @@ class PaymentService
         }
 
         $booking = $fresh->booking()->first();
+
+        // Declared in WebhookEndpoint::EVENTS since the webhooks slice,
+        // emitted since this one. A channel manager reconciling money
+        // needs the event, not a poll.
+        app(Webhooks::class)->emit('payment.succeeded', $this->paymentPayload($fresh, $booking));
 
         if ($booking->status !== BookingStatus::Pending) {
             return; // already confirmed by an earlier delivery or by staff
@@ -266,6 +323,27 @@ class PaymentService
         $payment->booking->decrement('paid_amount', $amount);
         $payment->booking->increment('balance_due', $amount);
 
+        app(Webhooks::class)->emit('payment.refunded', $this->paymentPayload($refund, $payment->booking->fresh()));
+
         return $refund;
+    }
+
+    /**
+     * What a partner is told about money: the booking it belongs to and
+     * the amounts — never the gateway's own object, which is theirs to
+     * fetch from their own account if they hold one.
+     *
+     * @return array<string,mixed>
+     */
+    protected function paymentPayload(Payment $payment, Booking $booking): array
+    {
+        return [
+            'reference' => $booking->reference,
+            'type' => $payment->type,
+            'amount' => ['amount' => $payment->amount, 'currency' => $payment->currency],
+            'paid_total' => ['amount' => $booking->paid_amount, 'currency' => $booking->currency],
+            'balance_due' => ['amount' => $booking->balance_due, 'currency' => $booking->currency],
+            'updated_at' => $booking->updated_at?->toIso8601String(),
+        ];
     }
 }

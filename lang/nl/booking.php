@@ -119,4 +119,14 @@ return [
     'late_checkout_requested_notice' => 'Dank u — wij hebben uw verzoek en bevestigen het.',
     'late_checkout_not_later' => 'Dat is niet later dan ons gebruikelijke uitchecken.',
     'error_not_changeable' => 'Deze boeking kan niet meer worden gewijzigd.',
+
+    'balance_title' => 'Restbedrag betalen',
+    'balance_intro' => 'Boeking :reference — het openstaande deel van uw verblijf.',
+    'paid_so_far' => 'Al betaald',
+    'balance_due' => 'Nog te betalen',
+    'balance_open' => 'Voor dit verblijf staat nog :amount open.',
+    'pay_balance_now' => 'Nu betalen',
+    'balance_at_desk' => 'U kunt dit bij aankomst aan de receptie voldoen.',
+    'back_to_manage' => 'Terug naar uw boeking',
+    'error_balance_unpayable' => 'Er valt op dit moment niets online te betalen.',
 ];

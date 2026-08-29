@@ -33,3 +33,8 @@ Schedule::command('doba:images')->dailyAt('03:30');
 // changes its photos and never says so sits in the directory looking like
 // it did last year.
 Schedule::command('doba:directory:announce')->dailyAt('04:00')->withoutOverlapping();
+
+// Pre-arrival and post-stay mail (§13). After the reconciler and before
+// business hours: the balance a pre-arrival mail quotes should be the
+// audited one.
+Schedule::command('doba:guest-mail')->dailyAt('08:00')->withoutOverlapping();

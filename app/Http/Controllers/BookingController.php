@@ -12,6 +12,7 @@ use App\Domain\Invoicing\InvoiceRenderer;
 use App\Domain\Payments\GatewayRegistry;
 use App\Domain\Payments\PaymentService;
 use App\Enums\BookingStatus;
+use App\Enums\PaymentStatus;
 use App\Http\Middleware\CaptureReferral;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
@@ -26,6 +27,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -325,6 +327,59 @@ class BookingController extends Controller
      * is arriving that afternoon, and a form that simply granted it would
      * be promising a room the hotel may have already sold.
      */
+    /**
+     * The guest settles what is still owed, from the manage page (§8).
+     *
+     * POST creates the payment intent, GET renders it — in that order
+     * and never the other way round, because a crawler walking GET links
+     * must not be able to manufacture intents at the gateway.
+     */
+    public function startBalancePayment(string $reference, string $token, PaymentService $payments): RedirectResponse
+    {
+        $booking = $this->findByToken($reference, $token);
+        $manage = Localization::route('booking.manage', compact('reference', 'token'));
+
+        try {
+            $payments->initiateBalance(GatewayRegistry::default(), $booking);
+        } catch (InvalidArgumentException) {
+            // Already settled, cancelled meanwhile, or a desk-only
+            // gateway: the manage page states the current truth.
+            return redirect($manage)->with('booking_error', __('booking.error_balance_unpayable'));
+        }
+
+        return redirect(Localization::route('booking.balance', compact('reference', 'token')));
+    }
+
+    public function payBalance(string $reference, string $token, Seo $seo): View|RedirectResponse
+    {
+        $booking = $this->findByToken($reference, $token);
+
+        $seo->title(__('booking.balance_title'))
+            ->noindex()
+            ->alternates(Localization::alternates('booking.balance', compact('reference', 'token')));
+
+        $payment = $booking->payments()
+            ->where('type', 'balance')
+            ->where('status', PaymentStatus::Pending)
+            ->latest('id')
+            ->first();
+
+        // Nothing owed, or nothing initiated: the manage page is the
+        // honest place to stand. A refresh after paying lands here too,
+        // once the webhook has credited the money.
+        if ($booking->balance_due <= 0 || $payment === null) {
+            return redirect(Localization::route('booking.manage', compact('reference', 'token')));
+        }
+
+        return view('booking.pay-balance', [
+            'booking' => $booking->load('rooms.roomType.translations', 'guest'),
+            'token' => $token,
+            'payment' => $payment,
+            'gateway' => $payment->gateway,
+            'approvalUrl' => $payment->payload['links'][0]['href'] ?? $payment->payload['approval_url'] ?? null,
+        ]);
+    }
+
     public function requestLateCheckout(Request $request, string $reference, string $token): RedirectResponse
     {
         $validated = $request->validate([

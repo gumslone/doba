@@ -119,4 +119,14 @@ return [
     'late_checkout_requested_notice' => 'Merci — nous avons votre demande et vous la confirmerons.',
     'late_checkout_not_later' => 'Ce n’est pas plus tard que notre départ habituel.',
     'error_not_changeable' => 'Cette réservation ne peut plus être modifiée.',
+
+    'balance_title' => 'Régler le solde',
+    'balance_intro' => 'Réservation :reference — le reste de votre séjour.',
+    'paid_so_far' => 'Déjà payé',
+    'balance_due' => 'Reste à payer',
+    'balance_open' => 'Il reste :amount à régler pour ce séjour.',
+    'pay_balance_now' => 'Payer maintenant',
+    'balance_at_desk' => 'Vous pourrez régler ce montant à la réception à votre arrivée.',
+    'back_to_manage' => 'Retour à votre réservation',
+    'error_balance_unpayable' => 'Il n\'y a rien à régler en ligne pour le moment.',
 ];

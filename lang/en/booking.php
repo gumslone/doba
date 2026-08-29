@@ -119,4 +119,14 @@ return [
     'late_checkout_requested_notice' => 'Thank you — we have your request and will confirm it.',
     'late_checkout_not_later' => 'That is not later than our usual checkout.',
     'error_not_changeable' => 'This booking can no longer be changed.',
+
+    'balance_title' => 'Pay the balance',
+    'balance_intro' => 'Booking :reference — the remainder of your stay.',
+    'paid_so_far' => 'Paid so far',
+    'balance_due' => 'Left to pay',
+    'balance_open' => 'There is :amount left to pay on this stay.',
+    'pay_balance_now' => 'Pay it now',
+    'balance_at_desk' => 'You can settle it at the front desk on arrival.',
+    'back_to_manage' => 'Back to your booking',
+    'error_balance_unpayable' => 'There is nothing to pay online right now.',
 ];

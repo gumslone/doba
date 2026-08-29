@@ -46,6 +46,29 @@
             </div>
         </dl>
 
+        @if ($booking->balance_due > 0 && in_array($booking->status, [BookingStatus::Confirmed, BookingStatus::CheckedIn], true))
+            {{-- The number a guest actually wonders about, with the way to
+                 make it zero right next to it. Hidden on the manual
+                 gateway: there, the desk settles it (§8). --}}
+            <div class="mt-6 rounded border border-amber-200 bg-amber-50 p-4">
+                <p class="text-amber-900">
+                    {{ __('booking.balance_open', ['amount' => \App\Support\Money::format($booking->balance_due)]) }}
+                </p>
+                @if (\App\Domain\Payments\GatewayRegistry::default()->name() !== 'manual')
+                    <form method="POST"
+                          action="{{ Localization::route('booking.pay-balance', ['reference' => $booking->reference, 'token' => $token]) }}"
+                          class="mt-3">
+                        @csrf
+                        <button type="submit" class="btn-primary rounded px-5 py-2.5">
+                            {{ __('booking.pay_balance_now') }}
+                        </button>
+                    </form>
+                @else
+                    <p class="mt-2 text-sm text-amber-800">{{ __('booking.balance_at_desk') }}</p>
+                @endif
+            </div>
+        @endif
+
         @if (session('booking_requested'))
             <p class="mt-6 rounded border border-green-200 bg-green-50 p-4 text-green-800" role="status">
                 {{ __('booking.late_checkout_requested_notice') }}

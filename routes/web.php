@@ -259,6 +259,13 @@ foreach ($locales as $locale) {
             Route::get($booking.'/manage/{reference}/{token}', [BookingController::class, 'manage'])->name('booking.manage');
             Route::get($booking.'/manage/{reference}/{token}/invoice.pdf', [BookingController::class, 'invoice'])
                 ->name('booking.invoice');
+            // Settling the balance online (§8): POST creates the intent,
+            // GET only renders it — a crawler must not mint intents.
+            Route::get($booking.'/manage/{reference}/{token}/balance', [BookingController::class, 'payBalance'])
+                ->name('booking.balance');
+            Route::post($booking.'/manage/{reference}/{token}/balance', [BookingController::class, 'startBalancePayment'])
+                ->middleware('throttle:booking')
+                ->name('booking.pay-balance');
             Route::post($booking.'/manage/{reference}/{token}/late-checkout', [BookingController::class, 'requestLateCheckout'])
                 ->middleware('throttle:booking')
                 ->name('booking.late-checkout');
