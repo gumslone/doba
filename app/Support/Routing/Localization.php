@@ -42,6 +42,35 @@ final class Localization
         return $locales === [] ? [config('app.locale')] : array_values($locales);
     }
 
+    /**
+     * The languages the SOFTWARE ships, as opposed to the ones this
+     * hotel serves. Read off the lang directory rather than a constant,
+     * so dropping a translated set into lang/ is the whole act of adding
+     * a language — and the install wizard offers every language a
+     * hotelier could actually run, not just the four in the default env.
+     *
+     * @return array<int,string>
+     */
+    public static function shipped(): array
+    {
+        $locales = [];
+
+        foreach (glob(base_path('lang/*'), GLOB_ONLYDIR) ?: [] as $dir) {
+            // booking.php is the file no guest-facing locale can lack.
+            if (is_file($dir.'/booking.php')) {
+                $locales[] = basename($dir);
+            }
+        }
+
+        sort($locales);
+
+        // English first: it is the fallback locale and the one set every
+        // installation carries complete.
+        usort($locales, static fn (string $a, string $b): int => ($a === 'en' ? 0 : 1) <=> ($b === 'en' ? 0 : 1));
+
+        return $locales;
+    }
+
     public static function defaultLocale(): string
     {
         return self::locales()[0];

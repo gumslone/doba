@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support\Hotel;
 
 use App\Models\Setting;
+use App\Support\Routing\Localization;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -150,9 +151,17 @@ class HotelSettings
     }
 
     /**
-     * A translatable value is a map whose every key is a configured locale.
-     * Checking the keys — rather than "is it an array" — is what keeps a
-     * genuine list setting (amenities.list) from being mistaken for one.
+     * A translatable value is a map whose every key is a locale — one the
+     * software ships or one this hotel has configured. Checking the keys,
+     * rather than "is it an array", is what keeps a genuine list setting
+     * (amenities.list) from being mistaken for one.
+     *
+     * Shipped locales count even when not currently configured, because a
+     * hotel's locale set CHANGES: a tagline stored under ['de','en'] must
+     * still resolve after the hotel drops German — returning the raw
+     * array instead put a 500 in the footer of every page the moment
+     * DOBA_LOCALES lost a language the settings had already been written
+     * in.
      *
      * @param  array<mixed>  $value
      */
@@ -162,7 +171,10 @@ class HotelSettings
             return false;
         }
 
-        $locales = (array) config('doba.locales', []);
+        $locales = array_merge(
+            (array) config('doba.locales', []),
+            Localization::shipped(),
+        );
 
         foreach (array_keys($value) as $key) {
             if (! is_string($key) || ! in_array($key, $locales, true)) {

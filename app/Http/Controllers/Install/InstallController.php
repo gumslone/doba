@@ -11,6 +11,7 @@ use App\Support\Install\EnvWriter;
 use App\Support\Install\Installer;
 use App\Support\Install\Requirements;
 use App\Support\Install\RoomBuilder;
+use App\Support\Routing\Localization;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,7 +90,7 @@ class InstallController extends Controller
         }
 
         return match ($step) {
-            'language' => view('install.language', ['locales' => (array) config('doba.locales', ['en'])]),
+            'language' => view('install.language', ['locales' => Localization::shipped()]),
             'requirements' => view('install.requirements', ['checks' => app(Requirements::class)->all()]),
             'database' => view('install.database', ['suggested' => database_path('database.sqlite')]),
             'hotel' => view('install.hotel', [
@@ -127,11 +128,31 @@ class InstallController extends Controller
     protected function saveLanguage(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'locale' => ['required', Rule::in((array) config('doba.locales', ['en']))],
+            // Every language the software ships, not only the ones in the
+            // default env: a Ukrainian hotelier picking Ukrainian here is
+            // the moment their site becomes Ukrainian, and a wizard that
+            // only offers what an operator pre-configured has that
+            // backwards.
+            'locale' => ['required', Rule::in(Localization::shipped())],
         ]);
 
         $request->session()->put('install_locale', $validated['locale']);
         app()->setLocale($validated['locale']);
+
+        // The chosen language leads the site's locale list, so it is the
+        // default locale (§4) — staged for the finish step alongside the
+        // hotel step's env, written once, together.
+        $locales = array_values(array_unique(array_merge(
+            [$validated['locale']],
+            (array) config('doba.locales', ['en']),
+        )));
+
+        $this->stageEnv($request, [
+            'APP_LOCALE' => $validated['locale'],
+            'DOBA_LOCALES' => implode(',', $locales),
+        ]);
+
+        config(['doba.locales' => $locales, 'app.locale' => $validated['locale']]);
 
         // Recorded only if there is somewhere to record it: on a fresh
         // clone the database does not exist yet, and choosing a language
@@ -238,7 +259,7 @@ class InstallController extends Controller
         // restart under `artisan serve`, and an install abandoned at step
         // 5 should not leave a half-configured .env behind. The database
         // step is the exception — migrations need it on disk immediately.
-        $request->session()->put('install_env', [
+        $this->stageEnv($request, [
             'APP_TIMEZONE' => $validated['timezone'],
             'DOBA_CURRENCY' => strtoupper($validated['currency']),
             'DOBA_CHECKIN_FROM' => $validated['checkin_from'],
@@ -307,6 +328,23 @@ class InstallController extends Controller
         $this->remember('rooms');
 
         return redirect('/install/finish');
+    }
+
+    /**
+     * Merge into the env staged for the finish step.
+     *
+     * Merge, never put: the language step and the hotel step both stage
+     * keys, and whichever ran second used to silently discard the
+     * first's.
+     *
+     * @param  array<string,string>  $values
+     */
+    protected function stageEnv(Request $request, array $values): void
+    {
+        $request->session()->put('install_env', array_merge(
+            (array) $request->session()->get('install_env', []),
+            $values,
+        ));
     }
 
     protected function saveFinish(Request $request): RedirectResponse

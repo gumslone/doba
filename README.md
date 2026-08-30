@@ -416,6 +416,20 @@ intend to make public.
 > GitHub Pages cannot host this: Pages serves static files, and Doba needs
 > PHP, a database and writable storage. Codespaces runs the real thing.
 
+## Languages
+
+The guest site ships in **English, German, French, Dutch, Ukrainian and
+Polish** — interface, mails, invoices and translated URL segments
+(`/de/zimmer`, `/pl/pokoje`, `/uk/номери`). The install wizard offers every
+shipped language; the one chosen becomes the site's default. A test pins
+key-parity across all six, so a string added in one language and forgotten
+in another fails CI rather than rendering as a raw translation key in a
+guest's inbox.
+
+Room descriptions, pages and menus are the hotel's own content, translated
+per locale in the admin — a language with no translation for a page simply
+does not serve that page, rather than serving it half-English.
+
 ## Installing
 
 Three ways onto a server, all ending at the same wizard:
