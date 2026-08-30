@@ -24,7 +24,7 @@ a first-class subsystem rather than a meta tag bolted on at the end.
 > interim admin with a WYSIWYG editor.
 > Still to come: the full Filament panel — specified in
 > [`docs/architecture.md`](docs/architecture.md). See [Roadmap](#roadmap).
-> The correctness-critical paths are covered by 415+ tests on both database
+> The correctness-critical paths are covered by 485+ tests on both database
 > engines, but the platform has not yet run a real hotel — treat it as
 > pre-release.
 
@@ -900,13 +900,15 @@ wizard and the public API, is in
 | Phase | Scope | State |
 |---|---|---|
 | 1 | Foundation: config/theme layer, content model, i18n routing, **SEO layer**, CI | **done** |
-| 2 | Availability service, rate engine, holds + locking + reconciliation, calendar API | **done** · checkout funnel + admin availability grid next |
-| 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds) | **done** |
+| 2 | Availability service, rate engine, holds + locking + reconciliation, calendar API, checkout funnel, admin availability grid | **done** |
+| 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds), **balance payment**, city tax, lifecycle mail | **done** |
 | — | Events, WYSIWYG admin, customizable styles, security headers | **done** |
 | — | Invoices, **iCal channel sync**, promo codes, eight style presets, **restaurant & menu** | **done** |
+| — | Install wizard + installers, safe updater with health checks, backups, reports, front desk, **guest book with GDPR export/erasure**, physical rooms & housekeeping, directory listing, **six languages** | **done** |
 | 4 | First hotel live | planned |
 | 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
 | 6 | Public REST API + ARI push + webhooks + **OpenAPI 3.1 contract** | **done** |
+| 7 | Full Filament panel, reviews, loyalty | as needed |
 
 ## Contributing
 
