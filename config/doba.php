@@ -109,6 +109,23 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Privacy retention (§14)
+    |--------------------------------------------------------------------------
+    |
+    | Months after a guest's last checkout before their profile is
+    | anonymised unasked. Data protection law expects data to go when its
+    | purpose has, not when somebody remembers to write in. Invoices and
+    | booking amounts stay — tax law keeps the books regardless of who
+    | asks. 0 switches the clock off.
+    |
+    */
+
+    'privacy' => [
+        'retention_months' => (int) env('DOBA_RETENTION_MONTHS', 24),
+    ],
+
     'guest_mail' => [
         // Days before arrival. 0 switches the pre-arrival mail off.
         'pre_arrival_days' => (int) env('DOBA_MAIL_PRE_ARRIVAL_DAYS', 3),

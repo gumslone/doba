@@ -39,6 +39,14 @@
                     <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
                         <div>
                             <strong>{{ $booking->guest?->last_name }}, {{ $booking->guest?->first_name }}</strong>
+                            @if (($booking->guest?->stays_count ?? 0) >= 2)
+                                {{-- The one fact that changes how the desk
+                                     says hello. The count includes this
+                                     stay: it was counted when confirmed. --}}
+                                <span class="ml-1 rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-800">
+                                    {{ trans_choice('admin.guest_nth_stay', $booking->guest->stays_count, ['count' => $booking->guest->stays_count]) }}
+                                </span>
+                            @endif
                             <span class="ml-1 font-mono text-xs text-neutral-400">{{ $booking->reference }}</span>
                             <p class="text-neutral-500">
                                 {{ $room($booking) }} · {{ $nights($booking) }} ·

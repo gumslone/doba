@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminDirectoryController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminFrontDeskController;
+use App\Http\Controllers\Admin\AdminGuestController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminMailController;
 use App\Http\Controllers\Admin\AdminPageController;
@@ -146,6 +147,13 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('reports', [AdminReportController::class, 'index'])->name('admin.reports');
         Route::get('reports/export', [AdminReportController::class, 'export'])->name('admin.reports.export');
+
+        Route::get('guests', [AdminGuestController::class, 'index'])->name('admin.guests');
+        Route::get('guests/export-consenting', [AdminGuestController::class, 'consenting'])->name('admin.guests.consenting');
+        Route::get('guests/{guest}', [AdminGuestController::class, 'show'])->name('admin.guests.show');
+        Route::post('guests/{guest}', [AdminGuestController::class, 'update'])->name('admin.guests.update');
+        Route::get('guests/{guest}/export', [AdminGuestController::class, 'export'])->name('admin.guests.export');
+        Route::post('guests/{guest}/erase', [AdminGuestController::class, 'erase'])->name('admin.guests.erase');
 
         Route::get('front-desk', [AdminFrontDeskController::class, 'index'])->name('admin.front-desk');
         Route::post('front-desk/{booking}/check-in', [AdminFrontDeskController::class, 'checkIn'])->name('admin.front-desk.check-in');

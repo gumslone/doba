@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $last_name
  * @property int $stays_count
  * @property int $total_spent
+ * @property CarbonImmutable|null $anonymised_at
  */
 class Guest extends Model
 {
@@ -25,7 +27,13 @@ class Guest extends Model
         'marketing_consent' => 'boolean',
         'stays_count' => 'integer',
         'total_spent' => 'integer',
+        'anonymised_at' => 'immutable_datetime',
     ];
+
+    public function isAnonymised(): bool
+    {
+        return $this->anonymised_at !== null;
+    }
 
     /**
      * @return HasMany<Booking, $this>

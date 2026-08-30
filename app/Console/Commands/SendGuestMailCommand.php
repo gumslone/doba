@@ -101,6 +101,13 @@ class SendGuestMailCommand extends Command
             return 0;   // an iCal-imported stay may have no address at all
         }
 
+        if ($booking->guest->isAnonymised()) {
+            // Checked out on Monday, erased on Tuesday: the thank-you run
+            // on Wednesday must find nobody. Mailing an anonymised
+            // address is the erasure not having happened.
+            return 0;
+        }
+
         if ($this->option('dry-run')) {
             $this->line(sprintf('  %s -> %s (%s)', $booking->reference, $email, $stamp));
 

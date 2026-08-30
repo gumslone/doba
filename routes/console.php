@@ -38,3 +38,7 @@ Schedule::command('doba:directory:announce')->dailyAt('04:00')->withoutOverlappi
 // business hours: the balance a pre-arrival mail quotes should be the
 // audited one.
 Schedule::command('doba:guest-mail')->dailyAt('08:00')->withoutOverlapping();
+
+// The retention clock (§14): weekly, because the obligation is "not
+// longer than needed", not "at midnight sharp".
+Schedule::command('doba:guests:anonymise')->weeklyOn(1, '04:30')->withoutOverlapping();

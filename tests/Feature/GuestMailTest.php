@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\Booking\BookingService;
+use App\Domain\Guests\GuestPrivacy;
 use App\Mail\PostStay;
 use App\Mail\PreArrival;
 use App\Models\Availability;
@@ -163,4 +164,16 @@ it('skips a stay with no address instead of failing the whole run', function ():
     // can reach must still hear from us.
     Mail::assertQueued(PreArrival::class, 1);
     Mail::assertQueued(PreArrival::class, fn (PreArrival $m): bool => $m->booking->is($withMail));
+});
+
+it('never mails a guest who has been erased since their stay', function (): void {
+    $booking = stayFor(hotelToday()->subDays(3), 2, 'checked_out');
+
+    // Checked out Monday, erased Tuesday — the Wednesday thank-you run
+    // must find nobody.
+    app(GuestPrivacy::class)->erase($booking->guest);
+
+    Artisan::call('doba:guest-mail');
+
+    Mail::assertNothingQueued();
 });
