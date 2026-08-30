@@ -224,6 +224,21 @@
                         </dt>
                         <dd class="text-right font-semibold">{{ Money::format($total) }}</dd>
                     </div>
+
+                    @php $cityTax = \App\Domain\Booking\BookingService::cityTax($stay['adults'], $stay['children'], $nights); @endphp
+                    @if ($cityTax > 0)
+                        {{-- Before the booking exists, not after: a guest
+                             must see every line they will owe while they
+                             can still walk away (§7). --}}
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-neutral-500">{{ __('booking.city_tax') }}</dt>
+                            <dd class="text-right">{{ Money::format($cityTax) }}</dd>
+                        </div>
+                        <div class="flex justify-between gap-4">
+                            <dt class="font-medium">{{ __('booking.total') }}</dt>
+                            <dd class="text-right font-semibold">{{ Money::format($total + $cityTax) }}</dd>
+                        </div>
+                    @endif
                 </dl>
 
                 <p class="mt-3 text-xs text-neutral-500">{{ __('seo.direct_booking_note') }}</p>

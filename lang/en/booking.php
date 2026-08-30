@@ -129,4 +129,6 @@ return [
     'balance_at_desk' => 'You can settle it at the front desk on arrival.',
     'back_to_manage' => 'Back to your booking',
     'error_balance_unpayable' => 'There is nothing to pay online right now.',
+
+    'city_tax' => 'City tax',
 ];

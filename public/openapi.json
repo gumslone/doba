@@ -1602,6 +1602,7 @@
                     "guest",
                     "subtotal",
                     "extras_total",
+                    "city_tax",
                     "discount_total",
                     "total",
                     "balance_due",
@@ -1698,6 +1699,10 @@
                     },
                     "extras_total": {
                         "$ref": "#/components/schemas/Money"
+                    },
+                    "city_tax": {
+                        "$ref": "#/components/schemas/Money",
+                        "description": "Municipal visitor's tax, per person per night, outside VAT\nand outside the room price. Zero where no municipality\nlevies one.\n"
                     },
                     "discount_total": {
                         "$ref": "#/components/schemas/Money"

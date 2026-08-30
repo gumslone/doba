@@ -111,6 +111,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | City tax (§7)
+    |--------------------------------------------------------------------------
+    |
+    | Per person, per night, in minor units — the Kurtaxe/Ortstaxe/taxe de
+    | séjour most European municipalities levy and require SHOWN
+    | SEPARATELY on the invoice. It is outside VAT and outside the room
+    | price: it never appears in a nightly rate, an ARI push or a
+    | directory quote, because those price the room and this taxes the
+    | person.
+    |
+    | Children are exempt by default, which matches most municipal rules;
+    | a municipality that taxes every age sets the flag to false.
+    |
+    */
+
+    'taxes' => [
+        'city_tax_per_person_night' => (int) env('DOBA_CITY_TAX', 0),
+        'city_tax_children_exempt' => (bool) env('DOBA_CITY_TAX_CHILDREN_EXEMPT', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Privacy retention (§14)
     |--------------------------------------------------------------------------
     |

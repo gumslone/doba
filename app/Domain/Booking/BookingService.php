@@ -133,6 +133,12 @@ class BookingService
                 $discount = $promoCode->discountFor($nightPrices, $units);
             }
 
+            // Per PERSON per night, not per room (§7): the municipality
+            // taxes the sleeper, and the invoice must show it on its own
+            // line. Deliberately outside the deposit — the deposit
+            // secures the room, and the tax is settled with the stay.
+            $cityTax = self::cityTax($adults, $children, $nights);
+
             $booking = Booking::create([
                 'reference' => Booking::nextReference(),
                 'manage_token' => Booking::newManageToken(),
@@ -146,9 +152,10 @@ class BookingService
                 'subtotal' => $subtotal,
                 'discount_total' => $discount,
                 'promo_code_id' => $promoCode?->id,
-                'total' => $subtotal - $discount,
+                'city_tax' => $cityTax,
+                'total' => $subtotal - $discount + $cityTax,
                 'deposit_due' => $subtotal - $discount,
-                'balance_due' => $subtotal - $discount,
+                'balance_due' => $subtotal - $discount + $cityTax,
                 'locale' => $bookingLocale,
                 'guest_id' => $guest->id,
             ]);
@@ -480,6 +487,22 @@ class BookingService
                     ->update(['released_at' => now()]);
             }
         }
+    }
+
+    /**
+     * The municipal visitor's tax for a stay, in minor units.
+     */
+    public static function cityTax(int $adults, int $children, int $nights): int
+    {
+        $rate = (int) config('doba.taxes.city_tax_per_person_night', 0);
+
+        if ($rate <= 0) {
+            return 0;
+        }
+
+        $people = $adults + (config('doba.taxes.city_tax_children_exempt', true) ? 0 : $children);
+
+        return $rate * $people * $nights;
     }
 
     /**

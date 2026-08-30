@@ -317,6 +317,7 @@ class BookingController extends Controller
             ],
             'subtotal' => Wire::money($booking->subtotal),
             'extras_total' => Wire::money($booking->extras_total),
+            'city_tax' => Wire::money($booking->city_tax),
             'discount_total' => Wire::money($booking->discount_total),
             'total' => Wire::money($booking->total),
             'balance_due' => Wire::money($booking->balance_due),

@@ -129,4 +129,6 @@ return [
     'balance_at_desk' => 'Vous pourrez régler ce montant à la réception à votre arrivée.',
     'back_to_manage' => 'Retour à votre réservation',
     'error_balance_unpayable' => 'Il n\'y a rien à régler en ligne pour le moment.',
+
+    'city_tax' => 'Taxe de séjour',
 ];

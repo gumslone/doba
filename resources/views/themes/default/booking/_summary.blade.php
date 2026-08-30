@@ -44,6 +44,16 @@
         </div>
     @endif
 
+    @if ($booking->city_tax > 0)
+        {{-- Its own line, as the municipality requires: the tax belongs
+             to the sleeper, not the room, and hiding it in the rate is
+             what the invoice rules exist to prevent (§7). --}}
+        <div class="flex justify-between gap-4">
+            <dt class="text-neutral-500">{{ __('booking.city_tax') }}</dt>
+            <dd class="text-right">{{ Money::format($booking->city_tax) }}</dd>
+        </div>
+    @endif
+
     <div class="flex justify-between gap-4 border-t border-neutral-200 pt-3 text-base">
         <dt class="font-medium">{{ __('booking.total') }}</dt>
         <dd class="text-right font-semibold">{{ Money::format($booking->total) }}</dd>

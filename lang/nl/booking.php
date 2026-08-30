@@ -129,4 +129,6 @@ return [
     'balance_at_desk' => 'U kunt dit bij aankomst aan de receptie voldoen.',
     'back_to_manage' => 'Terug naar uw boeking',
     'error_balance_unpayable' => 'Er valt op dit moment niets online te betalen.',
+
+    'city_tax' => 'Toeristenbelasting',
 ];

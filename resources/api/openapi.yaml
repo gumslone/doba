@@ -964,8 +964,9 @@ components:
       additionalProperties: false
       required:
         [reference, status, source, check_in, check_out, nights, adults,
-         children, rooms, guest, subtotal, extras_total, discount_total,
-         total, balance_due, hold_expires_at, created_at, updated_at]
+         children, rooms, guest, subtotal, extras_total, city_tax,
+         discount_total, total, balance_due, hold_expires_at, created_at,
+         updated_at]
       properties:
         reference: { type: string }
         status: { $ref: '#/components/schemas/BookingStatus' }
@@ -1002,6 +1003,12 @@ components:
             email: { type: [string, 'null'] }
         subtotal: { $ref: '#/components/schemas/Money' }
         extras_total: { $ref: '#/components/schemas/Money' }
+        city_tax:
+          $ref: '#/components/schemas/Money'
+          description: |
+            Municipal visitor's tax, per person per night, outside VAT
+            and outside the room price. Zero where no municipality
+            levies one.
         discount_total: { $ref: '#/components/schemas/Money' }
         total: { $ref: '#/components/schemas/Money' }
         balance_due: { $ref: '#/components/schemas/Money' }
