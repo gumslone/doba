@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPromoCodeController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
 use App\Http\Controllers\Admin\AdminReportController;
+use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVenueController;
 use App\Http\Controllers\Admin\AuthController;
@@ -155,10 +156,16 @@ Route::prefix('admin')->group(function (): void {
         Route::get('guests/{guest}/export', [AdminGuestController::class, 'export'])->name('admin.guests.export');
         Route::post('guests/{guest}/erase', [AdminGuestController::class, 'erase'])->name('admin.guests.erase');
 
+        Route::get('rooms', [AdminRoomController::class, 'index'])->name('admin.rooms');
+        Route::post('rooms', [AdminRoomController::class, 'store'])->name('admin.rooms.store');
+        Route::post('rooms/{room}', [AdminRoomController::class, 'update'])->name('admin.rooms.update');
+        Route::post('rooms/{room}/delete', [AdminRoomController::class, 'destroy'])->name('admin.rooms.destroy');
+
         Route::get('front-desk', [AdminFrontDeskController::class, 'index'])->name('admin.front-desk');
         Route::post('front-desk/{booking}/check-in', [AdminFrontDeskController::class, 'checkIn'])->name('admin.front-desk.check-in');
         Route::post('front-desk/{booking}/check-out', [AdminFrontDeskController::class, 'checkOut'])->name('admin.front-desk.check-out');
         Route::post('front-desk/{booking}/departure-time', [AdminFrontDeskController::class, 'departureTime'])->name('admin.front-desk.departure-time');
+        Route::post('front-desk/{booking}/assign-room', [AdminFrontDeskController::class, 'assignRoom'])->name('admin.front-desk.assign-room');
 
         Route::get('venues', [AdminVenueController::class, 'index'])->name('admin.venues');
         Route::get('venues/create', [AdminVenueController::class, 'create'])->name('admin.venues.create');

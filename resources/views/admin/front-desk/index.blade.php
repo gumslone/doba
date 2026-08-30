@@ -72,6 +72,10 @@
                                 {{ __('admin.check_in') }}
                             </button>
                         </form>
+
+                        <div class="w-full">
+                            @include('admin.front-desk._room-assign')
+                        </div>
                     </li>
                 @empty
                     <li class="px-4 py-6 text-sm text-neutral-500">{{ __('admin.no_arrivals') }}</li>
@@ -115,6 +119,8 @@
 
                         @include('admin.front-desk._late-checkout')
 
+                        @include('admin.front-desk._room-assign')
+
                     </li>
                 @empty
                     <li class="px-4 py-6 text-sm text-neutral-500">{{ __('admin.no_departures') }}</li>
@@ -149,6 +155,8 @@
                         </p>
 
                         @include('admin.front-desk._late-checkout')
+
+                        @include('admin.front-desk._room-assign')
                     </li>
                 @empty
                     <li class="px-4 py-6 text-sm text-neutral-500">{{ __('admin.nobody_in_house') }}</li>

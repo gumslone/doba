@@ -43,6 +43,16 @@ class BookingRoom extends Model
     }
 
     /**
+     * The door this stay was pinned to, if the desk has picked one.
+     *
+     * @return BelongsTo<Room, $this>
+     */
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
+    }
+
+    /**
      * @return BelongsTo<RoomType, $this>
      */
     public function roomType(): BelongsTo

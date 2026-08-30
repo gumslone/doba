@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
@@ -78,6 +79,16 @@ class RoomType extends Model implements HasMedia
     /**
      * @return MorphMany<Media, $this>
      */
+    /**
+     * The physical doors of this category, where the hotel lists them.
+     *
+     * @return HasMany<Room, $this>
+     */
+    public function rooms(): HasMany
+    {
+        return $this->hasMany(Room::class);
+    }
+
     public function media(): MorphMany
     {
         return $this->morphMany(Media::class, 'mediable')->orderBy('sort_order');

@@ -15,6 +15,7 @@ use App\Models\Extra;
 use App\Models\Guest;
 use App\Models\PromoCode;
 use App\Models\RatePlan;
+use App\Models\Room;
 use App\Models\RoomType;
 use App\Support\Webhooks\Webhooks;
 use Carbon\CarbonImmutable;
@@ -374,6 +375,14 @@ class BookingService
 
             if ($to === BookingStatus::CheckedOut) {
                 $booking->checked_out_at = CarbonImmutable::now();
+
+                // The door goes on housekeeping's list the moment the
+                // guest leaves it. Only clean turns dirty: a door that is
+                // out_of_order has a bigger problem than the sheets.
+                Room::query()
+                    ->whereIn('id', $booking->rooms()->whereNotNull('room_id')->pluck('room_id'))
+                    ->where('status', 'clean')
+                    ->update(['status' => 'dirty']);
             }
 
             if ($to === BookingStatus::Cancelled) {

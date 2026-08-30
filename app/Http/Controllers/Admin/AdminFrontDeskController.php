@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Domain\Booking\BookingService;
+use App\Domain\FrontDesk\RoomAssignment;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\BookingRoom;
+use App\Models\Room;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use InvalidArgumentException;
 
 /**
  * The front desk: who is arriving, who is in the house, who has gone.
@@ -27,7 +31,7 @@ class AdminFrontDeskController extends Controller
     {
         $date = $this->date($request);
 
-        $with = ['guest', 'rooms.roomType.translations'];
+        $with = ['guest', 'rooms.roomType.translations', 'rooms.room'];
 
         return view('admin.front-desk.index', [
             'date' => $date,
@@ -72,7 +76,38 @@ class AdminFrontDeskController extends Controller
 
             'houseCheckout' => (string) config('doba.checkout_until', '11:00'),
             'houseCheckin' => (string) config('doba.checkin_from', '15:00'),
+
+            // Doors exist only once the hotel has listed them; until
+            // then the assignment UI stays entirely out of the way.
+            'hasRooms' => Room::query()->exists(),
         ]);
+    }
+
+    /**
+     * Pin a stay to a door, or move it to another one.
+     */
+    public function assignRoom(Request $request, Booking $booking, RoomAssignment $assignment): RedirectResponse
+    {
+        $validated = $request->validate([
+            'booking_room_id' => ['required', 'integer'],
+            'room_id' => ['nullable', 'integer', 'exists:rooms,id'],
+        ]);
+
+        /** @var BookingRoom $bookingRoom */
+        $bookingRoom = $booking->rooms()->findOrFail($validated['booking_room_id']);
+
+        try {
+            $assignment->assign(
+                $bookingRoom,
+                isset($validated['room_id']) ? Room::query()->findOrFail($validated['room_id']) : null,
+            );
+        } catch (InvalidArgumentException $e) {
+            return back()->with('desk_error', $e->getMessage());
+        }
+
+        return back()->with('saved', $bookingRoom->fresh()->room === null
+            ? __('admin.room_unassigned')
+            : __('admin.room_assigned', ['number' => $bookingRoom->fresh()->room->number]));
     }
 
     public function checkIn(Booking $booking, BookingService $bookings): RedirectResponse

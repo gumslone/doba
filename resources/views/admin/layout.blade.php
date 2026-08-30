@@ -17,6 +17,7 @@
         __('admin.group_today') => [
             ['/admin/front-desk', __('admin.front_desk'), 'admin/front-desk*'],
             ['/admin/guests', __('admin.guests'), 'admin/guests*'],
+            ['/admin/rooms', __('admin.rooms'), 'admin/rooms*'],
             ['/admin/availability', __('admin.availability'), 'admin/availability*'],
             ['/admin/invoices', __('admin.invoices'), 'admin/invoices*'],
             ['/admin/reports', __('admin.reports'), 'admin/reports*'],
