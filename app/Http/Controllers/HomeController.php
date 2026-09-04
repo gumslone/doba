@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Faq;
 use App\Models\Gallery;
+use App\Models\Review;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Routing\Localization;
@@ -86,6 +87,28 @@ class HomeController extends Controller
             $hotelSchema['image'] = $gallery->media->map(static fn ($photo): string => $photo->url())->all();
         }
 
+        // Stars in the search result, but only ones a guest actually gave:
+        // the aggregate is computed from published reviews of real stays
+        // and appears only when at least one exists (§5).
+        $reviews = collect();
+
+        if ((bool) config('doba.features.reviews')) {
+            if (($aggregate = Review::aggregate()) !== null) {
+                $hotelSchema['aggregateRating'] = [
+                    '@type' => 'AggregateRating',
+                    'ratingValue' => $aggregate['average'],
+                    'reviewCount' => $aggregate['count'],
+                    'bestRating' => 5,
+                ];
+            }
+
+            $reviews = Review::query()->published()
+                ->with('guest')
+                ->latest('published_at')
+                ->limit(6)
+                ->get();
+        }
+
         $seo->title($hotel->get('seo.title') ?: $hotel->name)
             ->description($hotel->get('seo.description'))
             ->image($hotel->ogImage() ?? $hero?->url())
@@ -105,6 +128,7 @@ class HomeController extends Controller
         }
 
         return view('home', [
+            'reviews' => $reviews,
             'roomTypes' => $roomTypes,
             'faqs' => $faqs,
             'events' => $events,

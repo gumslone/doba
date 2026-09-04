@@ -21,4 +21,6 @@ return [
     'post_stay_intro' => 'Nous espérons que vous avez passé un excellent séjour à :hotel. Ce fut un plaisir de vous recevoir.',
     'post_stay_invoice' => 'Votre facture est disponible sur votre page de réservation, si le voyage passe en note de frais.',
     'post_stay_outro' => 'Nous serions ravis de vous accueillir à nouveau.',
+
+    'post_stay_review_ask' => 'Si vous avez une minute, un court avis sur votre page de réservation aide les autres voyageurs — et nous — plus qu\'on ne le pense. Seuls les vrais clients peuvent en écrire un.',
 ];

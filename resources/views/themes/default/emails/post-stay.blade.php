@@ -12,6 +12,10 @@
 {{ __('mail.post_stay_invoice', [], $locale) }}
 @endif
 
+@if (config('doba.features.reviews') && $booking->canBeReviewed())
+{{ __('mail.post_stay_review_ask', [], $locale) }}
+@endif
+
 <x-mail::button :url="$manageUrl">
 {{ __('booking.manage_title', [], $locale) }}
 </x-mail::button>

@@ -21,4 +21,6 @@ return [
     'post_stay_intro' => 'Wir hoffen, Sie hatten einen wunderbaren Aufenthalt im :hotel. Es war uns eine Freude.',
     'post_stay_invoice' => 'Ihre Rechnung finden Sie auf Ihrer Buchungsseite — falls die Reise in eine Abrechnung geht.',
     'post_stay_outro' => 'Wir würden uns freuen, Sie wieder begrüßen zu dürfen.',
+
+    'post_stay_review_ask' => 'Wenn Sie eine Minute haben: Eine kurze Bewertung auf Ihrer Buchungsseite hilft anderen Reisenden — und uns — mehr, als man denkt. Nur echte Gäste können eine schreiben.',
 ];

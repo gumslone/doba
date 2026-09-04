@@ -39,4 +39,10 @@ return [
     'check_out_label' => 'Check-out',
     'cancellation' => 'Cancellation',
     'similar_rooms' => 'Similar categories',
+
+    'reviews_eyebrow' => 'Guest reviews',
+    'reviews_title' => 'What our guests say',
+    'review_rating' => ':rating out of 5 stars',
+    'verified_stay' => 'verified stay',
+    'hotel_replied' => 'Reply from the hotel',
 ];

@@ -416,6 +416,18 @@ intend to make public.
 > GitHub Pages cannot host this: Pages serves static files, and Doba needs
 > PHP, a database and writable storage. Codespaces runs the real thing.
 
+## Verified reviews
+
+Switched on with `FEATURE_REVIEWS=true`. The post-stay mail invites a
+review; the guest writes it from their booking page — **only a real,
+departed stay can**, because the manage token is the proof, so there is no
+account system, no anonymous form and no imported stars. The hotel
+moderates and replies in the admin; what it cannot do is edit a guest's
+words, because a review the hotel can rewrite is worth exactly as much as
+one it wrote itself. Published reviews appear on the home page with a
+schema.org `AggregateRating`, computed from published reviews and nothing
+else — the stars in a search result are an average, never an assertion.
+
 ## Languages
 
 The guest site ships in **English, German, French, Dutch, Ukrainian and
@@ -908,7 +920,7 @@ wizard and the public API, is in
 | 4 | First hotel live | planned |
 | 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
 | 6 | Public REST API + ARI push + webhooks + **OpenAPI 3.1 contract** | **done** |
-| 7 | Full Filament panel, reviews, loyalty | as needed |
+| 7 | Full Filament panel, loyalty (**verified reviews** landed early) | as needed |
 
 ## Contributing
 

@@ -39,4 +39,10 @@ return [
     'check_out_label' => 'Uitchecken',
     'cancellation' => 'Annulering',
     'similar_rooms' => 'Vergelijkbare categorieën',
+
+    'reviews_eyebrow' => 'Gastbeoordelingen',
+    'reviews_title' => 'Wat onze gasten zeggen',
+    'review_rating' => ':rating van 5 sterren',
+    'verified_stay' => 'geverifieerd verblijf',
+    'hotel_replied' => 'Antwoord van het hotel',
 ];

@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPromoCodeController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
 use App\Http\Controllers\Admin\AdminReportController;
+use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVenueController;
@@ -156,6 +157,12 @@ Route::prefix('admin')->group(function (): void {
         Route::get('guests/{guest}/export', [AdminGuestController::class, 'export'])->name('admin.guests.export');
         Route::post('guests/{guest}/erase', [AdminGuestController::class, 'erase'])->name('admin.guests.erase');
 
+        Route::get('reviews', [AdminReviewController::class, 'index'])->name('admin.reviews');
+        Route::post('reviews/{review}/publish', [AdminReviewController::class, 'publish'])->name('admin.reviews.publish');
+        Route::post('reviews/{review}/unpublish', [AdminReviewController::class, 'unpublish'])->name('admin.reviews.unpublish');
+        Route::post('reviews/{review}/respond', [AdminReviewController::class, 'respond'])->name('admin.reviews.respond');
+        Route::post('reviews/{review}/delete', [AdminReviewController::class, 'destroy'])->name('admin.reviews.destroy');
+
         Route::get('rooms', [AdminRoomController::class, 'index'])->name('admin.rooms');
         Route::post('rooms', [AdminRoomController::class, 'store'])->name('admin.rooms.store');
         Route::post('rooms/{room}', [AdminRoomController::class, 'update'])->name('admin.rooms.update');
@@ -281,6 +288,12 @@ foreach ($locales as $locale) {
             Route::post($booking.'/manage/{reference}/{token}/balance', [BookingController::class, 'startBalancePayment'])
                 ->middleware('throttle:booking')
                 ->name('booking.pay-balance');
+            // A review can only come through the manage token, which is
+            // the whole point: every review belongs to a stay that
+            // happened (§5, FEATURE_REVIEWS).
+            Route::post($booking.'/manage/{reference}/{token}/review', [BookingController::class, 'storeReview'])
+                ->middleware('throttle:booking')
+                ->name('booking.review');
             Route::post($booking.'/manage/{reference}/{token}/late-checkout', [BookingController::class, 'requestLateCheckout'])
                 ->middleware('throttle:booking')
                 ->name('booking.late-checkout');

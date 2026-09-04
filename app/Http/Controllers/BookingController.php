@@ -17,6 +17,7 @@ use App\Http\Middleware\CaptureReferral;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\PromoCode;
+use App\Models\Review;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Routing\Localization;
@@ -378,6 +379,44 @@ class BookingController extends Controller
             'gateway' => $payment->gateway,
             'approvalUrl' => $payment->payload['links'][0]['href'] ?? $payment->payload['approval_url'] ?? null,
         ]);
+    }
+
+    /**
+     * The guest reviews their stay (§5, FEATURE_REVIEWS).
+     *
+     * Reachable only through the manage token and only once the stay is
+     * over — which is what makes every review on this site verified: it
+     * cannot be written by anyone who did not sleep here, and it cannot
+     * be written about a night that has not happened yet.
+     */
+    public function storeReview(Request $request, string $reference, string $token): RedirectResponse
+    {
+        abort_unless((bool) config('doba.features.reviews'), 404);
+
+        $booking = $this->findByToken($reference, $token);
+        $manage = Localization::route('booking.manage', compact('reference', 'token'));
+
+        if (! $booking->canBeReviewed()) {
+            return redirect($manage)->with('booking_error', __('booking.review_not_yet'));
+        }
+
+        $validated = $request->validate([
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'title' => ['nullable', 'string', 'max:120'],
+            'body' => ['required', 'string', 'min:20', 'max:4000'],
+        ]);
+
+        Review::create([
+            'booking_id' => $booking->id,
+            'guest_id' => $booking->guest_id,
+            'rating' => (int) $validated['rating'],
+            'title' => $validated['title'] ?? null,
+            'body' => $validated['body'],
+            // The language they wrote in, not the page they stood on.
+            'locale' => $booking->locale,
+        ]);
+
+        return redirect($manage)->with('booking_notice', __('booking.review_thanks'));
     }
 
     public function requestLateCheckout(Request $request, string $reference, string $token): RedirectResponse

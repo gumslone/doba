@@ -39,4 +39,10 @@ return [
     'check_out_label' => 'Abreise',
     'cancellation' => 'Stornierung',
     'similar_rooms' => 'Ähnliche Kategorien',
+
+    'reviews_eyebrow' => 'Gästebewertungen',
+    'reviews_title' => 'Was unsere Gäste sagen',
+    'review_rating' => ':rating von 5 Sternen',
+    'verified_stay' => 'verifizierter Aufenthalt',
+    'hotel_replied' => 'Antwort des Hauses',
 ];

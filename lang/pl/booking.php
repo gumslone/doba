@@ -131,4 +131,13 @@ return [
     'error_balance_unpayable' => 'Obecnie nie ma nic do zapłaty online.',
 
     'city_tax' => 'Opłata miejscowa',
+
+    'review_title' => 'Jak minął Twój pobyt?',
+    'review_hint' => 'Twoja opinia pojawi się na naszej stronie z Twoim imieniem, oznaczona jako zweryfikowany pobyt. Napisać ją mogą tylko goście, którzy naprawdę się tu zatrzymali.',
+    'review_rating' => 'Twoja ocena',
+    'review_headline' => 'Nagłówek (opcjonalnie)',
+    'review_body' => 'Twoja opinia',
+    'review_submit' => 'Wyślij opinię',
+    'review_thanks' => 'Dziękujemy — otrzymaliśmy Twoją opinię. Pojawi się po krótkiej weryfikacji.',
+    'review_not_yet' => 'Pobyt można ocenić dopiero po jego zakończeniu, i tylko raz.',
 ];

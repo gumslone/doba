@@ -21,4 +21,6 @@ return [
     'post_stay_intro' => 'We hopen dat u een fijn verblijf had bij :hotel. Het was ons een genoegen.',
     'post_stay_invoice' => 'Uw factuur staat op uw boekingspagina — handig voor de declaratie.',
     'post_stay_outro' => 'We verwelkomen u graag opnieuw.',
+
+    'post_stay_review_ask' => 'Heeft u een minuutje? Een korte beoordeling op uw boekingspagina helpt andere reizigers — en ons — meer dan u denkt. Alleen echte gasten kunnen er een schrijven.',
 ];

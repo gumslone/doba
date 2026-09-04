@@ -32,4 +32,6 @@ return [
     'post_stay_intro' => 'Mamy nadzieję, że pobyt w :hotel był udany. Goszczenie Ciebie było przyjemnością.',
     'post_stay_invoice' => 'Twoja faktura jest na stronie rezerwacji — gdyby podróż trafiła do rozliczenia.',
     'post_stay_outro' => 'Z przyjemnością powitamy Cię ponownie.',
+
+    'post_stay_review_ask' => 'Jeśli masz chwilę: krótka opinia na stronie rezerwacji pomaga innym podróżnym — i nam — bardziej, niż się wydaje. Napisać ją mogą tylko prawdziwi goście.',
 ];

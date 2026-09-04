@@ -69,6 +69,48 @@
             </div>
         @endif
 
+        @if (session('booking_notice'))
+            <p class="mt-6 rounded border border-green-200 bg-green-50 p-4 text-green-800" role="status">
+                {{ session('booking_notice') }}
+            </p>
+        @endif
+
+        @if (config('doba.features.reviews') && $booking->canBeReviewed())
+            {{-- Only after the stay, only once, only through this token:
+                 what makes every review on the site a verified one (§5). --}}
+            <form method="POST"
+                  action="{{ Localization::route('booking.review', ['reference' => $booking->reference, 'token' => $token]) }}"
+                  class="mt-6 rounded border border-neutral-200 bg-white p-4">
+                @csrf
+                <h2 class="font-medium">{{ __('booking.review_title') }}</h2>
+                <p class="mt-1 text-sm text-neutral-600">{{ __('booking.review_hint') }}</p>
+
+                <fieldset class="mt-3">
+                    <legend class="text-sm font-medium">{{ __('booking.review_rating') }}</legend>
+                    <div class="mt-1 flex gap-3">
+                        @foreach (range(1, 5) as $rating)
+                            <label class="flex items-center gap-1 text-sm">
+                                <input type="radio" name="rating" value="{{ $rating }}" required
+                                       @checked(old('rating') == $rating)>
+                                {{ $rating }}★
+                            </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+
+                <label for="review-title" class="mt-3 block text-sm font-medium">{{ __('booking.review_headline') }}</label>
+                <input id="review-title" name="title" maxlength="120" value="{{ old('title') }}"
+                       class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
+
+                <label for="review-body" class="mt-3 block text-sm font-medium">{{ __('booking.review_body') }}</label>
+                <textarea id="review-body" name="body" rows="4" required minlength="20" maxlength="4000"
+                          class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">{{ old('body') }}</textarea>
+                @error('body') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                <button type="submit" class="btn-primary mt-4 rounded px-5 py-2.5">{{ __('booking.review_submit') }}</button>
+            </form>
+        @endif
+
         @if (session('booking_requested'))
             <p class="mt-6 rounded border border-green-200 bg-green-50 p-4 text-green-800" role="status">
                 {{ __('booking.late_checkout_requested_notice') }}

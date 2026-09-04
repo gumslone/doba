@@ -63,6 +63,33 @@ class Booking extends Model
     ];
 
     /**
+     * The guest's verdict on this stay, once they have left it.
+     *
+     * @return HasOne<Review, $this>
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
+    /**
+     * Review rules in one place: the stay is over, and unreviewed.
+     *
+     * CheckedOut means they left, whatever the date says. Confirmed
+     * counts only once the check-out date is behind us — a desk that
+     * never presses the button still hosted a real guest, but a stay
+     * that has not happened yet has nothing to review.
+     */
+    public function canBeReviewed(): bool
+    {
+        $departed = $this->status === BookingStatus::CheckedOut
+            || ($this->status === BookingStatus::Confirmed
+                && $this->check_out->lt(CarbonImmutable::today(config('doba.timezone'))));
+
+        return $departed && $this->review()->doesntExist();
+    }
+
+    /**
      * @return BelongsTo<Guest, $this>
      */
     public function guest(): BelongsTo

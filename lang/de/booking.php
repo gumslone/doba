@@ -131,4 +131,13 @@ return [
     'error_balance_unpayable' => 'Derzeit ist online nichts zu bezahlen.',
 
     'city_tax' => 'Ortstaxe / Kurtaxe',
+
+    'review_title' => 'Wie war Ihr Aufenthalt?',
+    'review_hint' => 'Ihre Bewertung erscheint mit Ihrem Vornamen auf unserer Website, gekennzeichnet als verifizierter Aufenthalt. Nur Gäste, die wirklich hier waren, können eine schreiben.',
+    'review_rating' => 'Ihre Bewertung',
+    'review_headline' => 'Überschrift (optional)',
+    'review_body' => 'Ihre Bewertung',
+    'review_submit' => 'Bewertung absenden',
+    'review_thanks' => 'Vielen Dank — wir haben Ihre Bewertung erhalten. Sie erscheint nach einer kurzen Prüfung.',
+    'review_not_yet' => 'Ein Aufenthalt kann erst nach seinem Ende bewertet werden, und nur einmal.',
 ];

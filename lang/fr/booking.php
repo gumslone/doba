@@ -131,4 +131,13 @@ return [
     'error_balance_unpayable' => 'Il n\'y a rien à régler en ligne pour le moment.',
 
     'city_tax' => 'Taxe de séjour',
+
+    'review_title' => 'Comment s\'est passé votre séjour ?',
+    'review_hint' => 'Votre avis apparaît sur notre site avec votre prénom, signalé comme séjour vérifié. Seuls les clients qui ont réellement séjourné peuvent en écrire un.',
+    'review_rating' => 'Votre note',
+    'review_headline' => 'Titre (facultatif)',
+    'review_body' => 'Votre avis',
+    'review_submit' => 'Envoyer l\'avis',
+    'review_thanks' => 'Merci — votre avis a bien été reçu et paraîtra après vérification.',
+    'review_not_yet' => 'Un séjour ne peut être évalué qu\'une fois terminé, et une seule fois.',
 ];

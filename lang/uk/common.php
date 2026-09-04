@@ -39,4 +39,10 @@ return [
     'check_out_label' => 'Виїзд',
     'cancellation' => 'Скасування',
     'similar_rooms' => 'Схожі категорії',
+
+    'reviews_eyebrow' => 'Відгуки гостей',
+    'reviews_title' => 'Що кажуть наші гості',
+    'review_rating' => ':rating з 5 зірок',
+    'verified_stay' => 'підтверджене проживання',
+    'hotel_replied' => 'Відповідь готелю',
 ];

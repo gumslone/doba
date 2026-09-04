@@ -131,4 +131,13 @@ return [
     'error_balance_unpayable' => 'Er valt op dit moment niets online te betalen.',
 
     'city_tax' => 'Toeristenbelasting',
+
+    'review_title' => 'Hoe was uw verblijf?',
+    'review_hint' => 'Uw beoordeling verschijnt met uw voornaam op onze website, gemarkeerd als geverifieerd verblijf. Alleen gasten die hier echt verbleven, kunnen er een schrijven.',
+    'review_rating' => 'Uw beoordeling',
+    'review_headline' => 'Titel (optioneel)',
+    'review_body' => 'Uw beoordeling',
+    'review_submit' => 'Beoordeling versturen',
+    'review_thanks' => 'Dank u — we hebben uw beoordeling ontvangen. Na een korte controle verschijnt ze op de site.',
+    'review_not_yet' => 'Een verblijf kan pas na afloop worden beoordeeld, en slechts één keer.',
 ];

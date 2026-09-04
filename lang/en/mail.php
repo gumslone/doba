@@ -32,4 +32,6 @@ return [
     'post_stay_intro' => 'We hope you had a wonderful stay at :hotel. It was a pleasure to have you.',
     'post_stay_invoice' => 'Your invoice is on your booking page, in case the trip goes on an expense report.',
     'post_stay_outro' => 'We would love to welcome you again.',
+
+    'post_stay_review_ask' => 'If you have a minute, a short review on your booking page helps other travellers — and us — more than you would think. Only real guests can write one.',
 ];

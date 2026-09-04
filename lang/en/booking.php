@@ -131,4 +131,13 @@ return [
     'error_balance_unpayable' => 'There is nothing to pay online right now.',
 
     'city_tax' => 'City tax',
+
+    'review_title' => 'How was your stay?',
+    'review_hint' => 'Your review appears on our website with your first name, marked as a verified stay. Only guests who actually stayed can write one.',
+    'review_rating' => 'Your rating',
+    'review_headline' => 'Headline (optional)',
+    'review_body' => 'Your review',
+    'review_submit' => 'Submit review',
+    'review_thanks' => 'Thank you — your review has been received and will appear once it is checked.',
+    'review_not_yet' => 'A stay can be reviewed once it is over, and only once.',
 ];

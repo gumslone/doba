@@ -124,6 +124,41 @@
         </section>
     @endif
 
+    @if ($reviews->isNotEmpty())
+        {{-- Every one of these belongs to a stay that happened here —
+             that is the whole difference between this block and a star
+             widget (§5). --}}
+        <section class="section section--tint">
+            <div class="container">
+                <div class="section-head">
+                    <div class="eyebrow">{{ __('common.reviews_eyebrow') }}</div>
+                    <h2>{{ __('common.reviews_title') }}</h2>
+                </div>
+                <div class="grid grid--3">
+                    @foreach ($reviews as $review)
+                        <article class="card stack">
+                            <div aria-label="{{ __('common.review_rating', ['rating' => $review->rating]) }}">
+                                <span aria-hidden="true">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
+                            </div>
+                            @if ($review->title)
+                                <h3>{{ $review->title }}</h3>
+                            @endif
+                            <p>{{ $review->body }}</p>
+                            <p class="text-muted">
+                                {{ $review->guest?->first_name }} ·
+                                {{ $review->published_at?->translatedFormat('F Y') }}
+                                · {{ __('common.verified_stay') }}
+                            </p>
+                            @if ($review->hotel_response)
+                                <p class="text-muted">{{ __('common.hotel_replied') }}: {{ $review->hotel_response }}</p>
+                            @endif
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     @if ($events->isNotEmpty())
         <section class="section">
             <div class="wrap">
