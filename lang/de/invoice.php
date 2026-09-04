@@ -20,4 +20,6 @@ return [
     'discount' => 'Rabatt',
     'vat_id' => 'USt-IdNr.',
     'footer' => 'Alle Beträge verstehen sich inklusive der ausgewiesenen Mehrwertsteuer. Vielen Dank für Ihren Aufenthalt.',
+
+    'loyalty_discount' => 'Stammgast-Rabatt',
 ];

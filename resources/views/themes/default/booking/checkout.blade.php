@@ -90,6 +90,14 @@
                                placeholder="{{ __('promo.placeholder') }}"
                                class="mt-1 w-full rounded border border-neutral-300 px-3 py-2 font-mono uppercase">
                         <p class="mt-1 text-sm text-neutral-500">{{ __('promo.hint') }}</p>
+                        @if ((int) config('doba.loyalty.discount_bps') > 0)
+                            {{-- No lookup before submit — the discount is
+                                 computed server-side at placement. This
+                                 just says which email to use (§7). --}}
+                            <p class="mt-1 text-sm text-neutral-500">
+                                {{ __('booking.loyalty_hint', ['percent' => rtrim(rtrim(number_format(config('doba.loyalty.discount_bps') / 100, 2), '0'), '.')]) }}
+                            </p>
+                        @endif
                     </div>
 
                     <div>

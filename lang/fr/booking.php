@@ -140,4 +140,7 @@ return [
     'review_submit' => 'Envoyer l\'avis',
     'review_thanks' => 'Merci — votre avis a bien été reçu et paraîtra après vérification.',
     'review_not_yet' => 'Un séjour ne peut être évalué qu\'une fois terminé, et une seule fois.',
+
+    'loyalty_discount' => 'Remise client fidèle',
+    'loyalty_hint' => 'Déjà séjourné chez nous ? Réservez avec la même adresse e-mail : votre remise fidélité de :percent % s\'applique automatiquement.',
 ];

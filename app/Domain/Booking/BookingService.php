@@ -61,6 +61,7 @@ class BookingService
         ?string $locale = null,
         ?RatePlan $ratePlan = null,
         ?PromoCode $promoCode = null,
+        bool $applyLoyalty = false,
     ): Booking {
         $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
         $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
@@ -75,7 +76,7 @@ class BookingService
 
         $booking = DB::transaction(function () use (
             $roomType, $checkIn, $checkOut, $nights, $guestData,
-            $adults, $children, $units, $sessionId, $bookingLocale, $ratePlan, $promoCode
+            $adults, $children, $units, $sessionId, $bookingLocale, $ratePlan, $promoCode, $applyLoyalty
         ): Booking {
             // NOTE: nights only — the checkout row consumes no inventory (§6).
             $rows = $this->lockNights($roomType, $checkIn, $checkOut->subDay());
@@ -134,6 +135,14 @@ class BookingService
                 $discount = $promoCode->discountFor($nightPrices, $units);
             }
 
+            // The returning-guest discount (§7): automatic, direct bookings
+            // only, and never on top of a code — a guest who typed one
+            // chose that offer. Read off the guest row the engine already
+            // deduplicated by email, so "have they stayed before" is the
+            // same fact the front desk greets them with.
+            $loyalty = ($discount === 0 && $applyLoyalty) ? self::loyaltyDiscount($guest, $subtotal) : 0;
+            $discount += $loyalty;
+
             // Per PERSON per night, not per room (§7): the municipality
             // taxes the sleeper, and the invoice must show it on its own
             // line. Deliberately outside the deposit — the deposit
@@ -152,6 +161,7 @@ class BookingService
                 'currency' => (string) config('doba.currency'),
                 'subtotal' => $subtotal,
                 'discount_total' => $discount,
+                'loyalty_discount' => $loyalty,
                 'promo_code_id' => $promoCode?->id,
                 'city_tax' => $cityTax,
                 'total' => $subtotal - $discount + $cityTax,
@@ -496,6 +506,26 @@ class BookingService
                     ->update(['released_at' => now()]);
             }
         }
+    }
+
+    /**
+     * What a returning guest gets off, in minor units.
+     *
+     * stays_count is incremented on confirmation, so at placement it is
+     * exactly the number of stays completed BEFORE this one — no
+     * off-by-one, and a first-timer whose booking is still pending has
+     * not become a regular by sitting on the checkout page.
+     */
+    public static function loyaltyDiscount(Guest $guest, int $subtotal): int
+    {
+        $bps = (int) config('doba.loyalty.discount_bps', 0);
+        $minStays = max(1, (int) config('doba.loyalty.min_stays', 1));
+
+        if ($bps <= 0 || $guest->isAnonymised() || $guest->stays_count < $minStays) {
+            return 0;
+        }
+
+        return (int) round($subtotal * $bps / 10000);
     }
 
     /**

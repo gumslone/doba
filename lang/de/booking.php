@@ -140,4 +140,7 @@ return [
     'review_submit' => 'Bewertung absenden',
     'review_thanks' => 'Vielen Dank — wir haben Ihre Bewertung erhalten. Sie erscheint nach einer kurzen Prüfung.',
     'review_not_yet' => 'Ein Aufenthalt kann erst nach seinem Ende bewertet werden, und nur einmal.',
+
+    'loyalty_discount' => 'Stammgast-Rabatt',
+    'loyalty_hint' => 'Schon einmal bei uns gewesen? Buchen Sie mit derselben E-Mail-Adresse — Ihr Stammgast-Rabatt von :percent % wird automatisch abgezogen.',
 ];

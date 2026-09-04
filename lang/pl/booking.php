@@ -140,4 +140,7 @@ return [
     'review_submit' => 'Wyślij opinię',
     'review_thanks' => 'Dziękujemy — otrzymaliśmy Twoją opinię. Pojawi się po krótkiej weryfikacji.',
     'review_not_yet' => 'Pobyt można ocenić dopiero po jego zakończeniu, i tylko raz.',
+
+    'loyalty_discount' => 'Rabat dla stałych gości',
+    'loyalty_hint' => 'Byłeś już u nas? Zarezerwuj z tym samym adresem e-mail, a rabat :percent% dla stałych gości naliczy się automatycznie.',
 ];

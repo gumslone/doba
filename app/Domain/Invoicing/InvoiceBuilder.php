@@ -100,7 +100,11 @@ class InvoiceBuilder
             // A discount is a negative line at the accommodation rate, so
             // the VAT it removes leaves the breakdown consistent.
             $lines[] = $this->line(
-                description: __('invoice.discount', [], $booking->locale),
+                // Named for what earned it: a returning guest reading their
+                // invoice should see why the number is lower.
+                description: __($booking->loyalty_discount > 0 && $booking->promo_code_id === null
+                    ? 'invoice.loyalty_discount'
+                    : 'invoice.discount', [], $booking->locale),
                 quantity: 1,
                 gross: -$booking->discount_total,
                 taxRate: $accommodationRate,

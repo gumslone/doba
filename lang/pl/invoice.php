@@ -20,4 +20,6 @@ return [
     'discount' => 'Rabat',
     'vat_id' => 'NIP',
     'footer' => 'Wszystkie kwoty zawierają VAT według wskazanych stawek. Dziękujemy za pobyt u nas.',
+
+    'loyalty_discount' => 'Rabat dla stałego gościa',
 ];

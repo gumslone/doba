@@ -416,6 +416,18 @@ intend to make public.
 > GitHub Pages cannot host this: Pages serves static files, and Doba needs
 > PHP, a database and writable storage. Codespaces runs the real thing.
 
+## Returning-guest discount
+
+The loyalty scheme a small hotel can actually run: no points, no tiers, no
+card. Set `DOBA_LOYALTY_DISCOUNT_BPS` (500 is 5%) and a guest who has stayed
+before and books direct again with the same email gets it off automatically,
+named on the invoice as what earned it. Three rules keep it honest: it
+applies **only on the hotel's own site**, never to a channel manager's
+booking; it **never stacks on a promo code** — a guest who typed one chose
+that offer; and it counts stays *confirmed* before this one, so a first-timer
+whose booking is still pending has not become a regular by sitting on the
+checkout page.
+
 ## Verified reviews
 
 Switched on with `FEATURE_REVIEWS=true`. The post-stay mail invites a
@@ -920,7 +932,7 @@ wizard and the public API, is in
 | 4 | First hotel live | planned |
 | 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
 | 6 | Public REST API + ARI push + webhooks + **OpenAPI 3.1 contract** | **done** |
-| 7 | Full Filament panel, loyalty (**verified reviews** landed early) | as needed |
+| 7 | Full Filament panel (**verified reviews** and **returning-guest discount** landed early) | as needed |
 
 ## Contributing
 

@@ -140,4 +140,7 @@ return [
     'review_submit' => 'Submit review',
     'review_thanks' => 'Thank you — your review has been received and will appear once it is checked.',
     'review_not_yet' => 'A stay can be reviewed once it is over, and only once.',
+
+    'loyalty_discount' => 'Returning-guest discount',
+    'loyalty_hint' => 'Stayed with us before? Book with the same email and your :percent% returning-guest discount is applied automatically.',
 ];

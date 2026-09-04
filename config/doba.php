@@ -111,6 +111,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Returning-guest discount (§7, phase 7)
+    |--------------------------------------------------------------------------
+    |
+    | The loyalty scheme a small hotel can actually run: no points, no
+    | tiers, no card. A guest who has stayed before and books direct again
+    | with the same email gets a percentage off, automatically, and the
+    | invoice says so. Basis points, like every other rate here — 500 is
+    | 5%. `min_stays` is completed stays before this one; 1 means any
+    | returning guest.
+    |
+    | Applied only to bookings made on the hotel's own site, never to a
+    | channel manager's, and never on top of a promo code: a guest who
+    | typed a code chose that offer.
+    |
+    */
+
+    'loyalty' => [
+        'discount_bps' => (int) env('DOBA_LOYALTY_DISCOUNT_BPS', 0),
+        'min_stays' => (int) env('DOBA_LOYALTY_MIN_STAYS', 1),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | City tax (§7)
     |--------------------------------------------------------------------------
     |

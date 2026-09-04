@@ -140,4 +140,7 @@ return [
     'review_submit' => 'Beoordeling versturen',
     'review_thanks' => 'Dank u — we hebben uw beoordeling ontvangen. Na een korte controle verschijnt ze op de site.',
     'review_not_yet' => 'Een verblijf kan pas na afloop worden beoordeeld, en slechts één keer.',
+
+    'loyalty_discount' => 'Korting voor terugkerende gasten',
+    'loyalty_hint' => 'Al eerder bij ons geweest? Boek met hetzelfde e-mailadres en uw korting van :percent% voor terugkerende gasten wordt automatisch verrekend.',
 ];

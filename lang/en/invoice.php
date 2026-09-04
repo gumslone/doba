@@ -20,4 +20,6 @@ return [
     'discount' => 'Discount',
     'vat_id' => 'VAT ID',
     'footer' => 'All amounts include VAT at the rates shown. Thank you for staying with us.',
+
+    'loyalty_discount' => 'Returning-guest discount',
 ];

@@ -37,8 +37,12 @@
              guest who used a code is entitled to see what it took off. --}}
         <div class="flex justify-between gap-4">
             <dt class="text-neutral-500">
-                {{ __('promo.discount') }}
-                @if ($booking->promoCode) <span class="font-mono">{{ $booking->promoCode->code }}</span> @endif
+                @if ($booking->loyalty_discount > 0 && ! $booking->promoCode)
+                    {{ __('booking.loyalty_discount') }}
+                @else
+                    {{ __('promo.discount') }}
+                    @if ($booking->promoCode) <span class="font-mono">{{ $booking->promoCode->code }}</span> @endif
+                @endif
             </dt>
             <dd class="text-right text-green-700">−{{ Money::format($booking->discount_total) }}</dd>
         </div>

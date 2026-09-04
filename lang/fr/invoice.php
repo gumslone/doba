@@ -20,4 +20,6 @@ return [
     'discount' => 'Remise',
     'vat_id' => 'N° TVA',
     'footer' => 'Tous les montants incluent la TVA aux taux indiqués. Merci de votre séjour.',
+
+    'loyalty_discount' => 'Remise client fidèle',
 ];

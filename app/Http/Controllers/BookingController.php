@@ -194,6 +194,9 @@ class BookingController extends Controller
                 sessionId: $request->session()->getId(),
                 ratePlan: $ratePlan,
                 promoCode: $promoCode,
+                // The hotel's own site: the one place a returning guest
+                // earns their discount (§7).
+                applyLoyalty: true,
             );
         } catch (PromoCodeException $e) {
             // Used up between the guest typing it and finishing checkout.
