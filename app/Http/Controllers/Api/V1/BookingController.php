@@ -163,6 +163,14 @@ class BookingController extends Controller
         }
 
         $data = $validator->validated();
+
+        if (isset($data['promo_code']) && ! (bool) config('doba.features.promo_codes')) {
+            // Said, not swallowed: a partner passing a code it believes
+            // is valid should learn the hotel does not run codes, rather
+            // than book at full price and field the guest's complaint.
+            return Problem::validation(['promo_code' => [__('promo.error_disabled')]]);
+        }
+
         $roomType = RoomType::query()->where('code', $data['room_type'])->sole();
 
         try {

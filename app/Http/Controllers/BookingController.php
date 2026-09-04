@@ -114,7 +114,9 @@ class BookingController extends Controller
             'selected' => $selected,
             'total' => $selected['total']
                 ?? $availability->stayPrice($roomType, $stay['check_in'], $stay['check_out']),
-            'extras' => $roomType->availableExtras(),
+            // FEATURE_EXTRAS off: nothing to add, so the fieldset never
+            // renders — the view already skips an empty list.
+            'extras' => (bool) config('doba.features.extras') ? $roomType->availableExtras() : collect(),
         ]);
     }
 
@@ -151,7 +153,10 @@ class BookingController extends Controller
         // inside place(), so nothing the browser sends decides a price.
         $promoCode = null;
 
-        if ($code = trim((string) ($validated['promo_code'] ?? ''))) {
+        // A code typed into a hotel that does not offer codes is ignored,
+        // not rejected: the field is hidden, so the only way it arrives
+        // is a stale form or a script, and neither deserves an error page.
+        if ((bool) config('doba.features.promo_codes') && ($code = trim((string) ($validated['promo_code'] ?? '')))) {
             $promoCode = PromoCode::findByCode($code);
 
             // Spelled out rather than ?? : a valid code returns null from
@@ -229,7 +234,7 @@ class BookingController extends Controller
             $booking->forceFill(['arrival_time' => $arrival])->save();
         }
 
-        if ($extras = array_filter($validated['extras'] ?? [])) {
+        if ((bool) config('doba.features.extras') && ($extras = array_filter($validated['extras'] ?? []))) {
             $bookings->addExtras($booking, array_map('intval', $extras));
         }
 

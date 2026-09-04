@@ -69,6 +69,13 @@ return [
     */
 
     'payment' => [
+        // What is collected at booking when FEATURE_DEPOSIT_ONLY is on,
+        // in basis points of the room price — 10000 is the whole room
+        // price, 3000 is 30%. With FEATURE_DEPOSIT_ONLY off, the whole
+        // booking (extras and city tax included) is due at booking and
+        // this is ignored. City tax never sits in a deposit either way:
+        // the deposit secures the room, the tax is settled with the stay.
+        'deposit_bps' => (int) env('DOBA_DEPOSIT_BPS', 10000),
         'gateway' => env('PAYMENT_GATEWAY', 'manual'), // stripe | paypal | liqpay | coinbase | manual
     ],
 

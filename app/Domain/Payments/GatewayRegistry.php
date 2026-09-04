@@ -30,8 +30,22 @@ final class GatewayRegistry
         return app($class);
     }
 
+    /**
+     * The gateway the checkout initiates with.
+     *
+     * FEATURE_PAYMENT off means "take bookings without online payment
+     * for now" (§16 step 6) — a legitimate starting configuration, and
+     * one the flag had promised since phase 1 without ever being read.
+     * It resolves to the manual gateway whatever DOBA_PAYMENT_GATEWAY
+     * says, so a hotel can keep its Stripe keys configured and still
+     * switch collection off for a season.
+     */
     public static function default(): PaymentGateway
     {
+        if (! (bool) config('doba.features.online_payment', true)) {
+            return self::make('manual');
+        }
+
         return self::make((string) config('doba.payment.gateway', 'manual'));
     }
 }

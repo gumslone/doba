@@ -149,6 +149,13 @@ class BookingService
             // secures the room, and the tax is settled with the stay.
             $cityTax = self::cityTax($adults, $children, $nights);
 
+            // FEATURE_DEPOSIT_ONLY: a share of the room price now, the
+            // rest with the stay. Off: everything now. The default share
+            // is the whole room price, so an install that never set
+            // DOBA_DEPOSIT_BPS collects exactly what it collected before
+            // this flag was read for the first time.
+            $depositDue = self::depositDue($subtotal - $discount, $cityTax);
+
             $booking = Booking::create([
                 'reference' => Booking::nextReference(),
                 'manage_token' => Booking::newManageToken(),
@@ -165,7 +172,7 @@ class BookingService
                 'promo_code_id' => $promoCode?->id,
                 'city_tax' => $cityTax,
                 'total' => $subtotal - $discount + $cityTax,
-                'deposit_due' => $subtotal - $discount,
+                'deposit_due' => $depositDue,
                 'balance_due' => $subtotal - $discount + $cityTax,
                 'locale' => $bookingLocale,
                 'guest_id' => $guest->id,
@@ -506,6 +513,22 @@ class BookingService
                     ->update(['released_at' => now()]);
             }
         }
+    }
+
+    /**
+     * What is collected at booking (§8).
+     *
+     * @param  int  $roomPrice  the room price after discounts, in minor units
+     */
+    public static function depositDue(int $roomPrice, int $cityTax): int
+    {
+        if (! (bool) config('doba.features.deposit_only', true)) {
+            return $roomPrice + $cityTax;   // everything, now
+        }
+
+        $bps = max(0, min(10000, (int) config('doba.payment.deposit_bps', 10000)));
+
+        return (int) round($roomPrice * $bps / 10000);
     }
 
     /**

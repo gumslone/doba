@@ -19,4 +19,5 @@ return [
     'error_used_up' => 'Ce code a déjà été entièrement utilisé.',
     'error_room_type' => 'Ce code ne s\'applique pas à cette chambre.',
     'error_guest_limit' => 'Vous avez déjà utilisé ce code.',
+    'error_disabled' => 'Cet hôtel ne propose pas de codes promo.',
 ];

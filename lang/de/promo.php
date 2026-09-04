@@ -19,4 +19,5 @@ return [
     'error_used_up' => 'Dieser Code ist bereits vollständig eingelöst.',
     'error_room_type' => 'Dieser Code gilt nicht für dieses Zimmer.',
     'error_guest_limit' => 'Sie haben diesen Code bereits verwendet.',
+    'error_disabled' => 'Dieses Haus bietet keine Aktionscodes an.',
 ];

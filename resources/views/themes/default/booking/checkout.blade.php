@@ -83,13 +83,16 @@
                         </p>
                     </div>
 
+                    @if (config('doba.features.promo_codes') || (int) config('doba.loyalty.discount_bps') > 0)
                     <div>
+                        @if (config('doba.features.promo_codes'))
                         <label for="promo_code" class="block text-sm font-medium">{{ __('promo.label') }}</label>
                         <input type="text" id="promo_code" name="promo_code" maxlength="32"
                                value="{{ old('promo_code') }}" autocomplete="off" autocapitalize="characters"
                                placeholder="{{ __('promo.placeholder') }}"
                                class="mt-1 w-full rounded border border-neutral-300 px-3 py-2 font-mono uppercase">
                         <p class="mt-1 text-sm text-neutral-500">{{ __('promo.hint') }}</p>
+                        @endif
                         @if ((int) config('doba.loyalty.discount_bps') > 0)
                             {{-- No lookup before submit — the discount is
                                  computed server-side at placement. This
@@ -99,6 +102,7 @@
                             </p>
                         @endif
                     </div>
+                    @endif
 
                     <div>
                         <label for="guest_notes" class="block text-sm font-medium">{{ __('booking.notes') }}</label>

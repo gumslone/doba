@@ -25,4 +25,5 @@ return [
     'error_room_type' => 'That code does not apply to this room.',
     'error_used_up' => 'That code has already been fully redeemed.',
     'error_guest_limit' => 'You have already used that code.',
+    'error_disabled' => 'This hotel does not run promo codes.',
 ];

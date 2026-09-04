@@ -19,4 +19,5 @@ return [
     'error_used_up' => 'Deze code is al volledig ingewisseld.',
     'error_room_type' => 'Deze code geldt niet voor deze kamer.',
     'error_guest_limit' => 'U heeft deze code al gebruikt.',
+    'error_disabled' => 'Dit hotel werkt niet met promotiecodes.',
 ];
