@@ -21,6 +21,11 @@
         <input type="password" id="password" name="password" required
                class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
 
+        <label class="mt-4 flex items-center gap-2 text-sm">
+            <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
+            {{ __('admin.remember_me') }}
+        </label>
+
         <button type="submit" class="mt-6 w-full rounded bg-neutral-900 px-4 py-2 text-white">
             {{ __('admin.sign_in') }}
         </button>

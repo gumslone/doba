@@ -416,6 +416,19 @@ intend to make public.
 > GitHub Pages cannot host this: Pages serves static files, and Doba needs
 > PHP, a database and writable storage. Codespaces runs the real thing.
 
+## The admin account
+
+The admin session edits what the public site prints, so it is the crown
+jewels. **Two-factor sign-in** (standard TOTP — any authenticator app) is
+switched on under *Your account*, with eight single-use recovery codes
+shown once; turning it off or reissuing codes needs the password, so a
+session left open on a desk cannot weaken the account it is in. Remember-me
+is a checkbox that defaults to off — on a shared front-desk PC a long-lived
+cookie is everyone's session. There is deliberately no "forgot password"
+link: whoever can run `php artisan doba:admin:reset-password` on the server
+is the owner, and that is their reset (`--clear-2fa` for the phone that
+fell in the lake).
+
 ## Returning-guest discount
 
 The loyalty scheme a small hotel can actually run: no points, no tiers, no

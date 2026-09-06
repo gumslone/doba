@@ -43,6 +43,7 @@
             ['/admin/mail', __('admin.mail'), 'admin/mail*'],
             ['/admin/api', __('admin.api'), 'admin/api*'],
             ['/admin/update', __('admin.update'), 'admin/update*'],
+            ['/admin/security', __('admin.security'), 'admin/security*'],
         ],
     ];
 @endphp

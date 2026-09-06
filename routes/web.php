@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminRoomController;
 use App\Http\Controllers\Admin\AdminRoomTypeController;
+use App\Http\Controllers\Admin\AdminSecurityController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVenueController;
@@ -101,6 +102,10 @@ Route::post('webhooks/coinbase', [PaymentWebhookController::class, 'coinbase'])-
 Route::prefix('admin')->group(function (): void {
     Route::middleware('guest')->group(function (): void {
         Route::get('login', [AuthController::class, 'showLogin'])->name('admin.login');
+        Route::get('login/2fa', [AuthController::class, 'challenge'])->name('admin.login.2fa');
+        Route::post('login/2fa', [AuthController::class, 'verify'])
+            ->middleware('throttle:10,1')
+            ->name('admin.login.2fa.verify');
         Route::post('login', [AuthController::class, 'login'])
             ->middleware('throttle:10,1')
             ->name('admin.login.submit');
@@ -137,6 +142,12 @@ Route::prefix('admin')->group(function (): void {
         Route::get('directory', [AdminDirectoryController::class, 'edit'])->name('admin.directory');
         Route::post('directory', [AdminDirectoryController::class, 'update'])->name('admin.directory.update');
         Route::post('directory/announce', [AdminDirectoryController::class, 'announce'])->name('admin.directory.announce');
+
+        Route::get('security', [AdminSecurityController::class, 'edit'])->name('admin.security');
+        Route::post('security/2fa/enable', [AdminSecurityController::class, 'enable'])->name('admin.security.2fa.enable');
+        Route::post('security/2fa/disable', [AdminSecurityController::class, 'disable'])->name('admin.security.2fa.disable');
+        Route::post('security/2fa/recovery', [AdminSecurityController::class, 'regenerateCodes'])->name('admin.security.2fa.recovery');
+        Route::post('security/password', [AdminSecurityController::class, 'changePassword'])->name('admin.security.password');
 
         Route::get('settings', [AdminSettingsController::class, 'edit'])->name('admin.settings');
         Route::post('settings', [AdminSettingsController::class, 'update'])->name('admin.settings.update');
