@@ -22,6 +22,7 @@
                 @csrf
                 <input type="hidden" name="room_type" value="{{ $roomType->id }}">
                 <input type="hidden" name="check_in" value="{{ $stay['check_in']->toDateString() }}">
+                <input type="hidden" name="units" value="{{ $stay['units'] ?? 1 }}">
                 <input type="hidden" name="check_out" value="{{ $stay['check_out']->toDateString() }}">
                 <input type="hidden" name="adults" value="{{ $stay['adults'] }}">
                 <input type="hidden" name="children" value="{{ $stay['children'] }}">
@@ -230,9 +231,18 @@
                         <dt class="text-neutral-500">{{ __('booking.guests') }}</dt>
                         <dd class="text-right">{{ $stay['adults'] + $stay['children'] }}</dd>
                     </div>
+                    @if (($stay['units'] ?? 1) > 1)
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-neutral-500">{{ __('booking.rooms') }}</dt>
+                            <dd class="text-right">{{ $stay['units'] }}</dd>
+                        </div>
+                    @endif
                     <div class="flex justify-between gap-4 border-t border-neutral-200 pt-3 text-base">
                         <dt class="font-medium">
                             {{ $nights === 1 ? __('booking.night') : __('booking.nights', ['count' => $nights]) }}
+                            @if (($stay['units'] ?? 1) > 1)
+                                <span class="block text-sm font-normal text-neutral-500">{{ __('booking.rooms_count', ['count' => $stay['units']]) }}</span>
+                            @endif
                         </dt>
                         <dd class="text-right font-semibold">{{ Money::format($total) }}</dd>
                     </div>

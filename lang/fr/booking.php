@@ -144,4 +144,6 @@ return [
     'loyalty_discount' => 'Remise client fidèle',
     'loyalty_hint' => 'Déjà séjourné chez nous ? Réservez avec la même adresse e-mail : votre remise fidélité de :percent % s\'applique automatiquement.',
     'download_credit_note' => 'Télécharger l\'avoir :number',
+    'rooms' => 'Chambres',
+    'rooms_count' => 'pour :count chambres',
 ];

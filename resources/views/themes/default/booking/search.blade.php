@@ -74,7 +74,10 @@
 
                             <div class="text-right">
                                 <p class="text-xs uppercase tracking-wide text-neutral-500">{{ __('booking.stay_total') }}</p>
-                                <p class="text-2xl font-semibold">{{ Money::format($offer['total']) }}</p>
+                                <p class="text-2xl font-semibold">{{ Money::format($offer['total'] * $stay['units']) }}</p>
+                                @if ($stay['units'] > 1)
+                                    <p class="text-sm text-neutral-500">{{ __('booking.rooms_count', ['count' => $stay['units']]) }}</p>
+                                @endif
                                 <p class="text-sm text-neutral-500">
                                     {{ Money::format($offer['per_night']) }} {{ __('common.per_night') }}
                                 </p>
@@ -85,6 +88,7 @@
                                         'check_out' => $stay['check_out']->toDateString(),
                                         'adults' => $stay['adults'],
                                         'children' => $stay['children'],
+                                        'units' => $stay['units'] > 1 ? $stay['units'] : null,
                                     ])) }}"
                                    class="btn-primary mt-4 inline-block rounded px-5 py-2.5">
                                     {{ __('booking.choose') }}

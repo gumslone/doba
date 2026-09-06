@@ -67,6 +67,11 @@ class BookingController extends Controller
             ? $availability->search($stay['check_in'], $stay['check_out'], $stay['adults'], $stay['children'])
             : [];
 
+        if ($stay !== null && $stay['units'] > 1) {
+            // Two rooms wanted: a category with one left is not an offer.
+            $offers = array_values(array_filter($offers, static fn (array $o): bool => $o['units_left'] >= $stay['units']));
+        }
+
         return view('booking.search', [
             'stay' => $stay,
             'error' => $error,
@@ -95,7 +100,7 @@ class BookingController extends Controller
         // have sat on the results for an hour, and the funnel must never
         // offer a room the engine would refuse.
         if ($availability->validateStay($stay['check_in'], $stay['check_out']) !== null
-            || ! $availability->isBookable($roomType, $stay['check_in'], $stay['check_out'], 1, $stay['adults'], $stay['children'])) {
+            || ! $availability->isBookable($roomType, $stay['check_in'], $stay['check_out'], $stay['units'], $stay['adults'], $stay['children'])) {
             return redirect(Localization::route('booking.search', $this->stayQuery($stay)))
                 ->with('booking_error', __('booking.error_gone'));
         }
@@ -112,8 +117,9 @@ class BookingController extends Controller
             'roomType' => $roomType,
             'plans' => $plans,
             'selected' => $selected,
-            'total' => $selected['total']
-                ?? $availability->stayPrice($roomType, $stay['check_in'], $stay['check_out']),
+            // Per room, times the rooms asked for: what the guest will pay.
+            'total' => ($selected['total']
+                ?? $availability->stayPrice($roomType, $stay['check_in'], $stay['check_out'])) * $stay['units'],
             // FEATURE_EXTRAS off: nothing to add, so the fieldset never
             // renders — the view already skips an empty list.
             'extras' => (bool) config('doba.features.extras') ? $roomType->availableExtras() : collect(),
@@ -196,6 +202,7 @@ class BookingController extends Controller
                 ],
                 adults: $stay['adults'],
                 children: $stay['children'],
+                units: $stay['units'],
                 sessionId: $request->session()->getId(),
                 ratePlan: $ratePlan,
                 promoCode: $promoCode,
@@ -503,7 +510,7 @@ class BookingController extends Controller
     }
 
     /**
-     * @return array{check_in:CarbonImmutable,check_out:CarbonImmutable,adults:int,children:int}|null
+     * @return array{check_in:CarbonImmutable,check_out:CarbonImmutable,adults:int,children:int,units:int}|null
      */
     protected function stayFrom(Request $request): ?array
     {
@@ -519,20 +526,27 @@ class BookingController extends Controller
             'check_out' => CarbonImmutable::parse($checkOut)->startOfDay(),
             'adults' => max(1, min(20, $request->integer('adults', 2))),
             'children' => max(0, min(20, $request->integer('children'))),
+            // A family wanting two rooms books once, not twice. Capped
+            // low: a party needing six rooms is a group enquiry, not a
+            // checkout form.
+            'units' => max(1, min(5, $request->integer('units', 1))),
         ];
     }
 
     /**
-     * @param  array{check_in:CarbonImmutable,check_out:CarbonImmutable,adults:int,children:int}  $stay
+     * @param  array{check_in:CarbonImmutable,check_out:CarbonImmutable,adults:int,children:int,units:int}  $stay
      * @return array<string,string|int>
      */
     protected function stayQuery(array $stay): array
     {
-        return [
+        return array_filter([
             'check_in' => $stay['check_in']->toDateString(),
             'check_out' => $stay['check_out']->toDateString(),
             'adults' => $stay['adults'],
             'children' => $stay['children'],
-        ];
+            // Only when it matters, so every single-room URL stays exactly
+            // what it was before rooms could be counted.
+            'units' => $stay['units'] > 1 ? $stay['units'] : null,
+        ], static fn ($v): bool => $v !== null);
     }
 }

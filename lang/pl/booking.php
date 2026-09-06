@@ -144,4 +144,6 @@ return [
     'loyalty_discount' => 'Rabat dla stałych gości',
     'loyalty_hint' => 'Byłeś już u nas? Zarezerwuj z tym samym adresem e-mail, a rabat :percent% dla stałych gości naliczy się automatycznie.',
     'download_credit_note' => 'Pobierz fakturę korygującą :number',
+    'rooms' => 'Pokoje',
+    'rooms_count' => 'za :count pokoje',
 ];

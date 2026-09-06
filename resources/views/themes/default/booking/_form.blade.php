@@ -37,6 +37,11 @@
         </div>
     </div>
     <div class="field">
+        <label for="units">{{ __('booking.rooms') }}</label>
+        <input class="control" type="number" id="units" name="units" min="1" max="5"
+               value="{{ $stay['units'] ?? 1 }}" aria-label="{{ __('booking.rooms') }}">
+    </div>
+    <div class="field">
         <button type="submit" class="btn btn--primary btn--block" style="min-height:46px">
             {{ __('booking.search') }}
         </button>

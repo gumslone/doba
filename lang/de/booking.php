@@ -144,4 +144,6 @@ return [
     'loyalty_discount' => 'Stammgast-Rabatt',
     'loyalty_hint' => 'Schon einmal bei uns gewesen? Buchen Sie mit derselben E-Mail-Adresse — Ihr Stammgast-Rabatt von :percent % wird automatisch abgezogen.',
     'download_credit_note' => 'Gutschrift :number herunterladen',
+    'rooms' => 'Zimmer',
+    'rooms_count' => 'für :count Zimmer',
 ];

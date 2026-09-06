@@ -20,6 +20,7 @@ class StoreBookingRequest extends FormRequest
             'check_out' => ['required', 'date_format:Y-m-d', 'after:check_in'],
             'adults' => ['required', 'integer', 'min:1', 'max:20'],
             'children' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'units' => ['nullable', 'integer', 'min:1', 'max:5'],
 
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['required', 'string', 'max:120'],

@@ -144,4 +144,6 @@ return [
     'loyalty_discount' => 'Returning-guest discount',
     'loyalty_hint' => 'Stayed with us before? Book with the same email and your :percent% returning-guest discount is applied automatically.',
     'download_credit_note' => 'Download credit note :number',
+    'rooms' => 'Rooms',
+    'rooms_count' => 'for :count rooms',
 ];
