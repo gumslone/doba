@@ -283,6 +283,9 @@ return [
     'install' => [
         'lock_path' => env('DOBA_INSTALL_LOCK', storage_path('installed.lock')),
         'token_path' => env('DOBA_INSTALL_TOKEN', storage_path('install-token.txt')),
+        // Where the wizard and the settings screen write environment
+        // values. Only tests point this anywhere but the real .env.
+        'env_path' => env('DOBA_ENV_PATH', base_path('.env')),
     ],
 
     'backups' => [

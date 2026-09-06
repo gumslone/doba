@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\AdminRatePlanController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminRoomController;
+use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVenueController;
 use App\Http\Controllers\Admin\AuthController;
@@ -135,6 +136,9 @@ Route::prefix('admin')->group(function (): void {
         Route::get('directory', [AdminDirectoryController::class, 'edit'])->name('admin.directory');
         Route::post('directory', [AdminDirectoryController::class, 'update'])->name('admin.directory.update');
         Route::post('directory/announce', [AdminDirectoryController::class, 'announce'])->name('admin.directory.announce');
+
+        Route::get('settings', [AdminSettingsController::class, 'edit'])->name('admin.settings');
+        Route::post('settings', [AdminSettingsController::class, 'update'])->name('admin.settings.update');
 
         Route::get('mail', [AdminMailController::class, 'edit'])->name('admin.mail');
         Route::put('mail', [AdminMailController::class, 'update'])->name('admin.mail.update');

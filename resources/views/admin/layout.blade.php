@@ -38,6 +38,7 @@
             ['/admin/styles', __('admin.styles'), 'admin/styles*'],
         ],
         __('admin.group_system') => [
+            ['/admin/settings', __('admin.settings'), 'admin/settings*'],
             ['/admin/mail', __('admin.mail'), 'admin/mail*'],
             ['/admin/api', __('admin.api'), 'admin/api*'],
             ['/admin/update', __('admin.update'), 'admin/update*'],

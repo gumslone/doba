@@ -24,9 +24,19 @@ pest()->extend(TestCase::class)
         config([
             'doba.install.lock_path' => $lock,
             'doba.install.token_path' => storage_path('framework/testing/install-token.txt'),
+            // Never the developer's real .env: a test that wrote it would
+            // log them out of their own install, or worse.
+            'doba.install.env_path' => storage_path('framework/testing/.env'),
         ]);
 
         File::put($lock, 'testing');
+
+        // EnvWriter rightly refuses a missing .env — in production that is
+        // a broken install — so the isolated one exists before any test
+        // that writes settings runs.
+        if (! File::exists(storage_path('framework/testing/.env'))) {
+            File::put(storage_path('framework/testing/.env'), "APP_ENV=testing\n");
+        }
 
         DB::table('installations')->insert([
             'steps_completed' => json_encode(Installer::STEPS),

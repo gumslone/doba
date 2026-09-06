@@ -23,9 +23,14 @@ class EnvWriter
 {
     public function __construct(protected string $path) {}
 
+    /**
+     * The live .env, unless configured otherwise — and the test suite
+     * configures otherwise, because a test that writes the developer's
+     * own .env is a test that logs them out of their own install.
+     */
     public static function make(): self
     {
-        return new self(base_path('.env'));
+        return new self((string) config('doba.install.env_path', base_path('.env')));
     }
 
     /**
