@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 
 /**
  * @property string|null $totp_secret
- * @property \Carbon\CarbonImmutable|null $totp_confirmed_at
+ * @property CarbonImmutable|null $totp_confirmed_at
  * @property array<int,string>|null $totp_recovery_codes
  */
 class User extends Authenticatable
