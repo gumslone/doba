@@ -409,7 +409,7 @@ class ChannelSyncService
      */
     public function export(RoomType $roomType, ?CarbonImmutable $from = null, ?int $days = null): string
     {
-        $from ??= CarbonImmutable::today();
+        $from ??= CarbonImmutable::today(config('doba.timezone'));
         $days ??= (int) config('doba.booking.booking_window_days', 540);
 
         $rows = Availability::query()

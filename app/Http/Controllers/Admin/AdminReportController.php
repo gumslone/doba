@@ -73,7 +73,7 @@ class AdminReportController extends Controller
      */
     protected function range(Request $request): array
     {
-        $default = CarbonImmutable::today();
+        $default = CarbonImmutable::today(config('doba.timezone'));
 
         $from = $this->date($request->query('from')) ?? $default->startOfYear();
         $to = $this->date($request->query('to')) ?? $default->endOfMonth();

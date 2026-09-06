@@ -23,7 +23,7 @@ beforeEach(function (): void {
         'locale' => 'en', 'slug' => 'double-room', 'name' => 'Double room',
     ]);
 
-    $this->today = CarbonImmutable::today();
+    $this->today = CarbonImmutable::today(config('doba.timezone'));
 
     foreach (range(-2, 6) as $i) {
         Availability::create([

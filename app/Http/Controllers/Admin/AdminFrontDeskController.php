@@ -180,8 +180,13 @@ class AdminFrontDeskController extends Controller
     {
         $requested = (string) $request->query('date', '');
 
+        // The HOTEL's today, never the server's. A Berlin desk opening at
+        // half past midnight is on tomorrow's date while a UTC server is
+        // still on yesterday's, and every business date in this codebase
+        // is counted in the hotel's frame — this one was not, which is
+        // why CI, running at 22:00 UTC, saw a desk with no arrivals.
         return preg_match('/^\d{4}-\d{2}-\d{2}$/', $requested) === 1
             ? CarbonImmutable::parse($requested)->startOfDay()
-            : CarbonImmutable::today();
+            : CarbonImmutable::today(config('doba.timezone'));
     }
 }

@@ -286,7 +286,7 @@ class Reports
      */
     public function pace(CarbonImmutable $from, CarbonImmutable $to, ?CarbonImmutable $asOf = null): array
     {
-        $asOf ??= CarbonImmutable::today();
+        $asOf ??= CarbonImmutable::today(config('doba.timezone'));
 
         $now = $this->onTheBooks($from, $to, $asOf);
         $lastYear = $this->onTheBooks($from->subYear(), $to->subYear(), $asOf->subYear());

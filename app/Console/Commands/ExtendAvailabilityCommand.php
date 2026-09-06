@@ -24,7 +24,7 @@ class ExtendAvailabilityCommand extends Command
      */
     public function handle(): int
     {
-        $from = CarbonImmutable::today();
+        $from = CarbonImmutable::today(config('doba.timezone'));
         $to = $from->addDays(
             (int) config('doba.booking.booking_window_days')
             + (int) config('doba.booking.max_nights')

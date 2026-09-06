@@ -43,7 +43,7 @@ class Reconciler
      */
     public function drift(?CarbonImmutable $from = null, ?CarbonImmutable $to = null): array
     {
-        $from ??= CarbonImmutable::today();
+        $from ??= CarbonImmutable::today(config('doba.timezone'));
         $to ??= $from->addDays((int) config('doba.booking.booking_window_days', 540));
 
         $truth = $this->truth($from, $to);

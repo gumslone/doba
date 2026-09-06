@@ -87,7 +87,7 @@ it('pre-generates rows through the window plus the checkout boundary', function 
     // on the last bookable day still needs its nights AND its checkout row.
     expect(Availability::query()->where('room_type_id', $this->roomType->id)->count())->toBe(37)
         ->and(Availability::query()->orderByDesc('date')->first()->date->toDateString())
-        ->toBe(CarbonImmutable::today()->addDays(36)->toDateString());
+        ->toBe(CarbonImmutable::today(config('doba.timezone'))->addDays(36)->toDateString());
 
     expect(Availability::query()->first())
         ->allotment->toBe(3)

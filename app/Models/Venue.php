@@ -113,7 +113,7 @@ class Venue extends Model implements HasMedia
      */
     public function hoursOn(?CarbonImmutable $date = null): array
     {
-        $date ??= CarbonImmutable::today();
+        $date ??= CarbonImmutable::today(config('doba.timezone'));
 
         return $this->opening_hours[self::DAYS[$date->dayOfWeekIso - 1]] ?? [];
     }
