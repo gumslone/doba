@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Support\Maintenance;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 use Throwable;
@@ -82,6 +84,88 @@ class Backups
         }
 
         return ['database' => $database, 'uploads' => $uploads, 'uploads_error' => $error];
+    }
+
+    /**
+     * The second copy, off this machine (§15).
+     *
+     * A backup that lives next to the thing it backs up is a disk
+     * failure away from being lost together with it. Each file of the
+     * set is streamed to the configured disk — S3, or a local disk whose
+     * root is a mounted drive — and the remote side is pruned to its own
+     * count, because an offsite bucket that grows forever is a bill
+     * nobody expected.
+     *
+     * Best-effort in the same sense the uploads archive is: a failed
+     * copy must not undo the local snapshot, which already exists and is
+     * the half that matters most. The failure is returned, and the
+     * command that called this turns it into an alert.
+     *
+     * @param  array{database:string,uploads:string|null,uploads_error?:string|null}  $set
+     * @return array{disk:string|null,copied:array<int,string>,error:string|null}
+     */
+    public function copyOffsite(array $set): array
+    {
+        $disk = trim((string) config('doba.backups.offsite_disk', ''));
+
+        if ($disk === '') {
+            return ['disk' => null, 'copied' => [], 'error' => null];
+        }
+
+        $prefix = trim((string) config('doba.backups.offsite_path', 'doba-backups'), '/');
+        $copied = [];
+
+        try {
+            $storage = Storage::disk($disk);
+
+            foreach (array_filter([$set['database'], $set['uploads'] ?? null]) as $file) {
+                $handle = fopen($file, 'rb');
+
+                if ($handle === false) {
+                    throw new RuntimeException("Cannot read {$file}.");
+                }
+
+                $target = $prefix.'/'.basename($file);
+
+                if ($storage->put($target, $handle) === false) {
+                    throw new RuntimeException("Could not write {$target} to disk [{$disk}].");
+                }
+
+                if (is_resource($handle)) {
+                    fclose($handle);
+                }
+
+                $copied[] = $target;
+            }
+
+            $this->pruneOffsite($storage, $prefix);
+        } catch (Throwable $e) {
+            return ['disk' => $disk, 'copied' => $copied, 'error' => $e->getMessage()];
+        }
+
+        return ['disk' => $disk, 'copied' => $copied, 'error' => null];
+    }
+
+    /**
+     * Keep the newest N SETS remotely, by the same stamp grouping as
+     * locally — never half a set.
+     */
+    protected function pruneOffsite(Filesystem $storage, string $prefix): void
+    {
+        $keep = max(1, (int) config('doba.backups.offsite_keep', 30));
+        $stamps = [];
+
+        foreach ($storage->files($prefix) as $file) {
+            if (preg_match('/doba-(\d{4}-\d{2}-\d{2}-\d{6})\./', basename($file), $m) === 1) {
+                $stamps[$m[1]][] = $file;
+            }
+        }
+
+        krsort($stamps);
+
+        foreach (array_slice($stamps, $keep, null, true) as $files) {
+            $storage->delete($files);
+        }
     }
 
     /**

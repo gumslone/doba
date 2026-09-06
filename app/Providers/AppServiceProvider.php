@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Support\Alerts\Alerts;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +22,20 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // A queued job that fails for the last time was a confirmation
+        // mail, a webhook delivery or an invoice PDF nobody will now get.
+        // On a shared host nobody reads failed_jobs; the hotelier reads
+        // their inbox (§15). Throttled per job class, one message an hour.
+        Queue::failing(function (JobFailed $event): void {
+            $name = $event->job->resolveName();
+
+            app(Alerts::class)->send('A background job keeps failing: '.class_basename($name), [
+                'Job: '.$name,
+                'Error: '.mb_substr($event->exception->getMessage(), 0, 500),
+                'It has used all its retries and will not run again by itself.',
+            ]);
+        });
+
         // HTTPS enforced (§14): behind Apache/mod_proxy_fcgi the app, not
         // the vhost, is what generates canonical URLs, hreflang hrefs and
         // redirect targets — one http:// among them undoes the whole

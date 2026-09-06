@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Support\Alerts\Alerts;
 use App\Support\Maintenance\Backups;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -24,15 +25,19 @@ class BackupCommand extends Command
 
     protected $description = 'Back up the database and the uploaded photos';
 
-    public function handle(Backups $backups): int
+    public function handle(Backups $backups, Alerts $alerts): int
     {
         if (! $backups->isSupported()) {
             $this->error('No backup can be taken here: '.$backups->unsupportedReason());
 
             // Loud, because a backup that silently never runs is worse
             // than one that was never configured — the hotel believes it
-            // has copies.
-            Log::error('Scheduled backup could not run.', ['reason' => $backups->unsupportedReason()]);
+            // has copies. Loud now means the hotelier's inbox, not a log
+            // on a shared host nobody opens.
+            $alerts->send('Backups are not running', [
+                'The nightly backup could not run: '.$backups->unsupportedReason(),
+                'Until this is fixed the hotel has no fresh copy of its bookings.',
+            ]);
 
             return self::FAILURE;
         }
@@ -41,7 +46,10 @@ class BackupCommand extends Command
             $set = $backups->createSet(withUploads: ! $this->option('no-uploads'));
         } catch (Throwable $e) {
             $this->error('Backup failed: '.$e->getMessage());
-            Log::error('Scheduled backup failed.', ['error' => $e->getMessage()]);
+            $alerts->send('The nightly backup failed', [
+                'Error: '.$e->getMessage(),
+                'No new snapshot was written tonight.',
+            ]);
 
             return self::FAILURE;
         }
@@ -55,6 +63,24 @@ class BackupCommand extends Command
             // from anywhere else — but never silent.
             $this->warn('Uploads:  failed — '.$set['uploads_error']);
             Log::warning('Upload archive failed during backup.', ['error' => $set['uploads_error']]);
+        }
+
+        // The second copy, off this machine. Its failure is not the
+        // backup's failure — the local snapshot exists — but it is the
+        // difference between a bad night and a lost hotel, so it is said.
+        $offsite = $backups->copyOffsite($set);
+
+        if ($offsite['disk'] !== null) {
+            if ($offsite['error'] !== null) {
+                $this->warn('Offsite:  failed — '.$offsite['error']);
+                $alerts->send('The offsite backup copy failed', [
+                    'Disk: '.$offsite['disk'],
+                    'Error: '.$offsite['error'],
+                    'Tonight\'s snapshot exists on this server only.',
+                ]);
+            } else {
+                $this->info('Offsite:  '.count($offsite['copied']).' file(s) copied to ['.$offsite['disk'].']');
+            }
         }
 
         $keep = $this->option('keep');

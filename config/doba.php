@@ -292,6 +292,31 @@ return [
         'keep' => (int) env('DOBA_BACKUP_KEEP', 10),
         'uploads' => (bool) env('DOBA_BACKUP_UPLOADS', true),
         'nightly_at' => env('DOBA_BACKUP_AT', '03:15'),
+
+        // A second copy, off this machine. Any configured filesystem
+        // disk: 's3' out of the box, or a local disk whose root is a
+        // mounted drive or an rclone/NFS path. Empty = local only, which
+        // is a disk failure away from losing the hotel and its backups
+        // together.
+        'offsite_disk' => env('DOBA_BACKUP_OFFSITE_DISK'),
+        'offsite_path' => env('DOBA_BACKUP_OFFSITE_PATH', 'doba-backups'),
+        'offsite_keep' => (int) env('DOBA_BACKUP_OFFSITE_KEEP', 30),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Alerts (§15)
+    |--------------------------------------------------------------------------
+    |
+    | Where "something broke" goes. Empty means the hotel's own contact
+    | address — whoever reads the enquiries reads this. Nothing is sent
+    | while outgoing mail is unconfirmed, and each problem is reported at
+    | most once an hour.
+    |
+    */
+
+    'alerts' => [
+        'email' => env('DOBA_ALERT_EMAIL'),
     ],
 
     /*

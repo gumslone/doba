@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Domain\Availability\Reconciler;
+use App\Support\Alerts\Alerts;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 
@@ -29,7 +30,7 @@ class ReconcileAvailabilityCommand extends Command
 
     public function handle(Reconciler $reconciler): int
     {
-        $from = CarbonImmutable::today();
+        $from = CarbonImmutable::today(config('doba.timezone'));
         $days = $this->option('days');
         $to = $from->addDays($days === null ? (int) config('doba.booking.booking_window_days', 540) : (int) $days);
 
@@ -42,6 +43,19 @@ class ReconcileAvailabilityCommand extends Command
         }
 
         $this->warn(sprintf('%d counter(s) disagree with the bookings behind them:', count($drift)));
+
+        // Drift means a bug already happened somewhere between a booking
+        // and its counters. Corrected or not, the hotelier should know —
+        // a reconciler that silently fixes the same thing every night is
+        // a bug nobody will ever report (§15).
+        app(Alerts::class)->send('Availability counters needed correcting', array_merge(
+            [sprintf('%d night(s) disagreed with the bookings behind them.', count($drift))],
+            array_map(static fn (array $e): string => sprintf(
+                'Room type #%d on %s: %s was %d, bookings say %d.',
+                $e['room_type_id'], $e['date'], $e['column'], $e['counter'], $e['truth'],
+            ), array_slice($drift, 0, 10)),
+            [$this->option('fix') ? 'They have been corrected automatically.' : 'Run availability:reconcile --fix to correct them.'],
+        ));
 
         foreach (array_slice($drift, 0, 25) as $entry) {
             $this->line(sprintf(
