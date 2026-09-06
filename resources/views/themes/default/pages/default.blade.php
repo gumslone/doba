@@ -5,7 +5,7 @@
         <h1 class="text-3xl font-semibold tracking-tight">{{ $page->t('title') }}</h1>
 
         @if ($body = $page->t('body'))
-            <div class="prose mt-8 max-w-none">{!! $body !!}</div>
+            <div class="prose mt-8 max-w-none">{!! \App\Support\Html::clean($body) !!}</div>
         @endif
     </article>
 @endsection

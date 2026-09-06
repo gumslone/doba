@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventTranslation;
+use App\Support\Html;
 use App\Support\Routing\Localization;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -100,7 +101,7 @@ class AdminEventController extends Controller
                 'slug' => $slug,
                 'title' => $title,
                 'excerpt' => $input['excerpt'] ?? null,
-                'body' => $input['body'] ?? null,
+                'body' => Html::clean($input['body'] ?? null),
                 'meta_title' => $input['meta_title'] ?? null,
                 'meta_description' => $input['meta_description'] ?? null,
             ];

@@ -204,7 +204,7 @@
             <div class="mt-6 flex flex-wrap gap-3">
                 @foreach ($venue->sections as $section)
                     <form method="POST" action="/admin/venues/{{ $venue->id }}/sections/{{ $section->id }}"
-                          onsubmit="return confirm('{{ __('admin.confirm_delete') }}')">
+                          data-confirm="{{ __('admin.confirm_delete') }}">
                         @csrf @method('DELETE')
                         <button type="submit" class="text-sm text-red-600 hover:underline">
                             {{ __('admin.delete_section', ['name' => $section->t('name') ?? $section->code]) }}

@@ -154,7 +154,7 @@
         @if ($booking->status->canTransitionTo(BookingStatus::Cancelled))
             <form method="POST"
                   action="{{ Localization::route('booking.cancel', ['reference' => $booking->reference, 'token' => $token]) }}"
-                  onsubmit="return confirm('{{ __('booking.cancel_confirm') }}')"
+                  data-confirm="{{ __('booking.cancel_confirm') }}"
                   class="mt-8">
                 @csrf
                 <button type="submit" class="rounded border border-red-300 px-5 py-2.5 text-red-700 hover:bg-red-50">

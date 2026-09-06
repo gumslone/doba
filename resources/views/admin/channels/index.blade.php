@@ -31,7 +31,7 @@
                                 {{ __('admin.channel_keep') }}
                             </button>
                             <button name="decision" value="release"
-                                    onsubmit="return confirm('{{ __('admin.confirm_delete') }}')"
+                                    data-confirm="{{ __('admin.confirm_delete') }}"
                                     class="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50">
                                 {{ __('admin.channel_release') }}
                             </button>
@@ -74,7 +74,7 @@
                         </form>
                     @endif
                     <form method="POST" action="/admin/channels/{{ $feed->id }}"
-                          onsubmit="return confirm('{{ __('admin.confirm_delete') }}')">
+                          data-confirm="{{ __('admin.confirm_delete') }}">
                         @csrf @method('DELETE')
                         <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('admin.delete') }}</button>
                     </form>
@@ -92,7 +92,7 @@
         @foreach ($roomTypes as $roomType)
             <li class="px-4 py-3">
                 <p class="font-medium">{{ $roomType->t('name') ?? $roomType->code }}</p>
-                <input type="text" readonly value="{{ $roomType->icalUrl() }}" onclick="this.select()"
+                <input type="text" readonly value="{{ $roomType->icalUrl() }}" data-select-on-click
                        class="mt-1 w-full rounded border border-neutral-200 bg-neutral-50 px-2 py-1 font-mono text-xs">
             </li>
         @endforeach

@@ -35,7 +35,12 @@ class SecurityHeaders
         if (! $headers->has('Content-Security-Policy')) {
             $headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline'",
+                // No inline scripts anywhere: the three behaviours that
+                // used to be onclick/onchange/onsubmit attributes live in
+                // resources/js/behaviours.js, which is what lets the
+                // policy refuse inline script at all — and a script that
+                // does get injected into a page body then does nothing.
+                "script-src 'self'",
                 "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data:",
                 "font-src 'self'",

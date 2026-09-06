@@ -39,7 +39,7 @@
                             <form method="POST" action="/admin/rooms/{{ $door->id }}" class="flex items-center gap-2">
                                 @csrf
                                 <input type="hidden" name="notes" value="{{ $door->notes }}">
-                                <select name="status" onchange="this.form.submit()" @class([
+                                <select name="status" data-submit-on-change @class([
                                     'rounded border px-2 py-1 text-xs',
                                     'border-green-300 bg-green-50 text-green-800' => $door->status === 'clean',
                                     'border-amber-300 bg-amber-50 text-amber-900' => $door->status === 'dirty',
@@ -54,7 +54,7 @@
                             </form>
 
                             <form method="POST" action="/admin/rooms/{{ $door->id }}/delete"
-                                  onsubmit="return confirm('{{ __('admin.room_delete_confirm', ['number' => $door->number]) }}')">
+                                  data-confirm="{{ __('admin.room_delete_confirm', ['number' => $door->number]) }}">
                                 @csrf
                                 <button type="submit" class="text-xs text-neutral-400 hover:text-red-600">{{ __('admin.delete') }}</button>
                             </form>

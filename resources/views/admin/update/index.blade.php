@@ -144,7 +144,7 @@
                                 </a>
                             @endif
                             <form method="POST" action="/admin/update/backups/{{ $set['stamp'] }}"
-                                  onsubmit="return confirm('{{ __('admin.confirm_delete') }}')">
+                                  data-confirm="{{ __('admin.confirm_delete') }}">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:underline">{{ __('admin.delete') }}</button>
                             </form>

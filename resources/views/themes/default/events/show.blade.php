@@ -22,7 +22,7 @@
             class="mt-8 aspect-[16/9] w-full rounded-lg object-cover" />
 
         @if ($body = $event->t('body'))
-            <div class="prose mt-8 max-w-none">{!! $body !!}</div>
+            <div class="prose mt-8 max-w-none">{!! \App\Support\Html::clean($body) !!}</div>
         @elseif ($excerpt = $event->t('excerpt'))
             <p class="mt-8 text-lg text-neutral-700">{{ $excerpt }}</p>
         @endif

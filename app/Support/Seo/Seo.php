@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Seo;
 
+use App\Support\Html;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 
@@ -162,7 +163,10 @@ class Seo implements Arrayable
         }
 
         return static::clamp(
-            trim(preg_replace('/\s+/u', ' ', strip_tags($this->description)) ?? ''),
+            // Sanitised BEFORE the tags are stripped: strip_tags keeps a
+            // <script>'s source as prose, and a meta description reading
+            // "alert(1)" is the injection surviving in a second place.
+            trim(preg_replace('/\s+/u', ' ', strip_tags((string) Html::clean($this->description))) ?? ''),
             (int) config('doba.seo.description_max', 160)
         );
     }

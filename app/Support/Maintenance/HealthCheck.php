@@ -57,6 +57,7 @@ class HealthCheck
             $this->extensions(),
             $this->writable(),
             $this->appKey(),
+            $this->debugMode(),
             $this->database(),
             $this->schema(),
             $this->diskSpace(),
@@ -178,6 +179,30 @@ class HealthCheck
             $key === ''
                 ? 'APP_KEY is empty. Sessions and every encrypted setting will fail.'
                 : 'Set.',
+        );
+    }
+
+    /**
+     * A debug page prints configuration — database credentials, mail
+     * passwords, the app key — to whoever causes an error. The installers
+     * never write APP_DEBUG=true, but a hand-made .env copied from the
+     * example does, and this is the check that refuses to update, or to
+     * call the site healthy, until that is put right.
+     *
+     * @return Check
+     */
+    protected function debugMode(): array
+    {
+        $debug = (bool) config('app.debug');
+        $production = config('app.env') === 'production';
+
+        return $this->result(
+            'debug',
+            $debug && $production ? self::CRITICAL : self::OK,
+            'Debug mode',
+            $debug && $production
+                ? 'APP_DEBUG is true in production. Error pages print configuration to whoever triggers them — set APP_DEBUG=false.'
+                : ($debug ? 'On, outside production.' : 'Off.'),
         );
     }
 

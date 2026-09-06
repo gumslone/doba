@@ -141,3 +141,15 @@ it('denies the paths that must never be served in the docroot fallback', functio
         expect($htaccess)->toContain($must);
     }
 });
+
+it('marks the session cookie Secure on an https site, and only there', function (): void {
+    file_put_contents($this->dir.'/env.example', "APP_KEY=\nAPP_URL=http://localhost\n");
+
+    $this->installer->writeEnv('https://hotel.example');
+    expect((string) file_get_contents($this->dir.'/.env'))->toContain('SESSION_SECURE_COOKIE=true');
+
+    // A plain-http local look must not get a cookie the browser will
+    // refuse to send back.
+    $this->installer->writeEnv('http://localhost:8000');
+    expect((string) file_get_contents($this->dir.'/.env'))->not->toContain('SESSION_SECURE_COOKIE=true');
+});

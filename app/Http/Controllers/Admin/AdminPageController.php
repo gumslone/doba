@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\PageTranslation;
+use App\Support\Html;
 use App\Support\Routing\Localization;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -104,7 +105,7 @@ class AdminPageController extends Controller
             $payloads[$locale] = [
                 'slug' => $slug,
                 'title' => $title,
-                'body' => $input['body'] ?? null,
+                'body' => Html::clean($input['body'] ?? null),
                 'meta_title' => $input['meta_title'] ?? null,
                 'meta_description' => $input['meta_description'] ?? null,
             ];

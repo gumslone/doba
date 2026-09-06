@@ -78,7 +78,7 @@
 
                 @if ($description = $roomType->t('description'))
                     <section class="stack">
-                        <div class="prose lede" style="max-width:70ch">{!! $description !!}</div>
+                        <div class="prose lede" style="max-width:70ch">{!! \App\Support\Html::clean($description) !!}</div>
                     </section>
                 @endif
 

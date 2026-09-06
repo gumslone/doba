@@ -52,7 +52,7 @@
                 </form>
 
                 <form method="POST" action="/admin/photos/{{ $subject }}/{{ $photo->id }}"
-                      onsubmit="return confirm('{{ __('admin.confirm_delete') }}')"
+                      data-confirm="{{ __('admin.confirm_delete') }}"
                       class="border-t border-neutral-100 px-4 py-2 text-right">
                     @csrf @method('DELETE')
                     <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('admin.delete') }}</button>

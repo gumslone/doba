@@ -117,6 +117,11 @@ php -r '
     $set("APP_DEBUG", "false");
     $set("APP_KEY", "base64:" . base64_encode(random_bytes(32)));
     $set("APP_URL", $argv[1]);
+    // A cookie that may travel over plain http is a session that may be
+    // read on the wire; on an https site it must be marked Secure.
+    if (str_starts_with($argv[1], "https://")) {
+        $set("SESSION_SECURE_COOKIE", "true");
+    }
     file_put_contents(".env", $env);
 ' "$URL"
 

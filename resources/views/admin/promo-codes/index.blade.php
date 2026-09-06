@@ -35,7 +35,7 @@
                         </span>
                     </p>
                     <form method="POST" action="/admin/promo-codes/{{ $code->id }}"
-                          onsubmit="return confirm('{{ __('admin.confirm_delete') }}')">
+                          data-confirm="{{ __('admin.confirm_delete') }}">
                         @csrf @method('DELETE')
                         <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('admin.delete') }}</button>
                     </form>

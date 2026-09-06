@@ -336,6 +336,12 @@ class DobaWebInstaller
         $set('APP_KEY', 'base64:' . base64_encode(random_bytes(32)));
         $set('APP_URL', rtrim($url, '/'));
 
+        // On an https site the session cookie must be marked Secure, or a
+        // session may be read on the wire the one time it travels plain.
+        if (strpos($url, 'https://') === 0) {
+            $set('SESSION_SECURE_COOKIE', 'true');
+        }
+
         file_put_contents($this->dir . '/.env', $env);
     }
 

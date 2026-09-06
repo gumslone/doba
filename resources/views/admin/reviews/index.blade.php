@@ -68,7 +68,7 @@
                                 </form>
                             @endif
                             <form method="POST" action="/admin/reviews/{{ $review->id }}/delete"
-                                  onsubmit="return confirm('{{ __('admin.review_delete_confirm') }}')">@csrf
+                                  data-confirm="{{ __('admin.review_delete_confirm') }}">@csrf
                                 <button type="submit" class="text-xs text-neutral-400 hover:text-red-600">{{ __('admin.delete') }}</button>
                             </form>
                         </div>

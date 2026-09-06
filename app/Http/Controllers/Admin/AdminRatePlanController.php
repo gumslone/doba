@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BookingRoom;
 use App\Models\RatePlan;
 use App\Models\RoomType;
+use App\Support\Html;
 use App\Support\Routing\Localization;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -166,7 +167,7 @@ class AdminRatePlanController extends Controller
 
                 $plan->translations()->updateOrCreate(['locale' => $locale], [
                     'name' => $name,
-                    'description' => $input['description'] ?? null,
+                    'description' => Html::clean($input['description'] ?? null),
                     'policy_text' => $input['policy_text'] ?? null,
                 ]);
             }

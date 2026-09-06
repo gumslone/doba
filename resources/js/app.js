@@ -1,5 +1,6 @@
 import 'trix';
 import initCalendars from './calendar';
+import initBehaviours from './behaviours';
 import initDisclosures from './disclosures';
 import initGrid from './grid';
 import { initStylePresets } from './styles-admin';
@@ -15,6 +16,7 @@ import { initStylePresets } from './styles-admin';
  * the DOM directly. The security posture wins; the code is smaller.
  */
 const boot = () => {
+    initBehaviours();
     initCalendars();
     initDisclosures();
     initGrid();

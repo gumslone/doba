@@ -7,6 +7,7 @@ namespace App\Domain\Guests;
 use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\Guest;
+use App\Models\Review;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -105,6 +106,12 @@ class GuestPrivacy
                 // The guest's own words about themselves go with them.
                 'guest_notes' => null,
             ]);
+
+            // And their words about us. A review is personal data twice
+            // over — it is theirs, and it is signed with their name — so
+            // an erased guest's review published under "Guest" is the
+            // erasure not having happened.
+            Review::query()->where('guest_id', $guest->id)->delete();
 
             $guest->forceFill([
                 'email' => self::erasedEmail($guest),

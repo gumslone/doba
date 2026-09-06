@@ -11,6 +11,7 @@ use App\Models\Dish;
 use App\Models\MenuSection;
 use App\Models\Venue;
 use App\Models\VenueTranslation;
+use App\Support\Html;
 use App\Support\Routing\Localization;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -173,7 +174,7 @@ class AdminVenueController extends Controller
 
                 $dish->translations()->updateOrCreate(['locale' => $locale], [
                     'name' => $name,
-                    'description' => $input['description'] ?? null,
+                    'description' => Html::clean($input['description'] ?? null),
                 ]);
             }
         });
@@ -239,7 +240,7 @@ class AdminVenueController extends Controller
                 'slug' => $slug,
                 'name' => $name,
                 'tagline' => $input['tagline'] ?? null,
-                'description' => $input['description'] ?? null,
+                'description' => Html::clean($input['description'] ?? null),
                 'meta_title' => $input['meta_title'] ?? null,
                 'meta_description' => $input['meta_description'] ?? null,
             ];
