@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AdminApiClientController;
 use App\Http\Controllers\Admin\AdminAvailabilityController;
+use App\Http\Controllers\Admin\AdminBookingController;
 use App\Http\Controllers\Admin\AdminChannelController;
 use App\Http\Controllers\Admin\AdminDirectoryController;
 use App\Http\Controllers\Admin\AdminEventController;
@@ -167,6 +168,11 @@ Route::prefix('admin')->group(function (): void {
         Route::post('rooms', [AdminRoomController::class, 'store'])->name('admin.rooms.store');
         Route::post('rooms/{room}', [AdminRoomController::class, 'update'])->name('admin.rooms.update');
         Route::post('rooms/{room}/delete', [AdminRoomController::class, 'destroy'])->name('admin.rooms.destroy');
+
+        Route::get('bookings/create', [AdminBookingController::class, 'create'])->name('admin.bookings.create');
+        Route::post('bookings', [AdminBookingController::class, 'store'])->name('admin.bookings.store');
+        Route::get('bookings/{booking}/edit', [AdminBookingController::class, 'edit'])->name('admin.bookings.edit');
+        Route::put('bookings/{booking}', [AdminBookingController::class, 'update'])->name('admin.bookings.update');
 
         Route::get('front-desk', [AdminFrontDeskController::class, 'index'])->name('admin.front-desk');
         Route::post('front-desk/{booking}/check-in', [AdminFrontDeskController::class, 'checkIn'])->name('admin.front-desk.check-in');

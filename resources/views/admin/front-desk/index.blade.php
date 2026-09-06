@@ -7,7 +7,13 @@
     @endphp
 
     <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-2xl font-semibold">{{ __('admin.front_desk') }}</h1>
+        <h1 class="text-2xl font-semibold">
+            {{ __('admin.front_desk') }}
+            <a href="/admin/bookings/create?date={{ $date->toDateString() }}"
+               class="ml-3 rounded bg-neutral-900 px-3 py-1.5 align-middle text-sm font-normal text-white">
+                {{ __('admin.new_booking') }}
+            </a>
+        </h1>
 
         <form method="GET" class="flex items-center gap-2 text-sm">
             <label for="date" class="text-neutral-500">{{ __('admin.day') }}</label>
@@ -47,7 +53,7 @@
                                     {{ trans_choice('admin.guest_nth_stay', $booking->guest->stays_count, ['count' => $booking->guest->stays_count]) }}
                                 </span>
                             @endif
-                            <span class="ml-1 font-mono text-xs text-neutral-400">{{ $booking->reference }}</span>
+                            <a href="/admin/bookings/{{ $booking->id }}/edit" class="ml-1 font-mono text-xs text-neutral-400 hover:underline">{{ $booking->reference }}</a>
                             <p class="text-neutral-500">
                                 {{ $room($booking) }} · {{ $nights($booking) }} ·
                                 {{ trans_choice('admin.guest_count', $booking->adults + $booking->children, ['count' => $booking->adults + $booking->children]) }}
@@ -97,7 +103,7 @@
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <strong>{{ $booking->guest?->last_name }}, {{ $booking->guest?->first_name }}</strong>
-                                <span class="ml-1 font-mono text-xs text-neutral-400">{{ $booking->reference }}</span>
+                                <a href="/admin/bookings/{{ $booking->id }}/edit" class="ml-1 font-mono text-xs text-neutral-400 hover:underline">{{ $booking->reference }}</a>
                                 <p class="text-neutral-500">{{ $room($booking) }}</p>
                                 <p class="mt-0.5 text-xs">
                                     {{ __('admin.leaving_by', ['time' => $booking->departureTime()]) }}
@@ -138,7 +144,7 @@
                 @forelse ($inHouse as $booking)
                     <li class="px-4 py-3 text-sm">
                         <strong>{{ $booking->guest?->last_name }}, {{ $booking->guest?->first_name }}</strong>
-                        <span class="ml-1 font-mono text-xs text-neutral-400">{{ $booking->reference }}</span>
+                        <a href="/admin/bookings/{{ $booking->id }}/edit" class="ml-1 font-mono text-xs text-neutral-400 hover:underline">{{ $booking->reference }}</a>
                         <p class="text-neutral-500">
                             {{ $room($booking) }} · {{ $nights($booking) }}
                             @if ($booking->checked_in_at)

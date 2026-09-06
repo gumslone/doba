@@ -358,6 +358,198 @@ class BookingService
     }
 
     /**
+     * Change a booking's dates or party from the front desk (§12).
+     *
+     * The guest rang: "can we come a day later and stay a day longer?"
+     * Inventory moves in one transaction under the same row locks the
+     * funnel uses — nights the stay leaves are released, nights it gains
+     * are taken only if free — and when any gained night is sold out,
+     * nothing changes at all rather than half of it.
+     *
+     * Prices for the new nights are resolved fresh, with the room's own
+     * rate-plan adjustment, and the totals are rebuilt. What is NOT
+     * recomputed is the discount: a promo or loyalty amount was granted
+     * against the stay as booked, and quietly shrinking or growing it on
+     * a date change is a conversation the desk should have, not a side
+     * effect.
+     *
+     * @param  int|null  $adults  null = unchanged
+     * @param  int|null  $children  null = unchanged
+     */
+    public function changeStay(Booking $booking, CarbonInterface $checkIn, CarbonInterface $checkOut, ?int $adults = null, ?int $children = null): Booking
+    {
+        $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
+        $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
+
+        if ($checkIn >= $checkOut) {
+            throw new InvalidArgumentException('check_in must be before check_out.');
+        }
+
+        return DB::transaction(function () use ($booking, $checkIn, $checkOut, $adults, $children): Booking {
+            /** @var Booking $booking */
+            $booking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
+            $booking->load('rooms.roomType', 'rooms.ratePlan');
+
+            // Decided from the row under lock, never from the instance the
+            // caller handed in: that instance may predate a cancellation
+            // that happened a second ago, and moving a cancelled stay
+            // would put its nights back on the calendar as booked.
+            $side = $booking->status->inventorySide();
+
+            if ($side === 'none') {
+                // Cancelled, no-show, checked out: there is no stay to move.
+                throw new InvalidArgumentException("Booking {$booking->reference} is {$booking->status->value} and cannot be changed.");
+            }
+
+            $adults ??= $booking->adults;
+            $children ??= $booking->children;
+            $units = max(1, $booking->rooms->count());
+            $roomType = $booking->rooms->first()?->roomType;
+
+            if ($roomType === null) {
+                throw new InvalidArgumentException("Booking {$booking->reference} has no room to move.");
+            }
+
+            $nights = (int) $checkIn->diffInDays($checkOut);
+            $oldDates = $this->nightDates($booking->check_in, $booking->check_out);
+            $newDates = $this->nightDates($checkIn, $checkOut);
+
+            $leaving = array_values(array_diff($oldDates, $newDates));
+            $gaining = array_values(array_diff($newDates, $oldDates));
+
+            // Every affected night locked before anything moves — in date
+            // order, the same order place() locks in, so two desks moving
+            // two stays cannot deadlock each other.
+            $affected = array_values(array_unique(array_merge($leaving, $gaining)));
+            sort($affected);
+
+            $rows = $affected === [] ? collect() : Availability::query()
+                ->where('room_type_id', $roomType->id)
+                ->whereIn('date', $affected)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy(static fn (Availability $row): string => $row->date->toDateString());
+
+            foreach ($gaining as $date) {
+                $row = $rows->get($date);
+
+                if ($row === null || $row->closed || $row->unitsLeft() < $units) {
+                    // The transaction rolls everything back: the stay is
+                    // exactly as it was, and the desk is told which night.
+                    throw new NoAvailabilityException($date);
+                }
+            }
+
+            // Release what the stay leaves.
+            foreach ($leaving as $date) {
+                $row = $rows->get($date);
+
+                if ($row !== null) {
+                    $row->update([$side => max(0, $row->{$side} - $units)]);
+                }
+
+                $booking->holds()->where('date', $date)->whereNull('released_at')->update(['released_at' => now()]);
+            }
+
+            // Take what it gains, on the same side it already occupies.
+            $expiresAt = now()->addMinutes((int) config('doba.booking.hold_minutes'));
+
+            foreach ($gaining as $date) {
+                /** @var Availability $row */
+                $row = $rows->get($date);
+                $row->update([$side => $row->{$side} + $units]);
+
+                $booking->holds()->create([
+                    'session_id' => null,
+                    'room_type_id' => $roomType->id,
+                    'date' => $date,
+                    'units' => $units,
+                    'expires_at' => $expiresAt,
+                    // A confirmed stay's holds are already released — they
+                    // are the audit trail, not live inventory (§6).
+                    'released_at' => $side === 'booked' ? now() : null,
+                ]);
+            }
+
+            // Re-price the whole stay: the nights it keeps may be priced
+            // differently than the nights it had, and the rate plan's
+            // adjustment applies to each night the same way place() did.
+            $subtotal = 0;
+
+            foreach ($booking->rooms as $room) {
+                $perUnit = 0;
+                $room->nights()->delete();
+
+                foreach ($newDates as $date) {
+                    $price = $this->rates->nightlyPrice($roomType, CarbonImmutable::parse($date), Availability::query()
+                        ->where('room_type_id', $roomType->id)->where('date', $date)->first());
+
+                    if ($price === null) {
+                        throw new NoAvailabilityException($date);
+                    }
+
+                    $price = $room->ratePlan?->adjust($price) ?? $price;
+                    $room->nights()->create(['date' => $date, 'price' => $price]);
+                    $perUnit += $price;
+                }
+
+                $room->forceFill([
+                    'price_total' => $perUnit,
+                    'adults' => (int) ceil($adults / $units),
+                    'children' => (int) floor($children / $units),
+                ])->save();
+
+                $subtotal += $perUnit;
+            }
+
+            $cityTax = self::cityTax($adults, $children, $nights);
+            $extras = (int) $booking->extras()->sum('total');
+            $total = $subtotal + $extras + $cityTax - $booking->discount_total;
+
+            $booking->forceFill([
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'nights' => $nights,
+                'adults' => $adults,
+                'children' => $children,
+                'subtotal' => $subtotal,
+                'city_tax' => $cityTax,
+                'total' => $total,
+                'balance_due' => $total - $booking->paid_amount,
+                // The deposit was asked for once; it does not grow with
+                // the stay, and cannot exceed what is now owed.
+                'deposit_due' => min($booking->deposit_due, $total),
+            ])->save();
+
+            $this->recordHistory($booking, $booking->status, $booking->status, 'Stay changed at the desk: '.implode('–', [$checkIn->toDateString(), $checkOut->toDateString()]));
+
+            app(Webhooks::class)->emit('booking.updated', $this->webhookPayload($booking->fresh()));
+
+            return $booking->fresh();
+        });
+    }
+
+    /**
+     * The nights a stay occupies: every date from check-in up to but not
+     * including check-out (§6).
+     *
+     * @return array<int,string>
+     */
+    protected function nightDates(CarbonInterface $checkIn, CarbonInterface $checkOut): array
+    {
+        $dates = [];
+        $cursor = CarbonImmutable::instance($checkIn)->startOfDay();
+        $end = CarbonImmutable::instance($checkOut)->startOfDay();
+
+        while ($cursor < $end) {
+            $dates[] = $cursor->toDateString();
+            $cursor = $cursor->addDay();
+        }
+
+        return $dates;
+    }
+
+    /**
      * Move a booking through the state machine, diffing inventory sides.
      */
     public function transition(Booking $booking, BookingStatus $to, ?string $reason = null, ?int $userId = null): Booking

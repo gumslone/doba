@@ -53,6 +53,17 @@ class BookingRoom extends Model
     }
 
     /**
+     * The plan this room was sold on, if any — its adjustment is what a
+     * re-priced night still has to carry.
+     *
+     * @return BelongsTo<RatePlan, $this>
+     */
+    public function ratePlan(): BelongsTo
+    {
+        return $this->belongsTo(RatePlan::class);
+    }
+
+    /**
      * @return BelongsTo<RoomType, $this>
      */
     public function roomType(): BelongsTo
