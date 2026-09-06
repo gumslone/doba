@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\AdminRatePlanController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminRoomController;
+use App\Http\Controllers\Admin\AdminRoomTypeController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVenueController;
@@ -212,6 +213,12 @@ Route::prefix('admin')->group(function (): void {
 
         Route::get('invoices', [AdminInvoiceController::class, 'index'])->name('admin.invoices');
         Route::get('invoices/{invoice}.pdf', [AdminInvoiceController::class, 'download'])->name('admin.invoices.download');
+
+        Route::get('room-types', [AdminRoomTypeController::class, 'index'])->name('admin.room-types');
+        Route::get('room-types/create', [AdminRoomTypeController::class, 'create'])->name('admin.room-types.create');
+        Route::post('room-types', [AdminRoomTypeController::class, 'store'])->name('admin.room-types.store');
+        Route::get('room-types/{roomType}/edit', [AdminRoomTypeController::class, 'edit'])->name('admin.room-types.edit');
+        Route::put('room-types/{roomType}', [AdminRoomTypeController::class, 'update'])->name('admin.room-types.update');
 
         Route::get('rate-plans', [AdminRatePlanController::class, 'index'])->name('admin.rate-plans');
         Route::get('rate-plans/create', [AdminRatePlanController::class, 'create'])->name('admin.rate-plans.create');

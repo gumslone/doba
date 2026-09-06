@@ -24,6 +24,7 @@
             ['/admin/reports', __('admin.reports'), 'admin/reports*'],
         ],
         __('admin.group_selling') => [
+            ['/admin/room-types', __('admin.room_types'), 'admin/room-types*'],
             ['/admin/rate-plans', __('admin.rate_plans'), 'admin/rate-plans*'],
             ['/admin/extras', __('admin.extras'), 'admin/extras*'],
             ['/admin/promo-codes', __('admin.promo_codes'), 'admin/promo-codes*'],
