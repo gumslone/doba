@@ -157,6 +157,73 @@ class InvoiceBuilder
     }
 
     /**
+     * Reverse an invoice in full (§8).
+     *
+     * A stay cancelled after its invoice was issued leaves a document
+     * that claims money nobody owes. Tax law in the markets this targets
+     * does not allow that document to be deleted or edited; it allows it
+     * to be REVERSED, by a second document in the same numbered series
+     * that mirrors every line with the opposite sign. That is what this
+     * writes: the original's lines negated, the same VAT split, a pointer
+     * to the invoice it cancels, and the next number in the sequence —
+     * never a number of its own, because a gapless series is the first
+     * thing an audit checks.
+     *
+     * Idempotent: an invoice reversed twice has one credit note.
+     */
+    public function creditNote(Invoice $original, ?CarbonImmutable $at = null): Invoice
+    {
+        if ($original->isCreditNote()) {
+            throw new \InvalidArgumentException("Invoice {$original->number} is itself a credit note.");
+        }
+
+        $existing = Invoice::query()->where('credits_invoice_id', $original->id)->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $at ??= CarbonImmutable::now(config('doba.timezone'));
+        $original->loadMissing('lines');
+
+        $lines = $original->lines->map(static fn ($line): array => [
+            'description' => $line->description,
+            'quantity' => $line->quantity,
+            'tax_rate' => $line->tax_rate,
+            'unit_net' => -$line->unit_net,
+            'line_net' => -$line->line_net,
+            'tax_amount' => -$line->tax_amount,
+            'line_gross' => -$line->line_gross,
+            'sort_order' => $line->sort_order,
+        ])->all();
+
+        return DB::transaction(function () use ($original, $lines, $at): Invoice {
+            [$year, $sequence] = $this->nextNumber($at);
+
+            $note = Invoice::query()->create([
+                'booking_id' => $original->booking_id,
+                'kind' => Invoice::CREDIT_NOTE,
+                'credits_invoice_id' => $original->id,
+                'number' => sprintf('%d-%04d', $year, $sequence),
+                'year' => $year,
+                'sequence' => $sequence,
+                'issued_at' => $at,
+                'currency' => $original->currency,
+                'net_total' => -$original->net_total,
+                'tax_total' => -$original->tax_total,
+                'gross_total' => -$original->gross_total,
+                // The same recipient as the original: a credit note to a
+                // different name reverses nothing.
+                'billed_to' => $original->billed_to,
+            ]);
+
+            $note->lines()->createMany($lines);
+
+            return $note->load('lines');
+        });
+    }
+
+    /**
      * The next sequential number for the year (§8).
      *
      * Taken inside the caller's transaction with a locking read, so two

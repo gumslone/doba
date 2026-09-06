@@ -308,6 +308,23 @@ class BookingController extends Controller
      * carries their name and address, so it can never be served from a
      * public disk or a guessable URL.
      */
+    /**
+     * The credit note, gated exactly like the invoice it reverses.
+     */
+    public function creditNote(string $reference, string $token, InvoiceRenderer $renderer): Response
+    {
+        $note = $this->findByToken($reference, $token)->creditNote;
+
+        if ($note === null) {
+            throw new NotFoundHttpException('No credit note has been issued for this booking.');
+        }
+
+        return response($renderer->render($note), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$note->number.'.pdf"',
+        ]);
+    }
+
     public function invoice(string $reference, string $token, InvoiceRenderer $renderer): Response
     {
         $invoice = $this->findByToken($reference, $token)->invoice;

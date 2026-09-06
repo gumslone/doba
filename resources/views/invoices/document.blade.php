@@ -58,8 +58,11 @@
                 @endif
             </td>
             <td class="right">
-                <h1>{{ __('invoice.title', [], $locale) }}</h1>
+                <h1>{{ __($invoice->isCreditNote() ? 'invoice.credit_note' : 'invoice.title', [], $locale) }}</h1>
                 <span class="muted">{{ __('invoice.number', [], $locale) }}</span> <strong>{{ $invoice->number }}</strong><br>
+                @if ($invoice->isCreditNote() && $invoice->creditsInvoice)
+                    <span class="muted">{{ __('invoice.credits', ['number' => $invoice->creditsInvoice->number], $locale) }}</span><br>
+                @endif
                 <span class="muted">{{ __('invoice.issued', [], $locale) }}</span> {{ $invoice->issued_at->translatedFormat('j F Y') }}<br>
                 <span class="muted">{{ __('booking.reference', [], $locale) }}</span> {{ $invoice->booking?->reference }}
             </td>

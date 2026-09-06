@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 /**
@@ -14,12 +15,14 @@ use Illuminate\Support\Collection;
  * @property int $net_total
  * @property int $tax_total
  * @property int $gross_total
+ * @property string $kind
+ * @property int|null $credits_invoice_id
  * @property array<string,mixed>|null $billed_to
  */
 class Invoice extends Model
 {
     protected $fillable = [
-        'booking_id', 'number', 'year', 'sequence', 'issued_at', 'pdf_path',
+        'booking_id', 'kind', 'credits_invoice_id', 'number', 'year', 'sequence', 'issued_at', 'pdf_path',
         'currency', 'net_total', 'tax_total', 'gross_total', 'billed_to',
     ];
 
@@ -67,5 +70,34 @@ class Invoice extends Model
             ])
             ->sortBy('rate')
             ->values();
+    }
+
+    public const INVOICE = 'invoice';
+
+    public const CREDIT_NOTE = 'credit_note';
+
+    public function isCreditNote(): bool
+    {
+        return $this->kind === self::CREDIT_NOTE;
+    }
+
+    /**
+     * The invoice this credit note reverses.
+     *
+     * @return BelongsTo<self, $this>
+     */
+    public function creditsInvoice(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'credits_invoice_id');
+    }
+
+    /**
+     * The credit note that reversed this invoice, if one was issued.
+     *
+     * @return HasOne<self, $this>
+     */
+    public function creditNote(): HasOne
+    {
+        return $this->hasOne(self::class, 'credits_invoice_id');
     }
 }

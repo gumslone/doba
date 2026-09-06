@@ -22,4 +22,6 @@ return [
     'footer' => 'Alle Beträge verstehen sich inklusive der ausgewiesenen Mehrwertsteuer. Vielen Dank für Ihren Aufenthalt.',
 
     'loyalty_discount' => 'Stammgast-Rabatt',
+    'credit_note' => 'Gutschrift',
+    'credits' => 'Storniert Rechnung :number',
 ];

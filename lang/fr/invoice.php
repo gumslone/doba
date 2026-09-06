@@ -22,4 +22,6 @@ return [
     'footer' => 'Tous les montants incluent la TVA aux taux indiqués. Merci de votre séjour.',
 
     'loyalty_discount' => 'Remise client fidèle',
+    'credit_note' => 'Avoir',
+    'credits' => 'Annule la facture :number',
 ];

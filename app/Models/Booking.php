@@ -156,9 +156,24 @@ class Booking extends Model
     /**
      * @return HasOne<Invoice, $this>
      */
+    /**
+     * The invoice proper — never the credit note that may sit beside it.
+     *
+     * @return HasOne<Invoice, $this>
+     */
     public function invoice(): HasOne
     {
-        return $this->hasOne(Invoice::class);
+        return $this->hasOne(Invoice::class)->where('kind', Invoice::INVOICE);
+    }
+
+    /**
+     * The credit note issued when this stay was cancelled after invoicing.
+     *
+     * @return HasOne<Invoice, $this>
+     */
+    public function creditNote(): HasOne
+    {
+        return $this->hasOne(Invoice::class)->where('kind', Invoice::CREDIT_NOTE);
     }
 
     /**

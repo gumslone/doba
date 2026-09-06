@@ -628,6 +628,17 @@ class BookingService
             $this->webhookPayload($booking),
         );
 
+        if ($booking->status === BookingStatus::Cancelled) {
+            // A stay cancelled after invoicing leaves a document claiming
+            // money nobody owes. It cannot be deleted; it is reversed, by
+            // a credit note in the same series (§8).
+            $invoice = $booking->invoice()->first();
+
+            if ($invoice !== null) {
+                app(InvoiceBuilder::class)->creditNote($invoice);
+            }
+        }
+
         if ($booking->status === BookingStatus::Confirmed) {
             // The invoice is issued first so the mail can carry it.
             app(InvoiceBuilder::class)->issue($booking);

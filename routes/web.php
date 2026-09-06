@@ -296,6 +296,8 @@ foreach ($locales as $locale) {
             Route::get($booking.'/pay/{reference}', [BookingController::class, 'pay'])->name('booking.pay');
             Route::get($booking.'/confirmation/{reference}', [BookingController::class, 'confirmation'])->name('booking.confirmation');
             Route::get($booking.'/manage/{reference}/{token}', [BookingController::class, 'manage'])->name('booking.manage');
+            Route::get($booking.'/manage/{reference}/{token}/credit-note.pdf', [BookingController::class, 'creditNote'])
+                ->name('booking.credit-note');
             Route::get($booking.'/manage/{reference}/{token}/invoice.pdf', [BookingController::class, 'invoice'])
                 ->name('booking.invoice');
             // Settling the balance online (§8): POST creates the intent,

@@ -11,6 +11,9 @@
                 <div>
                     <a href="/admin/invoices/{{ $invoice->id }}.pdf" target="_blank"
                        class="font-mono font-medium hover:underline">{{ $invoice->number }}</a>
+                    @if ($invoice->isCreditNote())
+                        <span class="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900">{{ __('admin.credit_note') }}</span>
+                    @endif
                     <p class="text-sm text-neutral-500">
                         {{ $invoice->issued_at->translatedFormat('j M Y') }} ·
                         {{ $invoice->booking?->reference }} ·

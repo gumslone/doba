@@ -562,4 +562,5 @@ return [
     'room_type_untranslated' => 'No name in this language: the room is not shown to guests reading it.',
     'room_type_photos' => 'Photos',
     'room_type_doors' => 'doors listed',
+    'credit_note' => 'credit note',
 ];

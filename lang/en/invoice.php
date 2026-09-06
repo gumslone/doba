@@ -22,4 +22,6 @@ return [
     'footer' => 'All amounts include VAT at the rates shown. Thank you for staying with us.',
 
     'loyalty_discount' => 'Returning-guest discount',
+    'credit_note' => 'Credit note',
+    'credits' => 'Reverses invoice :number',
 ];

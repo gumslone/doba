@@ -22,4 +22,6 @@ return [
     'footer' => 'Alle bedragen zijn inclusief de vermelde btw. Dank voor uw verblijf.',
 
     'loyalty_discount' => 'Korting terugkerende gast',
+    'credit_note' => 'Creditnota',
+    'credits' => 'Crediteert factuur :number',
 ];

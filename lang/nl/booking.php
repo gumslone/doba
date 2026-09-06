@@ -143,4 +143,5 @@ return [
 
     'loyalty_discount' => 'Korting voor terugkerende gasten',
     'loyalty_hint' => 'Al eerder bij ons geweest? Boek met hetzelfde e-mailadres en uw korting van :percent% voor terugkerende gasten wordt automatisch verrekend.',
+    'download_credit_note' => 'Creditnota :number downloaden',
 ];

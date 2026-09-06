@@ -22,4 +22,6 @@ return [
     'footer' => 'Wszystkie kwoty zawierają VAT według wskazanych stawek. Dziękujemy za pobyt u nas.',
 
     'loyalty_discount' => 'Rabat dla stałego gościa',
+    'credit_note' => 'Faktura korygująca',
+    'credits' => 'Koryguje fakturę :number',
 ];

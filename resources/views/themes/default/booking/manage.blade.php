@@ -151,6 +151,14 @@
             </p>
         @endif
 
+        @if ($booking->creditNote)
+            <p class="mt-3 text-sm">
+                <a href="{{ Localization::route('booking.credit-note', ['reference' => $booking->reference, 'token' => $token]) }}" class="underline">
+                    {{ __('booking.download_credit_note', ['number' => $booking->creditNote->number]) }}
+                </a>
+            </p>
+        @endif
+
         @if ($booking->status->canTransitionTo(BookingStatus::Cancelled))
             <form method="POST"
                   action="{{ Localization::route('booking.cancel', ['reference' => $booking->reference, 'token' => $token]) }}"
