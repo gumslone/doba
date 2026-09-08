@@ -806,6 +806,14 @@ describing a configuration that no longer exists is worse than none.
   `p=reject`, because publishing reject on day one with SPF slightly wrong
   stops a hotel delivering its own confirmations.
 
+**The words are the hotel's.** Subject, heading, opening and closing
+line of the confirmation, the pre-arrival and the thank-you mail are
+editable under **Admin → Mail → Mail wording**, one box per language,
+with the shipped text greyed in as the starting point. Placeholders
+(`:name`, `:hotel`, `:date`, `:reference`) keep working; a language left
+empty keeps the shipped text, so switching the site's languages can never
+send a guest an empty line.
+
 ## The front desk
 
 The screen a hotel stands in front of all morning, and where the admin
@@ -819,8 +827,12 @@ booking list to work them out from.
   no time sorts **last**: an unknown arrival is not an early one.
 - **In-house includes stays that began days ago.** An occupied room is
   occupied whether or not the guest arrived this morning.
-- **Checked out today** is the housekeeping list: rooms free to clean and
-  resell, with the time each guest actually left.
+- **Checked out today** shows the rooms free to clean and resell, with
+  the time each guest actually left — and links to **Housekeeping**, a
+  phone-sized list with one big button per door: dirty doors with a guest
+  arriving today first (earliest stated arrival on top), then the rest,
+  then doors still occupied by somebody leaving today, without a button.
+  No guest names on it; housekeeping needs the door, not the person.
 - **Late checkout is a request, never an answer.** A guest asks from their
   manage link; the desk grants a time or declines, because the room may be
   sold to somebody arriving at three. The two are separate columns
@@ -850,6 +862,16 @@ language's title unpublishes that language: its URL, `hreflang` entry and
 sitemap line all disappear together. The demo seeder creates
 `admin@example.com` / `password` (override with `DOBA_ADMIN_EMAIL` /
 `DOBA_ADMIN_PASSWORD` before seeding anything public-facing).
+
+- **Enquiries** is the contact form's inbox: unread, answered, spam and
+  all, with a sidebar badge for what nobody has read. The answer is
+  written in the panel and goes out as the hotel's own mail, Reply-To the
+  hotel inbox, subject offered in the guest's language, kept on the
+  enquiry with who sent it and when. The spam filter's catches are kept
+  where a false positive can be rescued in one click.
+- **Invoices** lists every invoice and credit note and exports a period as
+  CSV — one row per document, decimal amounts, the VAT split into a column
+  pair per rate, a credit note as a negative row naming what it reverses.
 
 ## Theming & custom styles
 
@@ -941,7 +963,8 @@ wizard and the public API, is in
 | 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds), **balance payment**, city tax, lifecycle mail | **done** |
 | — | Events, WYSIWYG admin, customizable styles, security headers | **done** |
 | — | Invoices, **iCal channel sync**, promo codes, eight style presets, **restaurant & menu** | **done** |
-| — | Install wizard + installers, safe updater with health checks, backups, reports, front desk, **guest book with GDPR export/erasure**, physical rooms & housekeeping, directory listing, **six languages**, **apartments** (cleaning fee, minimum stay, bedrooms) | **done** |
+| — | Install wizard + installers, safe updater with health checks, backups, reports, front desk, **guest book with GDPR export/erasure**, physical rooms & housekeeping, directory listing, **six languages** | **done** |
+| — | Desk bookings and stay changes, settings and room-type editors, credit notes, offsite backups + failure alerts, multi-room bookings, 2FA and remember-me, **apartments**, enquiries inbox, editable mail wording, housekeeping list, invoice CSV | **done** |
 | 4 | First hotel live | planned |
 | 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
 | 6 | Public REST API + ARI push + webhooks + **OpenAPI 3.1 contract** | **done** |
