@@ -175,6 +175,7 @@
             <h2 class="border-b border-neutral-200 px-4 py-3 font-medium">
                 {{ __('admin.checked_out_today') }} <span class="text-neutral-400">{{ $departed->count() }}</span>
                 <span class="ml-1 text-xs font-normal text-neutral-500">{{ __('admin.rooms_free') }}</span>
+                <a href="/admin/housekeeping" class="ml-2 text-xs font-normal underline">{{ __('admin.housekeeping') }}</a>
             </h2>
 
             <ul class="divide-y divide-neutral-100">

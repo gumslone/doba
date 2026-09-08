@@ -658,4 +658,21 @@ return [
     'mail_wording_key_post_stay_heading' => 'After the stay — heading',
     'mail_wording_key_post_stay_intro' => 'After the stay — opening line',
     'mail_wording_key_post_stay_outro' => 'After the stay — closing line',
+
+    // Housekeeping list (§12)
+    'housekeeping' => 'Housekeeping',
+    'housekeeping_summary' => '{0} Nothing to clean|{1} 1 door to clean|[2,*] :count doors to clean',
+    'housekeeping_arriving' => '{1} 1 with a guest arriving today|[2,*] :count with guests arriving today',
+    'housekeeping_departing' => '{1} 1 leaving today|[2,*] :count leaving today',
+    'housekeeping_no_rooms' => 'No doors are listed yet, so there is nothing to clean. List them under',
+    'housekeeping_group_priority' => 'First — a guest arrives today',
+    'housekeeping_group_dirty' => 'To clean',
+    'housekeeping_group_departing' => 'Leaving today, still occupied',
+    'housekeeping_group_out_of_order' => 'Out of order',
+    'housekeeping_group_clean' => 'Clean',
+    'housekeeping_arriving_today' => 'arriving today',
+    'housekeeping_mark_clean' => 'Clean ✓',
+    'housekeeping_mark_dirty' => 'Needs cleaning',
+    'housekeeping_cleaned' => 'Room :number is clean.',
+    'housekeeping_dirtied' => 'Room :number is on the list.',
 ];

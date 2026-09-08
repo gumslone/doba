@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminFrontDeskController;
 use App\Http\Controllers\Admin\AdminGuestController;
+use App\Http\Controllers\Admin\AdminHousekeepingController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminMailController;
 use App\Http\Controllers\Admin\AdminMailWordingController;
@@ -189,6 +190,10 @@ Route::prefix('admin')->group(function (): void {
         Route::post('reviews/{review}/unpublish', [AdminReviewController::class, 'unpublish'])->name('admin.reviews.unpublish');
         Route::post('reviews/{review}/respond', [AdminReviewController::class, 'respond'])->name('admin.reviews.respond');
         Route::post('reviews/{review}/delete', [AdminReviewController::class, 'destroy'])->name('admin.reviews.destroy');
+
+        Route::get('housekeeping', [AdminHousekeepingController::class, 'index'])->name('admin.housekeeping');
+        Route::post('housekeeping/{room}/clean', [AdminHousekeepingController::class, 'clean'])->name('admin.housekeeping.clean');
+        Route::post('housekeeping/{room}/dirty', [AdminHousekeepingController::class, 'dirty'])->name('admin.housekeeping.dirty');
 
         Route::get('rooms', [AdminRoomController::class, 'index'])->name('admin.rooms');
         Route::post('rooms', [AdminRoomController::class, 'store'])->name('admin.rooms.store');

@@ -17,9 +17,10 @@
         __('admin.group_today') => [
             ['/admin/front-desk', __('admin.front_desk'), 'admin/front-desk*'],
             ['/admin/guests', __('admin.guests'), 'admin/guests*'],
-            // The one badge in the sidebar: mail that nobody has read yet.
+            // Badges are for what is waiting on a person: unread mail, dirty doors.
             ['/admin/enquiries', __('admin.enquiries'), 'admin/enquiries*', \App\Models\Enquiry::unreadCount()],
             ['/admin/rooms', __('admin.rooms'), 'admin/rooms*'],
+            ['/admin/housekeeping', __('admin.housekeeping'), 'admin/housekeeping*', \App\Http\Controllers\Admin\AdminHousekeepingController::dirtyCount()],
             ['/admin/reviews', __('admin.reviews'), 'admin/reviews*'],
             ['/admin/availability', __('admin.availability'), 'admin/availability*'],
             ['/admin/invoices', __('admin.invoices'), 'admin/invoices*'],
