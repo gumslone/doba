@@ -54,7 +54,9 @@
                                        class="hover:underline">{{ $roomType->t('name') }}</a>
                                 </h2>
                                 <p class="mt-1 text-sm text-neutral-500">
+                                    @if ($roomType->isApartment()) {{ __('common.kind_apartment') }} · @endif
                                     {{ __('common.guests', ['count' => $roomType->max_occupancy]) }}
+                                    @if ($roomType->isApartment() && $roomType->bedrooms) · {{ trans_choice('common.bedrooms', $roomType->bedrooms) }} @endif
                                     @if ($roomType->size_sqm) · {{ __('common.sqm', ['size' => $roomType->size_sqm]) }} @endif
                                     @if ($roomType->bed_setup) · {{ $roomType->bed_setup }} @endif
                                 </p>
@@ -81,6 +83,13 @@
                                 <p class="text-sm text-neutral-500">
                                     {{ Money::format($offer['per_night']) }} {{ __('common.per_night') }}
                                 </p>
+                                @if ($roomType->cleaning_fee > 0)
+                                    {{-- Shown beside the price, not inside it: the nightly
+                                         rate is comparable across types, the fee is not. --}}
+                                    <p class="text-sm text-neutral-500">
+                                        + {{ Money::format($roomType->cleaning_fee * $stay['units']) }} {{ __('common.cleaning_fee') }}
+                                    </p>
+                                @endif
                                 <a href="{{ Localization::route('booking.checkout', array_merge([
                                         'room_type' => $roomType->id,
                                     ], [

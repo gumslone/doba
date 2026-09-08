@@ -24,4 +24,7 @@ return [
     'loyalty_discount' => 'Korting terugkerende gast',
     'credit_note' => 'Creditnota',
     'credits' => 'Crediteert factuur :number',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Eindschoonmaak',
 ];

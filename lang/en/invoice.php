@@ -24,4 +24,7 @@ return [
     'loyalty_discount' => 'Returning-guest discount',
     'credit_note' => 'Credit note',
     'credits' => 'Reverses invoice :number',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Final cleaning',
 ];

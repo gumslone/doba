@@ -21,7 +21,9 @@
                 <span>▢ {{ __('common.sqm', ['size' => $roomType->size_sqm]) }}</span>
             @endif
             <span>◍ {{ __('common.guests', ['count' => $roomType->max_occupancy]) }}</span>
-            @if ($roomType->bed_setup)
+            @if ($roomType->isApartment() && $roomType->bedrooms)
+                <span>⌂ {{ trans_choice('common.bedrooms', $roomType->bedrooms) }}</span>
+            @elseif ($roomType->bed_setup)
                 <span>⌾ {{ $roomType->bed_setup }}</span>
             @endif
         </div>
@@ -45,6 +47,9 @@
                     <span class="price-from">{{ __('common.from') }}</span>
                     <span class="price">{{ Money::format($roomType->default_rate) }}</span>
                     <small>{{ __('common.per_night') }}</small>
+                    @if ($roomType->cleaning_fee > 0)
+                        <small style="display:block">+ {{ Money::format($roomType->cleaning_fee) }} {{ __('common.cleaning_fee') }}</small>
+                    @endif
                 </div>
             @else
                 <div></div>

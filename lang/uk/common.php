@@ -45,4 +45,14 @@ return [
     'review_rating' => ':rating з 5 зірок',
     'verified_stay' => 'підтверджене проживання',
     'hotel_replied' => 'Відповідь готелю',
+
+    // Apartments (§5)
+    'kind_room' => 'Номер',
+    'kind_apartment' => 'Апартаменти',
+    'bedrooms' => '{1} :count спальня|[2,4] :count спальні|[5,*] :count спалень',
+    'bathrooms' => '{1} :count ванна кімната|[2,4] :count ванні кімнати|[5,*] :count ванних кімнат',
+    'cleaning_fee' => 'Плата за прибирання',
+    'per_stay' => 'за перебування',
+    'min_nights' => 'Мінімальне перебування',
+    'our_rooms_and_apartments' => 'Номери та апартаменти',
 ];

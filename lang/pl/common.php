@@ -45,4 +45,14 @@ return [
     'review_rating' => ':rating na 5 gwiazdek',
     'verified_stay' => 'zweryfikowany pobyt',
     'hotel_replied' => 'Odpowiedź hotelu',
+
+    // Apartments (§5)
+    'kind_room' => 'Pokój',
+    'kind_apartment' => 'Apartament',
+    'bedrooms' => '{1} :count sypialnia|[2,4] :count sypialnie|[5,*] :count sypialni',
+    'bathrooms' => '{1} :count łazienka|[2,4] :count łazienki|[5,*] :count łazienek',
+    'cleaning_fee' => 'Opłata za sprzątanie',
+    'per_stay' => 'za pobyt',
+    'min_nights' => 'Minimalny pobyt',
+    'our_rooms_and_apartments' => 'Pokoje i apartamenty',
 ];

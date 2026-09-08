@@ -45,4 +45,14 @@ return [
     'review_rating' => ':rating van 5 sterren',
     'verified_stay' => 'geverifieerd verblijf',
     'hotel_replied' => 'Antwoord van het hotel',
+
+    // Apartments (§5)
+    'kind_room' => 'Kamer',
+    'kind_apartment' => 'Appartement',
+    'bedrooms' => '{1} :count slaapkamer|[2,*] :count slaapkamers',
+    'bathrooms' => '{1} :count badkamer|[2,*] :count badkamers',
+    'cleaning_fee' => 'Schoonmaakkosten',
+    'per_stay' => 'per verblijf',
+    'min_nights' => 'Minimumverblijf',
+    'our_rooms_and_apartments' => 'Kamers & appartementen',
 ];

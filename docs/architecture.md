@@ -191,7 +191,7 @@ Written to run unchanged on MySQL 8 and SQLite 3.35+. Constraints of the portabl
 ### Core inventory
 
 **`room_types`** — the sellable unit (a *category*, not a physical room)
-`id`, `code` (internal, stable, non-routing), `base_occupancy`, `max_occupancy`, `max_adults`, `max_children`, `extra_adult_price`, `extra_child_price`, `size_sqm`, `bed_setup`, `default_rate`, `total_units` (how many physical rooms of this type exist), `sort_order`, `is_active`, timestamps
+`id`, `code` (internal, stable, non-routing), `kind` (`room` | `apartment` — an apartment is sold like a room and additionally carries `bedrooms`, `bathrooms`, a `cleaning_fee` charged once per unit per stay, and a `min_nights` floor under the grid's per-date `min_stay`), `base_occupancy`, `max_occupancy`, `max_adults`, `max_children`, `extra_adult_price`, `extra_child_price`, `size_sqm`, `bed_setup`, `default_rate`, `total_units` (how many physical rooms of this type exist), `sort_order`, `is_active`, timestamps
 
 **`room_type_translations`** — `id`, `room_type_id`, `locale`, **`slug`**, `name`, `short_description`, `description`, `meta_title`, `meta_description`; unique on (`room_type_id`, `locale`) and on (`locale`, `slug`)
 

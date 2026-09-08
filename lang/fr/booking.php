@@ -146,4 +146,7 @@ return [
     'download_credit_note' => 'Télécharger l\'avoir :number',
     'rooms' => 'Chambres',
     'rooms_count' => 'pour :count chambres',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Frais de ménage',
 ];

@@ -66,7 +66,9 @@ final class JsonLd
     }
 
     /**
-     * A room type as schema.org/HotelRoom, with its "from" price as an Offer.
+     * A room type as schema.org/HotelRoom — or schema.org/Apartment for a
+     * self-catering unit, which is what a search engine files under
+     * "holiday apartments in …" — with its "from" price as an Offer.
      *
      * @param  array<string,mixed>  $context
      * @return array<string,mixed>
@@ -77,7 +79,7 @@ final class JsonLd
 
         return array_filter([
             '@context' => 'https://schema.org',
-            '@type' => 'HotelRoom',
+            '@type' => $roomType->isApartment() ? 'Apartment' : 'HotelRoom',
             '@id' => Arr::get($context, 'url').'#room',
             'name' => $roomType->t('name', $locale),
             'description' => $roomType->t('short_description', $locale)
@@ -99,6 +101,10 @@ final class JsonLd
                 'value' => $roomType->size_sqm,
                 'unitCode' => 'MTK', // square metre
             ] : null,
+            // Accommodation properties, so a flat with two bedrooms is not
+            // indexed as a studio. Null for a room, where they mean nothing.
+            'numberOfBedrooms' => $roomType->isApartment() ? $roomType->bedrooms : null,
+            'numberOfBathroomsTotal' => $roomType->isApartment() ? $roomType->bathrooms : null,
             'amenityFeature' => array_map(static fn (string $name): array => [
                 '@type' => 'LocationFeatureSpecification',
                 'name' => $name,

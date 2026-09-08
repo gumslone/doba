@@ -722,12 +722,20 @@ components:
       type: object
       additionalProperties: false
       required:
-        [code, names, slugs, base_occupancy, max_occupancy, total_units,
-         size_sqm, default_rate, amenities, images]
+        [code, kind, names, slugs, base_occupancy, max_occupancy, total_units,
+         size_sqm, bedrooms, bathrooms, default_rate, cleaning_fee, min_nights,
+         amenities, images]
       properties:
         code:
           type: string
           description: The stable identifier. Names are translated, codes are not.
+        kind:
+          type: string
+          enum: [room, apartment]
+          description: |
+            A hotel room, or a self-catering apartment. Both are booked
+            the same way; an apartment carries a cleaning fee and may
+            insist on a minimum stay.
         names:
           type: object
           description: Locale to name.
@@ -740,7 +748,23 @@ components:
         max_occupancy: { type: integer }
         total_units: { type: integer }
         size_sqm: { type: [integer, 'null'] }
+        bedrooms:
+          type: [integer, 'null']
+          description: Apartments only; null for a room.
+        bathrooms: { type: [integer, 'null'] }
         default_rate: { $ref: '#/components/schemas/Money' }
+        cleaning_fee:
+          $ref: '#/components/schemas/Money'
+          description: |
+            Charged once per unit per stay, on top of the nightly rates.
+            Zero for a room. A partner quoting an apartment adds it to
+            the offer total.
+        min_nights:
+          type: integer
+          minimum: 1
+          description: |
+            The shortest stay this type sells. The availability calendar
+            may raise it on particular arrival dates, never lower it.
         amenities:
           type: array
           items: { type: string }
@@ -870,13 +894,18 @@ components:
     Offer:
       type: object
       additionalProperties: false
-      required: [room_type, total, per_night, units_left, rate_plans]
+      required: [room_type, total, per_night, cleaning_fee, units_left, rate_plans]
       properties:
         room_type: { type: string }
         total:
           $ref: '#/components/schemas/Money'
-          description: The whole stay on the default plan, not one night.
+          description: |
+            The whole stay on the default plan, not one night. Nightly
+            rates only — add `cleaning_fee` for what the guest pays.
         per_night: { $ref: '#/components/schemas/Money' }
+        cleaning_fee:
+          $ref: '#/components/schemas/Money'
+          description: Once per unit per stay; zero for a room.
         units_left: { type: integer }
         rate_plans:
           type: array
@@ -965,8 +994,8 @@ components:
       required:
         [reference, status, source, check_in, check_out, nights, adults,
          children, rooms, guest, subtotal, extras_total, city_tax,
-         discount_total, total, balance_due, hold_expires_at, created_at,
-         updated_at]
+         cleaning_fee, discount_total, total, balance_due, hold_expires_at,
+         created_at, updated_at]
       properties:
         reference: { type: string }
         status: { $ref: '#/components/schemas/BookingStatus' }
@@ -1009,6 +1038,11 @@ components:
             Municipal visitor's tax, per person per night, outside VAT
             and outside the room price. Zero where no municipality
             levies one.
+        cleaning_fee:
+          $ref: '#/components/schemas/Money'
+          description: |
+            Apartment cleaning, once per unit per stay. Inside `total`,
+            outside `subtotal` and outside every discount.
         discount_total: { $ref: '#/components/schemas/Money' }
         total: { $ref: '#/components/schemas/Money' }
         balance_due: { $ref: '#/components/schemas/Money' }

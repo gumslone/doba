@@ -24,4 +24,7 @@ return [
     'loyalty_discount' => 'Remise client fidèle',
     'credit_note' => 'Avoir',
     'credits' => 'Annule la facture :number',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Ménage de fin de séjour',
 ];

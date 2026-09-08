@@ -941,7 +941,7 @@ wizard and the public API, is in
 | 3 | Payments (Stripe/PayPal/LiqPay/crypto/manual, webhook-driven, refunds), **balance payment**, city tax, lifecycle mail | **done** |
 | — | Events, WYSIWYG admin, customizable styles, security headers | **done** |
 | — | Invoices, **iCal channel sync**, promo codes, eight style presets, **restaurant & menu** | **done** |
-| — | Install wizard + installers, safe updater with health checks, backups, reports, front desk, **guest book with GDPR export/erasure**, physical rooms & housekeeping, directory listing, **six languages** | **done** |
+| — | Install wizard + installers, safe updater with health checks, backups, reports, front desk, **guest book with GDPR export/erasure**, physical rooms & housekeeping, directory listing, **six languages**, **apartments** (cleaning fee, minimum stay, bedrooms) | **done** |
 | 4 | First hotel live | planned |
 | 5 | Multi-install deploy (iCal sync and reports landed early) | planned |
 | 6 | Public REST API + ARI push + webhooks + **OpenAPI 3.1 contract** | **done** |

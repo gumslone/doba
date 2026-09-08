@@ -1074,13 +1074,18 @@
                 "additionalProperties": false,
                 "required": [
                     "code",
+                    "kind",
                     "names",
                     "slugs",
                     "base_occupancy",
                     "max_occupancy",
                     "total_units",
                     "size_sqm",
+                    "bedrooms",
+                    "bathrooms",
                     "default_rate",
+                    "cleaning_fee",
+                    "min_nights",
                     "amenities",
                     "images"
                 ],
@@ -1088,6 +1093,14 @@
                     "code": {
                         "type": "string",
                         "description": "The stable identifier. Names are translated, codes are not."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "room",
+                            "apartment"
+                        ],
+                        "description": "A hotel room, or a self-catering apartment. Both are booked\nthe same way; an apartment carries a cleaning fee and may\ninsist on a minimum stay.\n"
                     },
                     "names": {
                         "type": "object",
@@ -1118,8 +1131,30 @@
                             "null"
                         ]
                     },
+                    "bedrooms": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "Apartments only; null for a room."
+                    },
+                    "bathrooms": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
                     "default_rate": {
                         "$ref": "#/components/schemas/Money"
+                    },
+                    "cleaning_fee": {
+                        "$ref": "#/components/schemas/Money",
+                        "description": "Charged once per unit per stay, on top of the nightly rates.\nZero for a room. A partner quoting an apartment adds it to\nthe offer total.\n"
+                    },
+                    "min_nights": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "description": "The shortest stay this type sells. The availability calendar\nmay raise it on particular arrival dates, never lower it.\n"
                     },
                     "amenities": {
                         "type": "array",
@@ -1392,6 +1427,7 @@
                     "room_type",
                     "total",
                     "per_night",
+                    "cleaning_fee",
                     "units_left",
                     "rate_plans"
                 ],
@@ -1401,10 +1437,14 @@
                     },
                     "total": {
                         "$ref": "#/components/schemas/Money",
-                        "description": "The whole stay on the default plan, not one night."
+                        "description": "The whole stay on the default plan, not one night. Nightly\nrates only — add `cleaning_fee` for what the guest pays.\n"
                     },
                     "per_night": {
                         "$ref": "#/components/schemas/Money"
+                    },
+                    "cleaning_fee": {
+                        "$ref": "#/components/schemas/Money",
+                        "description": "Once per unit per stay; zero for a room."
                     },
                     "units_left": {
                         "type": "integer"
@@ -1603,6 +1643,7 @@
                     "subtotal",
                     "extras_total",
                     "city_tax",
+                    "cleaning_fee",
                     "discount_total",
                     "total",
                     "balance_due",
@@ -1703,6 +1744,10 @@
                     "city_tax": {
                         "$ref": "#/components/schemas/Money",
                         "description": "Municipal visitor's tax, per person per night, outside VAT\nand outside the room price. Zero where no municipality\nlevies one.\n"
+                    },
+                    "cleaning_fee": {
+                        "$ref": "#/components/schemas/Money",
+                        "description": "Apartment cleaning, once per unit per stay. Inside `total`,\noutside `subtotal` and outside every discount.\n"
                     },
                     "discount_total": {
                         "$ref": "#/components/schemas/Money"

@@ -146,4 +146,7 @@ return [
     'download_credit_note' => 'Download credit note :number',
     'rooms' => 'Rooms',
     'rooms_count' => 'for :count rooms',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Cleaning fee',
 ];

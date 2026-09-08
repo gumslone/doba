@@ -45,4 +45,14 @@ return [
     'review_rating' => ':rating out of 5 stars',
     'verified_stay' => 'verified stay',
     'hotel_replied' => 'Reply from the hotel',
+
+    // Apartments (§5)
+    'kind_room' => 'Room',
+    'kind_apartment' => 'Apartment',
+    'bedrooms' => '{1} :count bedroom|[2,*] :count bedrooms',
+    'bathrooms' => '{1} :count bathroom|[2,*] :count bathrooms',
+    'cleaning_fee' => 'Cleaning fee',
+    'per_stay' => 'per stay',
+    'min_nights' => 'Minimum stay',
+    'our_rooms_and_apartments' => 'Rooms & apartments',
 ];

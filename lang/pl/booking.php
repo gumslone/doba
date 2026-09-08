@@ -146,4 +146,7 @@ return [
     'download_credit_note' => 'Pobierz fakturę korygującą :number',
     'rooms' => 'Pokoje',
     'rooms_count' => 'za :count pokoje',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Opłata za sprzątanie',
 ];

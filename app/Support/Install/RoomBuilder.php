@@ -23,9 +23,14 @@ class RoomBuilder
      * Starting points, so somebody with a twelve-room B&B does not have to
      * describe it from nothing.
      *
-     * @var array<string,array<int,array{name:string,units:int,occupancy:int,price:int}>>
+     * @var array<string,array<int,array{name:string,units:int,occupancy:int,price:int,kind?:string,cleaning_fee?:int,min_nights?:int}>>
      */
     public const TEMPLATES = [
+        'apartments' => [
+            ['name' => 'Studio', 'units' => 4, 'occupancy' => 2, 'price' => 9500, 'kind' => RoomType::APARTMENT, 'cleaning_fee' => 4000, 'min_nights' => 2],
+            ['name' => 'One-bedroom apartment', 'units' => 4, 'occupancy' => 4, 'price' => 13500, 'kind' => RoomType::APARTMENT, 'cleaning_fee' => 5500, 'min_nights' => 3],
+            ['name' => 'Two-bedroom apartment', 'units' => 2, 'occupancy' => 6, 'price' => 18500, 'kind' => RoomType::APARTMENT, 'cleaning_fee' => 7000, 'min_nights' => 3],
+        ],
         'bnb' => [
             ['name' => 'Double room', 'units' => 6, 'occupancy' => 2, 'price' => 9000],
             ['name' => 'Single room', 'units' => 3, 'occupancy' => 1, 'price' => 6500],
@@ -71,6 +76,7 @@ class RoomBuilder
                 'occupancy' => max(1, (int) ($row['occupancy'] ?? 2)),
                 // Entered in whole currency, stored in minor units (§5).
                 'price' => (int) round((float) ($row['price'] ?? 0) * 100),
+                'kind' => ($row['kind'] ?? null) === RoomType::APARTMENT ? RoomType::APARTMENT : RoomType::ROOM,
             ];
         }
 
@@ -78,7 +84,7 @@ class RoomBuilder
     }
 
     /**
-     * @param  array<int,array{name:string,units:int,occupancy:int,price:int}>  $rooms
+     * @param  array<int,array{name:string,units:int,occupancy:int,price:int,kind?:string,cleaning_fee?:int,min_nights?:int}>  $rooms
      */
     protected function create(array $rooms): int
     {
@@ -98,6 +104,9 @@ class RoomBuilder
 
             $roomType = RoomType::create([
                 'code' => $code,
+                'kind' => $room['kind'] ?? RoomType::ROOM,
+                'cleaning_fee' => $room['cleaning_fee'] ?? 0,
+                'min_nights' => $room['min_nights'] ?? 1,
                 'base_occupancy' => min(2, $room['occupancy']),
                 'max_occupancy' => $room['occupancy'],
                 'default_rate' => $room['price'],

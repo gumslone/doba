@@ -51,6 +51,7 @@ class HotelController extends Controller
         return response()->json([
             'data' => array_map(static fn (RoomType $type): array => [
                 'code' => $type->code,
+                'kind' => $type->kind,
                 // Same reason as the address above: an untranslated room
                 // type would otherwise send `"names": []`.
                 'names' => (object) $type->translations->pluck('name', 'locale')->all(),
@@ -59,7 +60,13 @@ class HotelController extends Controller
                 'max_occupancy' => $type->max_occupancy,
                 'total_units' => $type->total_units,
                 'size_sqm' => $type->size_sqm,
+                'bedrooms' => $type->bedrooms,
+                'bathrooms' => $type->bathrooms,
                 'default_rate' => Wire::money($type->default_rate),
+                // Once per unit per stay, on top of the nightly rate. Zero
+                // for a room; a partner quoting an apartment must add it.
+                'cleaning_fee' => Wire::money($type->cleaning_fee),
+                'min_nights' => $type->minNights(),
                 'amenities' => $type->amenities->pluck('code')->values(),
                 // array_map over the plain array rather than Collection::map:
                 // the collection's TValue is invariant, so mapping a model

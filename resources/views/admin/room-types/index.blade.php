@@ -31,6 +31,9 @@
                         <td class="px-4 py-3">
                             <a href="/admin/room-types/{{ $type->id }}/edit" class="font-medium hover:underline">{{ $type->t('name') ?? $type->code }}</a>
                             <span class="ml-1 font-mono text-xs text-neutral-400">{{ $type->code }}</span>
+                            @if ($type->isApartment())
+                                <span class="ml-1 rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-800">{{ __('admin.room_type_kind_apartment') }}</span>
+                            @endif
                             @unless ($type->is_active)
                                 <span class="ml-1 rounded bg-neutral-100 px-1.5 py-0.5 text-xs text-neutral-500">{{ __('admin.room_type_inactive') }}</span>
                             @endunless

@@ -146,4 +146,7 @@ return [
     'download_credit_note' => 'Gutschrift :number herunterladen',
     'rooms' => 'Zimmer',
     'rooms_count' => 'für :count Zimmer',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Endreinigung',
 ];

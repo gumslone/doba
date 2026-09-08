@@ -24,4 +24,7 @@ return [
     'loyalty_discount' => 'Stammgast-Rabatt',
     'credit_note' => 'Gutschrift',
     'credits' => 'Storniert Rechnung :number',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Endreinigung',
 ];

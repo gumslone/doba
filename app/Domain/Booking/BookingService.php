@@ -149,12 +149,19 @@ class BookingService
             // secures the room, and the tax is settled with the stay.
             $cityTax = self::cityTax($adults, $children, $nights);
 
+            // Once per unit per stay, never per night: the flat is cleaned
+            // after the guest leaves, whether they stayed two nights or
+            // ten. Part of the accommodation price for the deposit — a
+            // hotel collecting 100% up front collects the fee too — and
+            // outside every discount, which is what a promo is a share of.
+            $cleaningFee = max(0, $roomType->cleaning_fee) * $units;
+
             // FEATURE_DEPOSIT_ONLY: a share of the room price now, the
             // rest with the stay. Off: everything now. The default share
             // is the whole room price, so an install that never set
             // DOBA_DEPOSIT_BPS collects exactly what it collected before
             // this flag was read for the first time.
-            $depositDue = self::depositDue($subtotal - $discount, $cityTax);
+            $depositDue = self::depositDue($subtotal - $discount + $cleaningFee, $cityTax);
 
             $booking = Booking::create([
                 'reference' => Booking::nextReference(),
@@ -171,9 +178,10 @@ class BookingService
                 'loyalty_discount' => $loyalty,
                 'promo_code_id' => $promoCode?->id,
                 'city_tax' => $cityTax,
-                'total' => $subtotal - $discount + $cityTax,
+                'cleaning_fee' => $cleaningFee,
+                'total' => $subtotal - $discount + $cityTax + $cleaningFee,
                 'deposit_due' => $depositDue,
-                'balance_due' => $subtotal - $discount + $cityTax,
+                'balance_due' => $subtotal - $discount + $cityTax + $cleaningFee,
                 'locale' => $bookingLocale,
                 'guest_id' => $guest->id,
             ]);
@@ -350,6 +358,8 @@ class BookingService
         // window, the extras attached to the stay come back too.
         if ($refundable > 0) {
             $refundable += (int) $booking->extras()->sum('total');
+            // Nobody cleans a flat that was never slept in.
+            $refundable += $booking->cleaning_fee;
         }
 
         // Never more than the guest actually paid — a partial payment
@@ -504,7 +514,9 @@ class BookingService
 
             $cityTax = self::cityTax($adults, $children, $nights);
             $extras = (int) $booking->extras()->sum('total');
-            $total = $subtotal + $extras + $cityTax - $booking->discount_total;
+            // Per unit per stay, and the desk cannot change the unit count
+            // here, so the cleaning fee is the one number that stays put.
+            $total = $subtotal + $extras + $cityTax + $booking->cleaning_fee - $booking->discount_total;
 
             $booking->forceFill([
                 'check_in' => $checkIn,
@@ -721,7 +733,7 @@ class BookingService
     /**
      * What is collected at booking (§8).
      *
-     * @param  int  $roomPrice  the room price after discounts, in minor units
+     * @param  int  $roomPrice  the accommodation price after discounts, cleaning fee included, in minor units
      */
     public static function depositDue(int $roomPrice, int $cityTax): int
     {

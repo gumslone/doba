@@ -176,6 +176,29 @@ class DatabaseSeeder extends Seeder
                 ],
             ],
             [
+                'code' => 'APT2',
+                'kind' => RoomType::APARTMENT,
+                'base_occupancy' => 2,
+                'max_occupancy' => 5,
+                'max_adults' => 4,
+                'max_children' => 3,
+                'size_sqm' => 68,
+                'bed_setup' => 'King bed + 2 singles',
+                'bedrooms' => 2,
+                'bathrooms' => 1,
+                'default_rate' => 21000,
+                'cleaning_fee' => 6000,    // €60.00 once per stay, not per night
+                'min_nights' => 3,
+                'total_units' => 2,
+                'sort_order' => 3,
+                'translations' => [
+                    'en' => ['slug' => 'lake-apartment', 'name' => 'Lake apartment', 'short' => 'A 68 m² two-bedroom apartment with a full kitchen and a terrace on the lake.'],
+                    'de' => ['slug' => 'seeapartment', 'name' => 'Seeapartment', 'short' => 'Ein 68 m² großes Apartment mit zwei Schlafzimmern, Küche und Seeterrasse.'],
+                    'fr' => ['slug' => 'appartement-lac', 'name' => 'Appartement du lac', 'short' => 'Un appartement de 68 m² avec deux chambres, cuisine équipée et terrasse sur le lac.'],
+                    'nl' => ['slug' => 'meerappartement', 'name' => 'Meerappartement', 'short' => 'Een appartement van 68 m² met twee slaapkamers, keuken en terras aan het meer.'],
+                ],
+            ],
+            [
                 'code' => 'SGL',
                 'base_occupancy' => 1,
                 'max_occupancy' => 1,
@@ -185,7 +208,7 @@ class DatabaseSeeder extends Seeder
                 'bed_setup' => 'Single bed',
                 'default_rate' => 8500,
                 'total_units' => 4,
-                'sort_order' => 3,
+                'sort_order' => 4,
                 'translations' => [
                     'en' => ['slug' => 'single-room', 'name' => 'Single room', 'short' => 'A compact 16 m² single, quiet side of the house.'],
                     'de' => ['slug' => 'einzelzimmer', 'name' => 'Einzelzimmer', 'short' => 'Ein kompaktes 16 m² Einzelzimmer auf der ruhigen Seite.'],

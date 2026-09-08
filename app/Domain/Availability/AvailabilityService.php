@@ -102,9 +102,10 @@ class AvailabilityService
         // Arrival-row restrictions. Min-stay is evaluated HERE and only
         // here: that is what ARI and every OTA mean by it, and requiring
         // nights >= max(min_stay) across the whole stay would block a
-        // Fri–Sun booking that Booking.com accepts (§6).
+        // Fri–Sun booking that Booking.com accepts (§6). The type's own
+        // floor (a holiday flat never let for one night) sits under it.
         if ($arrival->closed_to_arrival
-            || $nights < $arrival->min_stay
+            || $nights < max($arrival->min_stay, $roomType->minNights())
             || ($arrival->max_stay !== null && $nights > $arrival->max_stay)) {
             return false;
         }
@@ -353,7 +354,7 @@ class AvailabilityService
                     'date' => $date->toDateString(),
                     'available' => false,
                     'price' => null,
-                    'min_stay' => 1,
+                    'min_stay' => $roomType->minNights(),
                     'cta' => false,
                     'ctd' => false,
                     'units_left' => 0,
@@ -366,7 +367,7 @@ class AvailabilityService
                 'date' => $date->toDateString(),
                 'available' => ! $row->closed && $row->unitsLeft() >= 1,
                 'price' => $this->rates->nightlyPrice($roomType, $date, $row),
-                'min_stay' => $row->min_stay,
+                'min_stay' => max($row->min_stay, $roomType->minNights()),
                 'cta' => $row->closed_to_arrival,
                 'ctd' => $row->closed_to_departure,
                 // Confirmed bookings only — counting holds would let anyone
@@ -387,8 +388,16 @@ class AvailabilityService
     protected function rows(RoomType $roomType, CarbonInterface $from, CarbonInterface $to): Collection
     {
         if ($this->primed !== null) {
+            // Calendar dates, not instants: a check-out built in the hotel's
+            // timezone is 22:00 UTC the evening before, and comparing that
+            // against a row stamped midnight UTC silently drops the
+            // departure row — and with it every offer in the search.
+            $fromDate = $from->toDateString();
+            $toDate = $to->toDateString();
+
             return ($this->primed[$roomType->id] ?? collect())
-                ->filter(static fn (Availability $row): bool => $row->date->betweenIncluded($from, $to));
+                ->filter(static fn (Availability $row): bool => $row->date->toDateString() >= $fromDate
+                    && $row->date->toDateString() <= $toDate);
         }
 
         return Availability::query()

@@ -146,4 +146,7 @@ return [
     'download_credit_note' => 'Creditnota :number downloaden',
     'rooms' => 'Kamers',
     'rooms_count' => 'voor :count kamers',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Schoonmaakkosten',
 ];

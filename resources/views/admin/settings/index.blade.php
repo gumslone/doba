@@ -166,6 +166,10 @@
                     <input type="number" id="tax_accommodation_rate" name="tax[accommodation_rate]" min="0" max="10000" value="{{ $v('tax.accommodation_rate') }}" class="{{ $field }}">
                 </div>
                 <div>
+                    <label for="tax_cleaning_rate" class="{{ $label }}">{{ __('admin.settings_cleaning_rate') }}</label>
+                    <input type="number" id="tax_cleaning_rate" name="tax[cleaning_rate]" min="0" max="10000" value="{{ $v('tax.cleaning_rate') }}" class="{{ $field }}">
+                </div>
+                <div>
                     <label for="analytics_id" class="{{ $label }}">{{ __('admin.settings_analytics_id') }}</label>
                     <input id="analytics_id" name="analytics[id]" maxlength="64" value="{{ $v('analytics.id') }}" class="{{ $field }}">
                 </div>

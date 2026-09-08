@@ -146,4 +146,7 @@ return [
     'download_credit_note' => 'Завантажити кредит-ноту :number',
     'rooms' => 'Номери',
     'rooms_count' => 'за :count номери',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Плата за прибирання',
 ];

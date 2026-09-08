@@ -24,4 +24,7 @@ return [
     'loyalty_discount' => 'Знижка постійного гостя',
     'credit_note' => 'Кредит-нота',
     'credits' => 'Скасовує рахунок :number',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Фінальне прибирання',
 ];

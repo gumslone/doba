@@ -141,9 +141,14 @@ class DirectoryController extends Controller
                 return [
                     'room_type' => $offer['room_type']->code,
                     'name' => $offer['room_type']->t('name'),
+                    'kind' => $offer['room_type']->kind,
                     'max_occupancy' => $offer['room_type']->max_occupancy,
                     'total' => ['amount' => (int) $offer['total'], 'currency' => $currency],
                     'per_night' => ['amount' => (int) $offer['per_night'], 'currency' => $currency],
+                    // Once per unit per stay, on top of total: an aggregator
+                    // ranking by price has to add it or a flat looks cheaper
+                    // than the room next to it.
+                    'cleaning_fee' => ['amount' => (int) $offer['room_type']->cleaning_fee, 'currency' => $currency],
                     'units_left' => $offer['units_left'],
                     // Where the guest goes. Dates carried through, so the
                     // funnel opens on the stay they searched for rather

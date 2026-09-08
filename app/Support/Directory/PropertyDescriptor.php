@@ -183,6 +183,9 @@ class PropertyDescriptor
 
             return [
                 'code' => $type->code,
+                // room or apartment — an aggregator filtering "flats only"
+                // needs the fact, not a guess from the name.
+                'kind' => $type->kind,
                 'names' => (object) $type->translations->pluck('name', 'locale')->all(),
                 'urls' => (object) $type->translations
                     ->mapWithKeys(fn ($t): array => [
@@ -191,6 +194,13 @@ class PropertyDescriptor
                 'base_occupancy' => $type->base_occupancy,
                 'max_occupancy' => $type->max_occupancy,
                 'size_sqm' => $type->size_sqm,
+                'bedrooms' => $type->bedrooms,
+                'bathrooms' => $type->bathrooms,
+                'min_nights' => $type->minNights(),
+                'cleaning_fee' => [
+                    'amount' => (int) $type->cleaning_fee,
+                    'currency' => (string) config('doba.currency'),
+                ],
                 // The published rate, which is what the website shows when
                 // no dates are chosen. Not a live price — that is what the
                 // quote endpoint is for, and conflating the two is how an

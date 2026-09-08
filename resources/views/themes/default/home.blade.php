@@ -73,7 +73,7 @@
         <div class="wrap">
             <div class="section-head">
                 <div class="eyebrow">{{ __('common.rooms') }}</div>
-                <h2>{{ __('common.our_rooms') }}</h2>
+                <h2>{{ __($roomTypes->contains(fn ($t) => $t->isApartment()) ? 'common.our_rooms_and_apartments' : 'common.our_rooms') }}</h2>
                 <p class="lede">{{ __('common.rooms_lede') }}</p>
             </div>
 

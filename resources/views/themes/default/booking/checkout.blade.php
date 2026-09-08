@@ -247,18 +247,29 @@
                         <dd class="text-right font-semibold">{{ Money::format($total) }}</dd>
                     </div>
 
-                    @php $cityTax = \App\Domain\Booking\BookingService::cityTax($stay['adults'], $stay['children'], $nights); @endphp
+                    @php
+                        $cityTax = \App\Domain\Booking\BookingService::cityTax($stay['adults'], $stay['children'], $nights);
+                        $cleaningFee = max(0, $roomType->cleaning_fee) * ($stay['units'] ?? 1);
+                    @endphp
+                    {{-- Before the booking exists, not after: a guest must
+                         see every line they will owe while they can still
+                         walk away (§7). --}}
+                    @if ($cleaningFee > 0)
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-neutral-500">{{ __('booking.cleaning_fee') }}</dt>
+                            <dd class="text-right">{{ Money::format($cleaningFee) }}</dd>
+                        </div>
+                    @endif
                     @if ($cityTax > 0)
-                        {{-- Before the booking exists, not after: a guest
-                             must see every line they will owe while they
-                             can still walk away (§7). --}}
                         <div class="flex justify-between gap-4">
                             <dt class="text-neutral-500">{{ __('booking.city_tax') }}</dt>
                             <dd class="text-right">{{ Money::format($cityTax) }}</dd>
                         </div>
+                    @endif
+                    @if ($cityTax > 0 || $cleaningFee > 0)
                         <div class="flex justify-between gap-4">
                             <dt class="font-medium">{{ __('booking.total') }}</dt>
-                            <dd class="text-right font-semibold">{{ Money::format($total + $cityTax) }}</dd>
+                            <dd class="text-right font-semibold">{{ Money::format($total + $cityTax + $cleaningFee) }}</dd>
                         </div>
                     @endif
                 </dl>

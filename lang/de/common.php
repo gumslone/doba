@@ -45,4 +45,14 @@ return [
     'review_rating' => ':rating von 5 Sternen',
     'verified_stay' => 'verifizierter Aufenthalt',
     'hotel_replied' => 'Antwort des Hauses',
+
+    // Apartments (§5)
+    'kind_room' => 'Zimmer',
+    'kind_apartment' => 'Apartment',
+    'bedrooms' => '{1} :count Schlafzimmer|[2,*] :count Schlafzimmer',
+    'bathrooms' => '{1} :count Bad|[2,*] :count Bäder',
+    'cleaning_fee' => 'Endreinigung',
+    'per_stay' => 'pro Aufenthalt',
+    'min_nights' => 'Mindestaufenthalt',
+    'our_rooms_and_apartments' => 'Zimmer & Apartments',
 ];

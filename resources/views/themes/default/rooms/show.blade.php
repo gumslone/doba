@@ -42,7 +42,10 @@
         <div class="cols">
             <main>
                 <div>
-                    @if ($bed = $roomType->bed_setup)
+                    @php $bed = $roomType->bed_setup; @endphp
+                    @if ($roomType->isApartment())
+                        <div class="eyebrow">{{ __('common.kind_apartment') }}@if ($bed) · {{ $bed }}@endif</div>
+                    @elseif ($bed)
                         <div class="eyebrow">{{ $bed }}</div>
                     @endif
                     <h1 style="font-size:clamp(2rem,4vw,3rem)">{{ $roomType->t('name') }}</h1>
@@ -64,6 +67,16 @@
                             </svg>
                             {{ __('common.guests', ['count' => $roomType->max_occupancy]) }}
                         </span>
+                        @if ($roomType->isApartment() && $roomType->bedrooms)
+                            <span>
+                                <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                    <path d="M3 9.5 10 3l7 6.5V17H3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                                    <path d="M8 17v-5h4v5" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                                </svg>
+                                {{ trans_choice('common.bedrooms', $roomType->bedrooms) }}
+                                @if ($roomType->bathrooms) · {{ trans_choice('common.bathrooms', $roomType->bathrooms) }}@endif
+                            </span>
+                        @endif
                         @if ($bed)
                             <span>
                                 <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -129,6 +142,18 @@
                                 <tr>
                                     <th scope="row">{{ __('common.extra_adult') }}</th>
                                     <td>{{ Money::format($roomType->extra_adult_price) }} {{ __('common.per_night') }}</td>
+                                </tr>
+                            @endif
+                            @if ($roomType->minNights() > 1)
+                                <tr>
+                                    <th scope="row">{{ __('common.min_nights') }}</th>
+                                    <td>{{ __('booking.nights', ['count' => $roomType->minNights()]) }}</td>
+                                </tr>
+                            @endif
+                            @if ($roomType->cleaning_fee > 0)
+                                <tr>
+                                    <th scope="row">{{ __('common.cleaning_fee') }}</th>
+                                    <td>{{ Money::format($roomType->cleaning_fee) }} {{ __('common.per_stay') }}</td>
                                 </tr>
                             @endif
                         </tbody>

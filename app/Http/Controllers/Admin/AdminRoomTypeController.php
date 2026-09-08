@@ -23,6 +23,11 @@ use Illuminate\Validation\Rule;
  * again — names, occupancy, rates and descriptions were whatever the
  * wizard's template said. This is where they change.
  *
+ * A type is a room or an apartment (§5). Both sell the same way; an
+ * apartment additionally tells the guest how many bedrooms and bathrooms
+ * it has, may insist on a minimum stay, and carries a cleaning fee that
+ * is charged once per stay rather than per night.
+ *
  * Capacity still lives on the availability grid: `total_units` here is
  * what the website ADVERTISES as the category's size, and the grid's
  * allotment is what it SELLS. Creating a type runs availability:extend
@@ -40,7 +45,7 @@ class AdminRoomTypeController extends Controller
 
     public function create(): View
     {
-        return $this->form(new RoomType(['is_active' => true, 'base_occupancy' => 2, 'max_occupancy' => 2, 'max_adults' => 2, 'max_children' => 0, 'total_units' => 1]));
+        return $this->form(new RoomType(['is_active' => true, 'kind' => RoomType::ROOM, 'min_nights' => 1, 'base_occupancy' => 2, 'max_occupancy' => 2, 'max_adults' => 2, 'max_children' => 0, 'total_units' => 1]));
     }
 
     public function edit(RoomType $roomType): View
@@ -100,6 +105,7 @@ class AdminRoomTypeController extends Controller
 
         return $request->validate([
             'is_active' => ['sometimes', 'boolean'],
+            'kind' => ['nullable', Rule::in(RoomType::KINDS)],
             'base_occupancy' => ['required', 'integer', 'min:1', 'max:20'],
             'max_occupancy' => ['required', 'integer', 'min:1', 'max:20', 'gte:base_occupancy'],
             'max_adults' => ['required', 'integer', 'min:1', 'max:20'],
@@ -110,6 +116,10 @@ class AdminRoomTypeController extends Controller
             'total_units' => ['required', 'integer', 'min:1', 'max:5000'],
             'size_sqm' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'bed_setup' => ['nullable', 'string', 'max:120'],
+            'bedrooms' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'bathrooms' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'cleaning_fee' => ['nullable', 'integer', 'min:0', 'max:100000000'],
+            'min_nights' => ['nullable', 'integer', 'min:1', 'max:60'],
             'amenities' => ['nullable', 'array'],
             'amenities.*' => ['integer', 'exists:amenities,id'],
             'translations' => ['required', 'array'],
@@ -133,6 +143,7 @@ class AdminRoomTypeController extends Controller
     {
         return [
             'is_active' => (bool) ($validated['is_active'] ?? false),
+            'kind' => (string) ($validated['kind'] ?? RoomType::ROOM),
             'base_occupancy' => (int) $validated['base_occupancy'],
             'max_occupancy' => (int) $validated['max_occupancy'],
             'max_adults' => (int) $validated['max_adults'],
@@ -143,6 +154,10 @@ class AdminRoomTypeController extends Controller
             'total_units' => (int) $validated['total_units'],
             'size_sqm' => $validated['size_sqm'] ?? null,
             'bed_setup' => $validated['bed_setup'] ?? null,
+            'bedrooms' => $validated['bedrooms'] ?? null,
+            'bathrooms' => $validated['bathrooms'] ?? null,
+            'cleaning_fee' => (int) ($validated['cleaning_fee'] ?? 0),
+            'min_nights' => max(1, (int) ($validated['min_nights'] ?? 1)),
         ];
     }
 

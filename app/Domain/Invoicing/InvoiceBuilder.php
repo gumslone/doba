@@ -83,6 +83,19 @@ class InvoiceBuilder
             );
         }
 
+        if ($booking->cleaning_fee > 0) {
+            $lines[] = $this->line(
+                description: __('invoice.cleaning_fee', [], $booking->locale),
+                quantity: 1,
+                gross: $booking->cleaning_fee,
+                // Ancillary to the accommodation, so it follows the
+                // accommodation rate unless the hotel's tax office says
+                // otherwise — which is what the override setting is for.
+                taxRate: (int) $this->hotel->get('tax.cleaning_rate', $accommodationRate),
+                sortOrder: 800,
+            );
+        }
+
         if ($booking->city_tax > 0) {
             $lines[] = $this->line(
                 description: __('invoice.city_tax', [], $booking->locale),

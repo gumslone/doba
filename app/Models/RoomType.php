@@ -21,6 +21,11 @@ use Illuminate\Support\Str;
  *
  * @property int $id
  * @property string $code
+ * @property string $kind
+ * @property int|null $bedrooms
+ * @property int|null $bathrooms
+ * @property int $cleaning_fee
+ * @property int $min_nights
  * @property int $base_occupancy
  * @property int $max_occupancy
  * @property int|null $default_rate
@@ -30,14 +35,22 @@ class RoomType extends Model implements HasMedia
 {
     use HasTranslations;
 
+    /** A hotel room: sold per night, serviced daily. */
+    public const ROOM = 'room';
+
+    /** A self-catering unit: bedrooms, a kitchen, a cleaning fee, a minimum stay. */
+    public const APARTMENT = 'apartment';
+
+    public const KINDS = [self::ROOM, self::APARTMENT];
+
     protected string $translationModel = RoomTypeTranslation::class;
 
     protected string $translationForeignKey = 'room_type_id';
 
     protected $fillable = [
-        'code', 'base_occupancy', 'max_occupancy', 'max_adults', 'max_children',
-        'extra_adult_price', 'extra_child_price', 'size_sqm', 'bed_setup',
-        'default_rate', 'total_units', 'sort_order', 'is_active',
+        'code', 'kind', 'base_occupancy', 'max_occupancy', 'max_adults', 'max_children',
+        'extra_adult_price', 'extra_child_price', 'size_sqm', 'bed_setup', 'bedrooms', 'bathrooms',
+        'default_rate', 'cleaning_fee', 'min_nights', 'total_units', 'sort_order', 'is_active',
     ];
 
     /**
@@ -62,6 +75,19 @@ class RoomType extends Model implements HasMedia
             : url("/ical/{$this->id}/{$this->ical_token}.ics");
     }
 
+    public function isApartment(): bool
+    {
+        return $this->kind === self::APARTMENT;
+    }
+
+    /**
+     * The shortest stay this type sells at all, never below one night.
+     */
+    public function minNights(): int
+    {
+        return max(1, (int) $this->min_nights);
+    }
+
     protected $casts = [
         'base_occupancy' => 'integer',
         'max_occupancy' => 'integer',
@@ -70,15 +96,16 @@ class RoomType extends Model implements HasMedia
         'extra_adult_price' => 'integer',
         'extra_child_price' => 'integer',
         'size_sqm' => 'integer',
+        'bedrooms' => 'integer',
+        'bathrooms' => 'integer',
         'default_rate' => 'integer',
+        'cleaning_fee' => 'integer',
+        'min_nights' => 'integer',
         'total_units' => 'integer',
         'sort_order' => 'integer',
         'is_active' => 'boolean',
     ];
 
-    /**
-     * @return MorphMany<Media, $this>
-     */
     /**
      * The physical doors of this category, where the hotel lists them.
      *
@@ -89,6 +116,9 @@ class RoomType extends Model implements HasMedia
         return $this->hasMany(Room::class);
     }
 
+    /**
+     * @return MorphMany<Media, $this>
+     */
     public function media(): MorphMany
     {
         return $this->morphMany(Media::class, 'mediable')->orderBy('sort_order');

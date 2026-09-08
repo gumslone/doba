@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Install;
 
 use App\Http\Controllers\Controller;
+use App\Models\RoomType;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Install\EnvWriter;
@@ -313,6 +314,7 @@ class InstallController extends Controller
             'rooms.*.units' => ['nullable', 'integer', 'min:1', 'max:500'],
             'rooms.*.occupancy' => ['nullable', 'integer', 'min:1', 'max:20'],
             'rooms.*.price' => ['nullable', 'numeric', 'min:0', 'max:99999'],
+            'rooms.*.kind' => ['nullable', Rule::in(RoomType::KINDS)],
         ]);
 
         $builder = new RoomBuilder;

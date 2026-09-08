@@ -48,6 +48,15 @@
         </div>
     @endif
 
+    @if ($booking->cleaning_fee > 0)
+        {{-- Once per stay, not per night — which is why it cannot hide
+             inside the room line without the nightly rate looking wrong. --}}
+        <div class="flex justify-between gap-4">
+            <dt class="text-neutral-500">{{ __('booking.cleaning_fee') }}</dt>
+            <dd class="text-right">{{ Money::format($booking->cleaning_fee) }}</dd>
+        </div>
+    @endif
+
     @if ($booking->city_tax > 0)
         {{-- Its own line, as the municipality requires: the tax belongs
              to the sleeper, not the room, and hiding it in the rate is

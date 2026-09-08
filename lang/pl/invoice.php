@@ -24,4 +24,7 @@ return [
     'loyalty_discount' => 'Rabat dla stałego gościa',
     'credit_note' => 'Faktura korygująca',
     'credits' => 'Koryguje fakturę :number',
+
+    // Apartments (§5)
+    'cleaning_fee' => 'Sprzątanie końcowe',
 ];

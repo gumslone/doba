@@ -589,4 +589,16 @@ return [
     'new_password' => 'New password (12 characters or more)',
     'new_password_confirm' => 'New password again',
     'password_changed' => 'Password changed. Every other signed-in session was ended.',
+
+    // Apartments (§5)
+    'room_type_kind' => 'Type',
+    'room_type_kind_room' => 'Room',
+    'room_type_kind_apartment' => 'Apartment',
+    'room_type_apartment_hint' => 'An apartment is sold exactly like a room. In addition it tells the guest its bedrooms and bathrooms, may insist on a minimum stay, and charges its cleaning fee once per stay rather than per night.',
+    'room_type_bedrooms' => 'Bedrooms',
+    'room_type_bathrooms' => 'Bathrooms',
+    'room_type_cleaning_fee' => 'Cleaning fee per stay (minor units)',
+    'room_type_min_nights' => 'Minimum nights',
+    'cleaning_fee' => 'Cleaning fee',
+    'settings_cleaning_rate' => 'VAT on the cleaning fee, in basis points (empty = accommodation rate)',
 ];

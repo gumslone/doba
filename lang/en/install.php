@@ -100,4 +100,10 @@ return [
     'checklist_backup' => 'Download a backup from Admin → Update and keep it somewhere other than this server.',
     'checklist_test_booking' => 'Make one real booking end to end and cancel it.',
     'finish_button' => 'Finish and open my hotel',
+
+    // Apartments (§5)
+    'template_apartments' => 'Holiday apartments',
+    'room_kind' => 'Type',
+    'room_kind_room' => 'Room',
+    'room_kind_apartment' => 'Apartment',
 ];

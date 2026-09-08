@@ -84,6 +84,7 @@ class AdminSettingsController extends Controller
             'social.tripadvisor' => ['nullable', 'url', 'max:255'],
             'tax.vat_id' => ['nullable', 'string', 'max:32'],
             'tax.accommodation_rate' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'tax.cleaning_rate' => ['nullable', 'integer', 'min:0', 'max:10000'],
             'analytics.id' => ['nullable', 'string', 'max:64'],
             'translations' => ['nullable', 'array'],
             'translations.*' => ['array'],

@@ -22,6 +22,7 @@ use Illuminate\Support\Str;
  * @property CarbonImmutable $check_out
  * @property int $nights
  * @property int $subtotal
+ * @property int $cleaning_fee
  * @property int $total
  * @property int $guest_id
  */
@@ -32,7 +33,7 @@ class Booking extends Model
         'check_in', 'check_out', 'nights', 'adults', 'children', 'children_ages',
         'arrival_time', 'requested_checkout_time', 'checkout_time',
         'currency', 'subtotal', 'extras_total', 'discount_total', 'loyalty_discount', 'tax_total',
-        'city_tax', 'total', 'deposit_due', 'paid_amount', 'balance_due',
+        'city_tax', 'cleaning_fee', 'total', 'deposit_due', 'paid_amount', 'balance_due',
         'promo_code_id', 'locale', 'guest_id', 'guest_notes', 'internal_notes',
         'cancellation_reason', 'cancelled_at', 'confirmed_at',
         'checked_in_at', 'checked_out_at',
@@ -55,6 +56,7 @@ class Booking extends Model
         'loyalty_discount' => 'integer',
         'tax_total' => 'integer',
         'city_tax' => 'integer',
+        'cleaning_fee' => 'integer',
         'total' => 'integer',
         'deposit_due' => 'integer',
         'paid_amount' => 'integer',

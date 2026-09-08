@@ -79,6 +79,9 @@
                     @foreach ($booking->extras as $extra)
                         <div class="flex justify-between"><dt class="text-neutral-500">{{ $extra->extra?->t('name') }} × {{ $extra->quantity }}</dt><dd>{{ Money::format($extra->total) }}</dd></div>
                     @endforeach
+                    @if ($booking->cleaning_fee > 0)
+                        <div class="flex justify-between"><dt class="text-neutral-500">{{ __('admin.cleaning_fee') }}</dt><dd>{{ Money::format($booking->cleaning_fee) }}</dd></div>
+                    @endif
                     @if ($booking->city_tax > 0)
                         <div class="flex justify-between"><dt class="text-neutral-500">{{ __('admin.city_tax') }}</dt><dd>{{ Money::format($booking->city_tax) }}</dd></div>
                     @endif

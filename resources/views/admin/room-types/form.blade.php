@@ -28,6 +28,16 @@
                 {{ __('admin.room_type_active') }}
             </label>
 
+            <div class="mt-4 max-w-xs">
+                <label for="kind" class="{{ $label }}">{{ __('admin.room_type_kind') }}</label>
+                <select id="kind" name="kind" class="{{ $field }}">
+                    @foreach (\App\Models\RoomType::KINDS as $kind)
+                        <option value="{{ $kind }}" @selected(old('kind', $roomType->kind) === $kind)>{{ __('admin.room_type_kind_'.$kind) }}</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-neutral-500">{{ __('admin.room_type_apartment_hint') }}</p>
+            </div>
+
             <div class="mt-4 grid gap-4 sm:grid-cols-3">
                 @foreach (['base_occupancy' => 1, 'max_occupancy' => 1, 'max_adults' => 1, 'max_children' => 0, 'total_units' => 1, 'size_sqm' => 1] as $key => $min)
                     <div>
@@ -46,6 +56,22 @@
                 <div>
                     <label for="extra_child_price" class="{{ $label }}">{{ __('admin.room_type_extra_child') }}</label>
                     <input type="number" id="extra_child_price" name="extra_child_price" min="0" value="{{ old('extra_child_price', $roomType->extra_child_price) }}" class="{{ $field }}">
+                </div>
+                <div>
+                    <label for="bedrooms" class="{{ $label }}">{{ __('admin.room_type_bedrooms') }}</label>
+                    <input type="number" id="bedrooms" name="bedrooms" min="0" max="20" value="{{ old('bedrooms', $roomType->bedrooms) }}" class="{{ $field }}">
+                </div>
+                <div>
+                    <label for="bathrooms" class="{{ $label }}">{{ __('admin.room_type_bathrooms') }}</label>
+                    <input type="number" id="bathrooms" name="bathrooms" min="0" max="20" value="{{ old('bathrooms', $roomType->bathrooms) }}" class="{{ $field }}">
+                </div>
+                <div>
+                    <label for="min_nights" class="{{ $label }}">{{ __('admin.room_type_min_nights') }}</label>
+                    <input type="number" id="min_nights" name="min_nights" min="1" max="60" value="{{ old('min_nights', $roomType->min_nights ?? 1) }}" class="{{ $field }}">
+                </div>
+                <div>
+                    <label for="cleaning_fee" class="{{ $label }}">{{ __('admin.room_type_cleaning_fee') }}</label>
+                    <input type="number" id="cleaning_fee" name="cleaning_fee" min="0" value="{{ old('cleaning_fee', $roomType->cleaning_fee ?? 0) }}" class="{{ $field }}">
                 </div>
                 <div class="sm:col-span-3">
                     <label for="bed_setup" class="{{ $label }}">{{ __('admin.room_type_bed_setup') }}</label>

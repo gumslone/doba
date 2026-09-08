@@ -125,6 +125,9 @@ class AvailabilityController extends Controller
                 'room_type' => $offer['room_type']->code,
                 'total' => Wire::money($offer['total']),
                 'per_night' => Wire::money($offer['per_night']),
+                // Not folded into total: total is what the nightly rates add
+                // up to on every plan, and the fee is the same on all of them.
+                'cleaning_fee' => Wire::money($offer['room_type']->cleaning_fee),
                 'units_left' => $offer['units_left'],
                 'rate_plans' => array_map(static fn (array $plan): array => [
                     'code' => $plan['plan']->code,
