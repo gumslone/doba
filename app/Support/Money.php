@@ -42,6 +42,16 @@ final class Money
      * readability choice for a price badge, but on a tax document the
      * columns must align and every figure must be exact.
      */
+    /**
+     * The amount as a plain decimal string for a spreadsheet: "125.00",
+     * "-60.00" — dot, two places, no symbol, no grouping, whatever the
+     * locale. Minor units divided by 100, like every other edge here.
+     */
+    public static function decimal(int $minor): string
+    {
+        return number_format($minor / 100, 2, '.', '');
+    }
+
     public static function exact(?int $minor, ?string $currency = null, ?string $locale = null): ?string
     {
         if ($minor === null) {

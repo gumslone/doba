@@ -3,7 +3,25 @@
 @section('content')
     @php use App\Support\Money; @endphp
 
-    <h1 class="mb-6 text-2xl font-semibold">{{ __('admin.invoices') }}</h1>
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold">{{ __('admin.invoices') }}</h1>
+            <p class="mt-1 max-w-2xl text-sm text-neutral-600">{{ __('admin.invoices_export_intro') }}</p>
+        </div>
+
+        {{-- The month-end question, answered without a PDF at a time. --}}
+        <form method="GET" action="/admin/invoices/export" class="flex flex-wrap items-end gap-2 text-sm">
+            <div>
+                <label for="from" class="block text-xs text-neutral-500">{{ __('admin.from') }}</label>
+                <input type="date" id="from" name="from" value="{{ $from->toDateString() }}" class="mt-1 rounded border border-neutral-300 px-2 py-1.5">
+            </div>
+            <div>
+                <label for="to" class="block text-xs text-neutral-500">{{ __('admin.to') }}</label>
+                <input type="date" id="to" name="to" value="{{ $to->toDateString() }}" class="mt-1 rounded border border-neutral-300 px-2 py-1.5">
+            </div>
+            <button type="submit" class="rounded border border-neutral-300 px-4 py-2">{{ __('admin.export_csv') }}</button>
+        </form>
+    </div>
 
     <ul class="divide-y divide-neutral-200 rounded border border-neutral-200 bg-white">
         @forelse ($invoices as $invoice)

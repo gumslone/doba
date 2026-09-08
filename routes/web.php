@@ -238,6 +238,7 @@ Route::prefix('admin')->group(function (): void {
         Route::post('channels/review/{channelBooking}', [AdminChannelController::class, 'resolve'])->name('admin.channels.resolve');
 
         Route::get('invoices', [AdminInvoiceController::class, 'index'])->name('admin.invoices');
+        Route::get('invoices/export', [AdminInvoiceController::class, 'export'])->name('admin.invoices.export');
         Route::get('invoices/{invoice}.pdf', [AdminInvoiceController::class, 'download'])->name('admin.invoices.download');
 
         Route::get('room-types', [AdminRoomTypeController::class, 'index'])->name('admin.room-types');

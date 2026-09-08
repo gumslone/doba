@@ -675,4 +675,7 @@ return [
     'housekeeping_mark_dirty' => 'Needs cleaning',
     'housekeeping_cleaned' => 'Room :number is clean.',
     'housekeeping_dirtied' => 'Room :number is on the list.',
+
+    // Invoice CSV (§5)
+    'invoices_export_intro' => 'Every invoice and credit note, newest first. The CSV for a period is one row per document with the VAT split by rate — decimal amounts, ready for the accountant.',
 ];
