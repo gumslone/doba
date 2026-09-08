@@ -69,14 +69,14 @@
                                 // From the house check-in time to midnight. A
                                 // guest arriving at 23:00 needs to be able to
                                 // say so — that is the whole point of asking.
-                                $slot = \Carbon\CarbonImmutable::createFromFormat('H:i', config('doba.checkin_from', '15:00'));
-                                $end = $slot->endOfDay();
+                                $arrivalSlot = \Carbon\CarbonImmutable::createFromFormat('H:i', config('doba.checkin_from', '15:00'));
+                                $end = $arrivalSlot->endOfDay();
                             @endphp
-                            @while ($slot < $end)
-                                <option value="{{ $slot->format('H:i') }}" @selected(old('arrival_time') === $slot->format('H:i'))>
-                                    {{ $slot->format('H:i') }}
+                            @while ($arrivalSlot < $end)
+                                <option value="{{ $arrivalSlot->format('H:i') }}" @selected(old('arrival_time') === $arrivalSlot->format('H:i'))>
+                                    {{ $arrivalSlot->format('H:i') }}
                                 </option>
-                                @php $slot = $slot->addMinutes(30); @endphp
+                                @php $arrivalSlot = $arrivalSlot->addMinutes(30); @endphp
                             @endwhile
                         </select>
                         <p class="mt-1 text-sm text-neutral-500">

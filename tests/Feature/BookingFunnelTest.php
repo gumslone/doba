@@ -77,7 +77,10 @@ it('walks the whole funnel from search to a confirmed booking', function (): voi
     // 2. Checkout page
     $this->get('/en/booking/checkout?'.http_build_query(
         stayQuery($this->checkIn) + ['room_type' => $this->roomType->id]
-    ))->assertOk()->assertSee('DBL room');
+    ))->assertOk()->assertSee('DBL room')
+        // The arrival-time loop once left a Carbon in a variable the
+        // layout echoes, and every guest saw a timestamp above the title.
+        ->assertDontSee('00:00:00');
 
     // 3. Create the booking
     $response = $this->post('/en/booking', stayQuery($this->checkIn) + [
