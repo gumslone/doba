@@ -19,4 +19,7 @@ return [
     'map_load' => 'Wczytaj mapę',
     'map_open' => 'Otwórz w Google Maps',
     'map_privacy' => 'Mapa jest wczytywana z Google dopiero po naciśnięciu przycisku.',
+
+    // The panel's answer (§12)
+    'reply_subject' => 'Re: Państwa zapytanie do :hotel',
 ];

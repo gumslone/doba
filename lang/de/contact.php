@@ -19,4 +19,7 @@ return [
     'map_load' => 'Karte laden',
     'map_open' => 'In Google Maps öffnen',
     'map_privacy' => 'Die Karte wird erst nach dem Klick von Google geladen.',
+
+    // The panel's answer (§12)
+    'reply_subject' => 'Re: Ihre Anfrage an :hotel',
 ];

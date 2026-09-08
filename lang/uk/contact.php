@@ -19,4 +19,7 @@ return [
     'map_load' => 'Завантажити мапу',
     'map_open' => 'Відкрити в Google Maps',
     'map_privacy' => 'Мапа завантажується з Google лише після натискання кнопки.',
+
+    // The panel's answer (§12)
+    'reply_subject' => 'Re: ваш запит до :hotel',
 ];

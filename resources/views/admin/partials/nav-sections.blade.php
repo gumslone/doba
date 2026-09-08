@@ -8,7 +8,8 @@
         {{ $group }}
     </p>
 
-    @foreach ($links as [$href, $label, $pattern])
+    @foreach ($links as $link)
+        @php [$href, $label, $pattern] = $link; $badge = (int) ($link[3] ?? 0); @endphp
         <a href="{{ $href }}"
            @if (request()->is($pattern)) aria-current="page" @endif
            @class([
@@ -17,6 +18,9 @@
                'text-neutral-700 hover:bg-neutral-100' => ! request()->is($pattern),
            ])>
             {{ $label }}
+            @if ($badge > 0)
+                <span class="ml-2 rounded-full bg-amber-500 px-1.5 py-0.5 text-[0.65rem] font-semibold text-white">{{ $badge }}</span>
+            @endif
         </a>
     @endforeach
 @endforeach

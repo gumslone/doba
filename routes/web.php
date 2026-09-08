@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminAvailabilityController;
 use App\Http\Controllers\Admin\AdminBookingController;
 use App\Http\Controllers\Admin\AdminChannelController;
 use App\Http\Controllers\Admin\AdminDirectoryController;
+use App\Http\Controllers\Admin\AdminEnquiryController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminFrontDeskController;
@@ -173,6 +174,12 @@ Route::prefix('admin')->group(function (): void {
         Route::post('guests/{guest}', [AdminGuestController::class, 'update'])->name('admin.guests.update');
         Route::get('guests/{guest}/export', [AdminGuestController::class, 'export'])->name('admin.guests.export');
         Route::post('guests/{guest}/erase', [AdminGuestController::class, 'erase'])->name('admin.guests.erase');
+
+        Route::get('enquiries', [AdminEnquiryController::class, 'index'])->name('admin.enquiries');
+        Route::get('enquiries/{enquiry}', [AdminEnquiryController::class, 'show'])->name('admin.enquiries.show');
+        Route::post('enquiries/{enquiry}/reply', [AdminEnquiryController::class, 'reply'])->name('admin.enquiries.reply');
+        Route::post('enquiries/{enquiry}/status', [AdminEnquiryController::class, 'status'])->name('admin.enquiries.status');
+        Route::post('enquiries/{enquiry}/delete', [AdminEnquiryController::class, 'destroy'])->name('admin.enquiries.destroy');
 
         Route::get('reviews', [AdminReviewController::class, 'index'])->name('admin.reviews');
         Route::post('reviews/{review}/publish', [AdminReviewController::class, 'publish'])->name('admin.reviews.publish');

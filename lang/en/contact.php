@@ -19,4 +19,7 @@ return [
     'map_load' => 'Load map',
     'map_open' => 'Open in Google Maps',
     'map_privacy' => 'The map is loaded from Google only after you tap the button.',
+
+    // The panel's answer (§12)
+    'reply_subject' => 'Re: your enquiry to :hotel',
 ];

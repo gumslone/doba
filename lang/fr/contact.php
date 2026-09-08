@@ -19,4 +19,7 @@ return [
     'map_load' => 'Charger la carte',
     'map_open' => 'Ouvrir dans Google Maps',
     'map_privacy' => 'La carte n’est chargée depuis Google qu’après un clic.',
+
+    // The panel's answer (§12)
+    'reply_subject' => 'Re : votre demande à :hotel',
 ];
