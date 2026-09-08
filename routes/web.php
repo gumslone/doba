@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AdminFrontDeskController;
 use App\Http\Controllers\Admin\AdminGuestController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
 use App\Http\Controllers\Admin\AdminMailController;
+use App\Http\Controllers\Admin\AdminMailWordingController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPromoCodeController;
 use App\Http\Controllers\Admin\AdminRatePlanController;
@@ -157,6 +158,8 @@ Route::prefix('admin')->group(function (): void {
         Route::put('mail', [AdminMailController::class, 'update'])->name('admin.mail.update');
         Route::post('mail/test', [AdminMailController::class, 'test'])->name('admin.mail.test');
         Route::post('mail/confirm', [AdminMailController::class, 'confirm'])->name('admin.mail.confirm');
+        Route::get('mail/wording', [AdminMailWordingController::class, 'edit'])->name('admin.mail.wording');
+        Route::put('mail/wording', [AdminMailWordingController::class, 'update'])->name('admin.mail.wording.update');
 
         Route::get('update', [AdminUpdateController::class, 'index'])->name('admin.update');
         Route::post('update', [AdminUpdateController::class, 'run'])->name('admin.update.run');

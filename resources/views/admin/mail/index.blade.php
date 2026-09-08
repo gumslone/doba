@@ -110,6 +110,11 @@
         <button type="submit" class="rounded bg-neutral-900 px-5 py-2.5 text-white">{{ __('admin.save') }}</button>
     </form>
 
+    <p class="mt-4 text-sm">
+        <a href="/admin/mail/wording" class="underline">{{ __('admin.mail_wording') }}</a>
+        <span class="text-neutral-500">— {{ __('admin.mail_wording_link_hint') }}</span>
+    </p>
+
     <form method="POST" action="/admin/mail/test" class="mt-8 flex max-w-2xl flex-wrap items-end gap-3 rounded border border-neutral-200 bg-white p-4">
         @csrf
         <div>

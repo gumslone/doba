@@ -6,6 +6,8 @@ namespace App\Mail;
 
 use App\Domain\Invoicing\InvoiceRenderer;
 use App\Models\Booking;
+use App\Support\Hotel\HotelSettings;
+use App\Support\Mail\Wording;
 use App\Support\Routing\Localization;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -30,8 +32,10 @@ class BookingConfirmed extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __('mail.booking_subject', [
+            subject: Wording::text('booking_subject', [
                 'reference' => $this->booking->reference,
+                'hotel' => app(HotelSettings::class)->name,
+                'name' => $this->booking->guest?->first_name,
             ], $this->booking->locale),
         );
     }

@@ -640,4 +640,22 @@ return [
     'enquiry_status_saved' => 'Saved.',
     'enquiry_deleted' => 'Enquiry deleted.',
     'enquiry_delete_confirm' => 'Delete this enquiry? There is no undo.',
+
+    // Mail wording (§13)
+    'mail_wording' => 'Mail wording',
+    'mail_wording_link_hint' => 'change what the confirmation, the pre-arrival and the thank-you mails say, in every language.',
+    'mail_wording_intro' => 'The prose in the three guest mails, in each language the site serves. The shipped text is shown greyed as the starting point; leave a box empty to keep it. The reference, dates, amounts and the button are facts the mail carries and cannot be edited here.',
+    'mail_wording_placeholders' => 'Placeholders you can use:',
+    'mail_wording_hint' => 'Text is sent exactly as written — no formatting, no HTML. A language you leave empty keeps the shipped wording.',
+    'mail_wording_saved' => 'Mail wording saved.',
+    'mail_wording_key_booking_subject' => 'Confirmation — subject line',
+    'mail_wording_key_booking_intro' => 'Confirmation — opening line',
+    'mail_wording_key_pre_arrival_subject' => 'Before arrival — subject line',
+    'mail_wording_key_pre_arrival_heading' => 'Before arrival — heading',
+    'mail_wording_key_pre_arrival_intro' => 'Before arrival — opening line',
+    'mail_wording_key_pre_arrival_outro' => 'Before arrival — closing line',
+    'mail_wording_key_post_stay_subject' => 'After the stay — subject line',
+    'mail_wording_key_post_stay_heading' => 'After the stay — heading',
+    'mail_wording_key_post_stay_intro' => 'After the stay — opening line',
+    'mail_wording_key_post_stay_outro' => 'After the stay — closing line',
 ];

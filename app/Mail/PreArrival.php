@@ -6,6 +6,7 @@ namespace App\Mail;
 
 use App\Models\Booking;
 use App\Support\Hotel\HotelSettings;
+use App\Support\Mail\Wording;
 use App\Support\Routing\Localization;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -31,8 +32,10 @@ class PreArrival extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __('mail.pre_arrival_subject', [
+            subject: Wording::text('pre_arrival_subject', [
                 'hotel' => app(HotelSettings::class)->name,
+                'name' => $this->booking->guest?->first_name,
+                'date' => $this->booking->check_in->translatedFormat('l, j M Y'),
             ], $this->booking->locale),
         );
     }

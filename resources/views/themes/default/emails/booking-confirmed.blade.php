@@ -7,7 +7,7 @@
 <x-mail::message>
 # {{ __('booking.confirmed_heading', [], $locale) }}
 
-{{ __('mail.booking_intro', ['name' => $booking->guest?->first_name], $locale) }}
+{{ \App\Support\Mail\Wording::text('booking_intro', ['name' => $booking->guest?->first_name, 'hotel' => app(\App\Support\Hotel\HotelSettings::class)->name, 'reference' => $booking->reference], $locale) }}
 
 **{{ __('booking.reference', [], $locale) }}:** {{ $booking->reference }}
 **{{ __('booking.dates', [], $locale) }}:** {{ $booking->check_in->translatedFormat('j M Y') }} – {{ $booking->check_out->translatedFormat('j M Y') }}

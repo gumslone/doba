@@ -4,9 +4,10 @@
 @endphp
 
 <x-mail::message>
-# {{ __('mail.post_stay_heading', ['name' => $booking->guest?->first_name], $locale) }}
+@php $words = ['name' => $booking->guest?->first_name, 'hotel' => $hotel->name]; @endphp
+# {{ \App\Support\Mail\Wording::text('post_stay_heading', $words, $locale) }}
 
-{{ __('mail.post_stay_intro', ['hotel' => $hotel->name], $locale) }}
+{{ \App\Support\Mail\Wording::text('post_stay_intro', $words, $locale) }}
 
 @if ($booking->invoice)
 {{ __('mail.post_stay_invoice', [], $locale) }}
@@ -20,7 +21,7 @@
 {{ __('booking.manage_title', [], $locale) }}
 </x-mail::button>
 
-{{ __('mail.post_stay_outro', [], $locale) }}
+{{ \App\Support\Mail\Wording::text('post_stay_outro', $words, $locale) }}
 
 {{ $hotel->name }}
 </x-mail::message>

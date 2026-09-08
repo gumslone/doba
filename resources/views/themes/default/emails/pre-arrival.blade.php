@@ -6,12 +6,16 @@
 @endphp
 
 <x-mail::message>
-# {{ __('mail.pre_arrival_heading', ['name' => $booking->guest?->first_name], $locale) }}
+@php
+    $words = [
+        'name' => $booking->guest?->first_name,
+        'hotel' => $hotel->name,
+        'date' => $booking->check_in->translatedFormat('l, j M Y'),
+    ];
+@endphp
+# {{ \App\Support\Mail\Wording::text('pre_arrival_heading', $words, $locale) }}
 
-{{ __('mail.pre_arrival_intro', [
-    'hotel' => $hotel->name,
-    'date' => $booking->check_in->translatedFormat('l, j M Y'),
-], $locale) }}
+{{ \App\Support\Mail\Wording::text('pre_arrival_intro', $words, $locale) }}
 
 **{{ __('booking.reference', [], $locale) }}:** {{ $booking->reference }}
 **{{ __('mail.check_in_from', [], $locale) }}:** {{ config('doba.checkin_from') }}
@@ -34,7 +38,7 @@
 {{ __('booking.manage_title', [], $locale) }}
 </x-mail::button>
 
-{{ __('mail.pre_arrival_outro', [], $locale) }}
+{{ \App\Support\Mail\Wording::text('pre_arrival_outro', $words, $locale) }}
 
 {{ $hotel->name }}
 </x-mail::message>

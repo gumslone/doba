@@ -6,6 +6,7 @@ namespace App\Mail;
 
 use App\Models\Booking;
 use App\Support\Hotel\HotelSettings;
+use App\Support\Mail\Wording;
 use App\Support\Routing\Localization;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -30,8 +31,9 @@ class PostStay extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __('mail.post_stay_subject', [
+            subject: Wording::text('post_stay_subject', [
                 'hotel' => app(HotelSettings::class)->name,
+                'name' => $this->booking->guest?->first_name,
             ], $this->booking->locale),
         );
     }
