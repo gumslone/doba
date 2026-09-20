@@ -40,7 +40,14 @@ class AppServiceProvider extends ServiceProvider
         // the vhost, is what generates canonical URLs, hreflang hrefs and
         // redirect targets — one http:// among them undoes the whole
         // canonical story.
-        if ($this->app->environment('production')) {
+        //
+        // Only where the hotel has SAID its address is https. Forcing it on
+        // an install whose APP_URL is http:// — a first look on localhost,
+        // a container on a LAN, a NAS — redirects every page to a port
+        // that speaks no TLS, and the person trying Doba for the first
+        // time sees a browser error instead of the wizard. The health
+        // page nags about plain http in production instead.
+        if (self::shouldForceHttps((string) $this->app->environment(), (string) config('app.url'))) {
             URL::forceScheme('https');
         }
 
@@ -53,5 +60,13 @@ class AppServiceProvider extends ServiceProvider
         // than a form post: ten a minute is far more than a human books
         // and far less than a script needs to sweep the calendar.
         RateLimiter::for('booking', static fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
+    }
+
+    /**
+     * Production, and an address the hotel itself declared as https.
+     */
+    public static function shouldForceHttps(string $environment, string $appUrl): bool
+    {
+        return $environment === 'production' && str_starts_with($appUrl, 'https://');
     }
 }

@@ -469,7 +469,7 @@ does not serve that page, rather than serving it half-English.
 
 ## Installing
 
-Three ways onto a server, all ending at the same wizard:
+Four ways onto a server, all ending at the same wizard:
 
 **No shell at all** — download `doba-installer.php` from the
 [latest release](https://github.com/gumslone/doba/releases), upload that
@@ -492,6 +492,27 @@ by the same code either way. And both verify the tarball's SHA-256
 before extracting a byte: the release workflow smoke-tests each
 installer against the exact tarball it publishes, so a release whose
 installers cannot install it never ships.
+
+**With Docker** — one container, one volume:
+
+```bash
+docker run -d -p 8080:80 -v doba-data:/data -e DOBA_URL=http://localhost:8080 ghcr.io/gumslone/doba
+```
+
+or `docker compose up -d` with the [`docker-compose.yml`](docker-compose.yml)
+in this repository. Everything the hotel owns lives under `/data` — `.env`,
+photos, invoices, backups, logs and the SQLite database — so backing up
+that volume is backing up Doba, and **updating is pulling a newer image**:
+the container runs the same health-checked updater on boot, snapshotting
+the database first. The scheduler and the queue worker run inside the
+container, because a container has no crontab. Put any reverse proxy in
+front for a domain and https and set `DOBA_URL` to the public address. The
+image is built for amd64 and arm64, so a Raspberry Pi or a Synology works.
+The wizard's install token is one command away:
+
+```bash
+docker exec <container> cat /data/storage/install-token.txt
+```
 
 **As a developer** — clone and build; see
 [Quick start](#quick-start-developers).

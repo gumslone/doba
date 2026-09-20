@@ -21,7 +21,18 @@ use RuntimeException;
  */
 class EnvWriter
 {
-    public function __construct(protected string $path) {}
+    protected string $path;
+
+    public function __construct(string $path)
+    {
+        // A symlinked .env — a shared/ directory in a release-per-folder
+        // deploy, a data volume in a container — must be written THROUGH.
+        // rename() over the link itself would swap it for a plain file
+        // that vanishes with the next release or the next container.
+        $resolved = is_link($path) ? realpath($path) : false;
+
+        $this->path = $resolved !== false ? $resolved : $path;
+    }
 
     /**
      * The live .env, unless configured otherwise — and the test suite

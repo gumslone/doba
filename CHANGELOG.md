@@ -11,6 +11,17 @@ release so far is marked pre-release for that reason.
 
 - Project housekeeping: contributing guide, security policy, issue
   templates and this changelog.
+- **The scheduler without cron.** Where a host offers no cron, visitor
+  traffic runs the scheduler after the response has gone out; a real cron
+  always wins, and the health page says which one is doing the work.
+- **Fixed:** production forced every URL to https even when the site
+  address was http, so a first look on localhost or a LAN redirected to a
+  port that speaks no TLS. It now follows the declared site address, and
+  the health page warns about plain http on a public address.
+- **Docker image** (`ghcr.io/gumslone/doba`, amd64 and arm64): one
+  container, one `/data` volume, the same wizard; updating is pulling a
+  newer image. The env writer now writes through a symlinked `.env`, which
+  also fixes release-per-folder deploys.
 
 ## v0.3.0 — 2026-09-09
 

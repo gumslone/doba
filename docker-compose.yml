@@ -1,0 +1,49 @@
+# Doba in one command:
+#
+#   docker compose up -d
+#
+# then open http://localhost:8080 and follow the wizard. It asks for an
+# install token to prove the server is yours:
+#
+#   docker compose exec doba cat /data/storage/install-token.txt
+#
+# Updating is pulling a newer image — the container migrates on boot,
+# snapshotting the database first:
+#
+#   docker compose pull && docker compose up -d
+
+services:
+  doba:
+    image: ghcr.io/gumslone/doba:latest
+    # To build from a checkout instead of pulling:  build: .
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      # The public address of the site. Change it when you put a domain
+      # and https in front (Caddy, Traefik, nginx-proxy — Doba trusts the
+      # proxy's forwarded headers).
+      DOBA_URL: http://localhost:8080
+    volumes:
+      # Everything the hotel owns: .env, photos, invoices, backups, logs
+      # and the SQLite database. Back this up and you have backed up Doba.
+      - doba-data:/data
+
+  # SQLite is the default and is enough for one hotel. For MySQL, uncomment
+  # this service and choose "MySQL" in the wizard with host "db", database
+  # "doba", user "doba" and the password below.
+  #
+  # db:
+  #   image: mysql:8.4
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_DATABASE: doba
+  #     MYSQL_USER: doba
+  #     MYSQL_PASSWORD: change-me
+  #     MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+  #   volumes:
+  #     - doba-db:/var/lib/mysql
+
+volumes:
+  doba-data:
+  # doba-db:

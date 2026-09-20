@@ -1,0 +1,116 @@
+name: Docker image
+
+# Builds the production image on every change that could break it, and
+# publishes it to GitHub Container Registry on a release tag. The build is
+# smoke-tested either way: an image that cannot boot to the install wizard
+# never gets a tag.
+
+on:
+  push:
+    tags: ['v*']
+    branches: [main]
+    paths:
+      - Dockerfile
+      - docker/**
+      - .dockerignore
+      - docker-compose.yml
+      - composer.lock
+      - package-lock.json
+      - .github/workflows/docker.yml
+  pull_request:
+    paths:
+      - Dockerfile
+      - docker/**
+      - .dockerignore
+      - .github/workflows/docker.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build for the smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: doba:smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test — boots to the wizard, survives a restart
+        run: |
+          set -euo pipefail
+          docker volume create doba-smoke
+          docker run -d --name doba -p 8080:80 -v doba-smoke:/data -e DOBA_URL=http://localhost:8080 doba:smoke
+
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null http://localhost:8080/up && break
+            sleep 2
+          done
+
+          # An uninstalled copy sends every URL to the wizard.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)" = "302"
+          curl -fsS http://localhost:8080/install | grep -qi 'doba'
+
+          # The hotel's state is on the volume, not in the container.
+          docker exec doba test -f /data/.env
+          docker exec doba test -f /data/storage/install-token.txt
+          docker exec doba test -L /var/www/html/.env
+          # The web user must be able to FOLLOW the links into the volume, or
+          # the wizard's blocking server check refuses to continue.
+          docker exec doba su -s /bin/sh www-data -c 'test -w /var/www/html/.env && test -w /var/www/html/storage'
+          # Plain http on localhost must reach the wizard, not an https port
+          # nobody is listening on.
+          curl -s -o /dev/null -w '%{redirect_url}' http://localhost:8080/ | grep -q '^http://localhost:8080/install'
+
+          # A new container on the same volume keeps the same key.
+          KEY_BEFORE="$(docker exec doba grep '^APP_KEY=' /data/.env)"
+          docker rm -f doba
+          docker run -d --name doba -p 8080:80 -v doba-smoke:/data -e DOBA_URL=http://localhost:8080 doba:smoke
+          sleep 8
+          test "$KEY_BEFORE" = "$(docker exec doba grep '^APP_KEY=' /data/.env)"
+          docker logs doba | tail -20
+
+      - name: Log in to the registry
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - name: Stamp the version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: echo "${GITHUB_REF_NAME}" > VERSION
+
+      - name: Publish (amd64 + arm64)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha

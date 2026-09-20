@@ -93,7 +93,7 @@ class InstallController extends Controller
         return match ($step) {
             'language' => view('install.language', ['locales' => Localization::shipped()]),
             'requirements' => view('install.requirements', ['checks' => app(Requirements::class)->all()]),
-            'database' => view('install.database', ['suggested' => database_path('database.sqlite')]),
+            'database' => view('install.database', ['suggested' => (string) config('doba.install.sqlite_path', database_path('database.sqlite'))]),
             'hotel' => view('install.hotel', [
                 'timezones' => \DateTimeZone::listIdentifiers(),
                 'locales' => (array) config('doba.locales', ['en']),
@@ -381,7 +381,7 @@ class InstallController extends Controller
     protected function connectionFor(array $input): array
     {
         if ($input['driver'] === 'sqlite') {
-            $path = database_path('database.sqlite');
+            $path = (string) config('doba.install.sqlite_path', database_path('database.sqlite'));
 
             if (! is_file($path)) {
                 touch($path);
@@ -420,7 +420,7 @@ class InstallController extends Controller
     protected function envFor(array $input): array
     {
         if ($input['driver'] === 'sqlite') {
-            return ['DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => database_path('database.sqlite')];
+            return ['DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => (string) config('doba.install.sqlite_path', database_path('database.sqlite'))];
         }
 
         return [
