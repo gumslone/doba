@@ -182,6 +182,11 @@ return [
         // Days before arrival. 0 switches the pre-arrival mail off.
         'pre_arrival_days' => (int) env('DOBA_MAIL_PRE_ARRIVAL_DAYS', 3),
         'post_stay' => (bool) env('DOBA_MAIL_POST_STAY', true),
+        // A reminder to a guest whose unfinished booking expired. OFF by
+        // default: in several countries that is advertising and needs
+        // consent. A hotel switches it on knowing its own law.
+        'recovery' => (bool) env('DOBA_MAIL_RECOVERY', false),
+        'recovery_after_minutes' => (int) env('DOBA_MAIL_RECOVERY_AFTER', 60),
     ],
 
     /*

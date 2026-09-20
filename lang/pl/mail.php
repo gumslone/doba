@@ -34,4 +34,11 @@ return [
     'post_stay_outro' => 'Z przyjemnością powitamy Cię ponownie.',
 
     'post_stay_review_ask' => 'Jeśli masz chwilę: krótka opinia na stronie rezerwacji pomaga innym podróżnym — i nam — bardziej, niż się wydaje. Napisać ją mogą tylko prawdziwi goście.',
+
+    // Unfinished-booking reminder (§13)
+    'recovery_subject' => 'Pokój w :hotel jest nadal wolny',
+    'recovery_heading' => 'Jeszcze się Pan/Pani zastanawia, :name?',
+    'recovery_intro' => 'Rozpoczęto rezerwację w :hotel na :date, ale nie została dokończona. Pokój jest nadal dostępny, a dokończenie zajmie minutę.',
+    'recovery_button' => 'Dokończ rezerwację',
+    'recovery_outro' => 'Jeśli plany się zmieniły, nie trzeba nic robić: nic nie zostało pobrane i nic nie jest zablokowane. Nie napiszemy w tej sprawie ponownie.',
 ];

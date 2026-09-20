@@ -34,4 +34,11 @@ return [
     'post_stay_outro' => 'We would love to welcome you again.',
 
     'post_stay_review_ask' => 'If you have a minute, a short review on your booking page helps other travellers — and us — more than you would think. Only real guests can write one.',
+
+    // Unfinished-booking reminder (§13)
+    'recovery_subject' => 'Your room at :hotel is still free',
+    'recovery_heading' => 'Still thinking about it, :name?',
+    'recovery_intro' => 'You started a booking at :hotel for :date and did not finish it. The room is still available, and picking up where you left off takes a minute.',
+    'recovery_button' => 'Finish my booking',
+    'recovery_outro' => 'If you changed your mind, do nothing: nothing was charged and nothing is being held. We will not write again about this.',
 ];

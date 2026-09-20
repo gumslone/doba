@@ -836,6 +836,16 @@ describing a configuration that no longer exists is worse than none.
   `p=reject`, because publishing reject on day one with SPF slightly wrong
   stops a hotel delivering its own confirmations.
 
+**The guest who did not finish** can be reminded — once, about an hour
+after their unpaid hold expired, only while the room can still be had, with
+a link that reopens checkout on the same room and dates and a sentence
+saying nothing was charged. It follows only a booking the guest started on
+the website and only a hold that ran out by itself; it stays silent if they
+came back and booked, if they were erased, or if the room has gone. **Off by
+default** (`DOBA_MAIL_RECOVERY=true` switches it on): in several countries a
+reminder like this counts as advertising and needs consent, and that is the
+hotel's call to make, not a default's.
+
 **The words are the hotel's.** Subject, heading, opening and closing
 line of the confirmation, the pre-arrival and the thank-you mail are
 editable under **Admin → Mail → Mail wording**, one box per language,

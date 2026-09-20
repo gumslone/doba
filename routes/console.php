@@ -46,6 +46,10 @@ Schedule::command('doba:directory:announce')->dailyAt('04:00')->withoutOverlappi
 // audited one.
 Schedule::command('doba:guest-mail')->dailyAt('08:00')->withoutOverlapping();
 
+// The unfinished-booking reminder (§13). The command is a no-op unless the
+// hotel switched it on; it runs often because "an hour later" is the point.
+Schedule::command('doba:recovery-mail')->everyTenMinutes()->withoutOverlapping();
+
 // The retention clock (§14): weekly, because the obligation is "not
 // longer than needed", not "at midnight sharp".
 Schedule::command('doba:guests:anonymise')->weeklyOn(1, '04:30')->withoutOverlapping();

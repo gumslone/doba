@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\BookingStatus;
 use App\Mail\BookingConfirmed;
+use App\Mail\CheckoutReminder;
 use App\Mail\PostStay;
 use App\Mail\PreArrival;
 use App\Models\Availability;
@@ -95,7 +96,7 @@ it('sends the hotel\'s own words, placeholders filled, in the language it wrote 
         ->and($german->render())->toContain('Anna');
 });
 
-it('covers every editable text in the three mails', function (): void {
+it('covers every editable text in all four mails', function (): void {
     foreach (array_keys(Wording::KEYS) as $key) {
         wordingStore($key, ['en' => "[[{$key}]]"]);
     }
@@ -104,9 +105,11 @@ it('covers every editable text in the three mails', function (): void {
     $rendered = (new BookingConfirmed($booking))->render()
         .(new PreArrival($booking))->render()
         .(new PostStay($booking))->render()
+        .(new CheckoutReminder($booking))->render()
         .(new BookingConfirmed($booking))->envelope()->subject
         .(new PreArrival($booking))->envelope()->subject
-        .(new PostStay($booking))->envelope()->subject;
+        .(new PostStay($booking))->envelope()->subject
+        .(new CheckoutReminder($booking))->envelope()->subject;
 
     foreach (array_keys(Wording::KEYS) as $key) {
         expect($rendered)->toContain("[[{$key}]]");

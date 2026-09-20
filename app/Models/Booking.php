@@ -36,7 +36,7 @@ class Booking extends Model
         'city_tax', 'cleaning_fee', 'total', 'deposit_due', 'paid_amount', 'balance_due',
         'promo_code_id', 'locale', 'guest_id', 'guest_notes', 'internal_notes',
         'cancellation_reason', 'cancelled_at', 'confirmed_at',
-        'checked_in_at', 'checked_out_at',
+        'checked_in_at', 'checked_out_at', 'recovery_sent_at',
         'ip_address', 'user_agent',
     ];
 
@@ -62,6 +62,7 @@ class Booking extends Model
         'paid_amount' => 'integer',
         'balance_due' => 'integer',
         'cancelled_at' => 'datetime',
+        'recovery_sent_at' => 'immutable_datetime',
         'confirmed_at' => 'datetime',
     ];
 

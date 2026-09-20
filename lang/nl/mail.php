@@ -23,4 +23,11 @@ return [
     'post_stay_outro' => 'We verwelkomen u graag opnieuw.',
 
     'post_stay_review_ask' => 'Heeft u een minuutje? Een korte beoordeling op uw boekingspagina helpt andere reizigers — en ons — meer dan u denkt. Alleen echte gasten kunnen er een schrijven.',
+
+    // Unfinished-booking reminder (§13)
+    'recovery_subject' => 'Uw kamer bij :hotel is nog vrij',
+    'recovery_heading' => 'Twijfelt u nog, :name?',
+    'recovery_intro' => 'U bent een boeking bij :hotel voor :date begonnen en heeft die niet afgerond. De kamer is nog beschikbaar; verdergaan waar u was gebleven kost een minuut.',
+    'recovery_button' => 'Boeking afronden',
+    'recovery_outro' => 'Bent u van gedachten veranderd, dan hoeft u niets te doen: er is niets afgeschreven en er wordt niets vastgehouden. Wij schrijven u hier niet nog eens over.',
 ];

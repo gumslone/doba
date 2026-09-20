@@ -23,4 +23,11 @@ return [
     'post_stay_outro' => 'Wir würden uns freuen, Sie wieder begrüßen zu dürfen.',
 
     'post_stay_review_ask' => 'Wenn Sie eine Minute haben: Eine kurze Bewertung auf Ihrer Buchungsseite hilft anderen Reisenden — und uns — mehr, als man denkt. Nur echte Gäste können eine schreiben.',
+
+    // Unfinished-booking reminder (§13)
+    'recovery_subject' => 'Ihr Zimmer im :hotel ist noch frei',
+    'recovery_heading' => 'Noch unentschlossen, :name?',
+    'recovery_intro' => 'Sie haben eine Buchung im :hotel für :date begonnen und nicht abgeschlossen. Das Zimmer ist noch frei — dort weiterzumachen, wo Sie aufgehört haben, dauert eine Minute.',
+    'recovery_button' => 'Buchung abschließen',
+    'recovery_outro' => 'Falls Sie es sich anders überlegt haben, müssen Sie nichts tun: Es wurde nichts berechnet und nichts reserviert. Wir schreiben Ihnen dazu nicht noch einmal.',
 ];

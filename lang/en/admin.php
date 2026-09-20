@@ -684,4 +684,10 @@ return [
     'demo_admin_hint' => 'The desk, bookings, rates, rooms and housekeeping all work — try them. Website content, mail, settings and the updater are read-only here, and everything resets every night.',
     'demo_blocked' => 'That is switched off in the public demo, because the next visitor would inherit it. On your own install it works.',
     'demo_login_hint' => 'This is a public demo — sign in with:',
+
+    // Unfinished-booking reminder (§13)
+    'mail_wording_key_recovery_subject' => 'Unfinished booking — subject line',
+    'mail_wording_key_recovery_heading' => 'Unfinished booking — heading',
+    'mail_wording_key_recovery_intro' => 'Unfinished booking — opening line',
+    'mail_wording_key_recovery_outro' => 'Unfinished booking — closing line',
 ];

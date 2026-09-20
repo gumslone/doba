@@ -18,6 +18,10 @@ release so far is marked pre-release for that reason.
   address was http, so a first look on localhost or a LAN redirected to a
   port that speaks no TLS. It now follows the declared site address, and
   the health page warns about plain http on a public address.
+- **Unfinished-booking reminder** (`DOBA_MAIL_RECOVERY=true`, off by
+  default): one mail about an hour after a guest's unpaid hold expires,
+  only while the room is still free, with a link back to the same room and
+  dates. Off by default because in several countries it needs consent.
 - **The installer explains PHP versions.** When the host runs an older PHP,
   `doba-installer.php` guesses the control panel (cPanel, Plesk,
   DirectAdmin, IONOS) and shows where the setting lives, step by step, with

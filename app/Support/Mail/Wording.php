@@ -38,6 +38,10 @@ final class Wording
         'post_stay_heading' => ['name', 'hotel'],
         'post_stay_intro' => ['hotel', 'name'],
         'post_stay_outro' => ['hotel', 'name'],
+        'recovery_subject' => ['hotel', 'name', 'date'],
+        'recovery_heading' => ['name', 'hotel', 'date'],
+        'recovery_intro' => ['hotel', 'date', 'name'],
+        'recovery_outro' => ['hotel', 'name'],
     ];
 
     /**
