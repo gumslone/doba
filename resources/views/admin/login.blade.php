@@ -12,8 +12,15 @@
         @csrf
         <h1 class="text-lg font-semibold">Doba</h1>
 
+        @if (\App\Support\Demo\Demo::enabled())
+            <p class="mt-4 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900">
+                {{ __('admin.demo_login_hint') }}<br>
+                <span class="font-mono">{{ config('doba.admin.email') }}</span> · <span class="font-mono">{{ config('doba.admin.password') }}</span>
+            </p>
+        @endif
+
         <label for="email" class="mt-6 block text-sm font-medium">{{ __('admin.email') }}</label>
-        <input type="email" id="email" name="email" required autofocus value="{{ old('email') }}"
+        <input type="email" id="email" name="email" required autofocus value="{{ old('email', \App\Support\Demo\Demo::enabled() ? config('doba.admin.email') : '') }}"
                class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
         @error('email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
 

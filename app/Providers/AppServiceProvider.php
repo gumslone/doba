@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Support\Alerts\Alerts;
+use App\Support\Demo\Demo;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobFailed;
@@ -47,6 +48,17 @@ class AppServiceProvider extends ServiceProvider
         // that speaks no TLS, and the person trying Doba for the first
         // time sees a browser error instead of the wizard. The health
         // page nags about plain http in production instead.
+        // A public demo never mails a stranger's address and never takes
+        // a card, whatever the .env underneath it says (§22).
+        if (Demo::enabled()) {
+            config([
+                'mail.default' => 'log',
+                'doba.features.online_payment' => false,
+                'doba.features.reviews' => true,
+                'doba.seo.noindex' => true,
+            ]);
+        }
+
         if (self::shouldForceHttps((string) $this->app->environment(), (string) config('app.url'))) {
             URL::forceScheme('https');
         }

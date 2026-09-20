@@ -413,6 +413,11 @@ The seeded admin is `admin@example.com` / `password` at `/admin`. Set
 `DOBA_ADMIN_EMAIL` and `DOBA_ADMIN_PASSWORD` before seeding anything you
 intend to make public.
 
+**Hosting a public demo of your own** is one switch, `DOBA_DEMO=true`: the
+install builds a living demo hotel, prints the admin login on every page,
+makes the dangerous half of the admin read-only and rebuilds itself every
+night. See [`docs/demo-hosting.md`](docs/demo-hosting.md).
+
 > GitHub Pages cannot host this: Pages serves static files, and Doba needs
 > PHP, a database and writable storage. Codespaces runs the real thing.
 

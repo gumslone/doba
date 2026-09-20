@@ -55,4 +55,8 @@ return [
     'per_stay' => 'per stay',
     'min_nights' => 'Minimum stay',
     'our_rooms_and_apartments' => 'Rooms & apartments',
+
+    // Public demo (§22)
+    'demo_strip' => 'This is a public demo of Doba. It resets every night.',
+    'demo_strip_admin' => 'Look behind the desk:',
 ];

@@ -55,4 +55,8 @@ return [
     'per_stay' => 'pro Aufenthalt',
     'min_nights' => 'Mindestaufenthalt',
     'our_rooms_and_apartments' => 'Zimmer & Apartments',
+
+    // Public demo (§22)
+    'demo_strip' => 'Dies ist eine öffentliche Demo von Doba. Sie wird jede Nacht zurückgesetzt.',
+    'demo_strip_admin' => 'Blick hinter die Rezeption:',
 ];

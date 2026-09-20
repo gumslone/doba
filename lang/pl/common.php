@@ -55,4 +55,8 @@ return [
     'per_stay' => 'za pobyt',
     'min_nights' => 'Minimalny pobyt',
     'our_rooms_and_apartments' => 'Pokoje i apartamenty',
+
+    // Public demo (§22)
+    'demo_strip' => 'To publiczne demo Doba. Co noc jest przywracane do stanu początkowego.',
+    'demo_strip_admin' => 'Zajrzyj za recepcję:',
 ];

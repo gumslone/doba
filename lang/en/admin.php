@@ -678,4 +678,10 @@ return [
 
     // Invoice CSV (§5)
     'invoices_export_intro' => 'Every invoice and credit note, newest first. The CSV for a period is one row per document with the VAT split by rate — decimal amounts, ready for the accountant.',
+
+    // Public demo (§22)
+    'demo_title' => 'Public demo.',
+    'demo_admin_hint' => 'The desk, bookings, rates, rooms and housekeeping all work — try them. Website content, mail, settings and the updater are read-only here, and everything resets every night.',
+    'demo_blocked' => 'That is switched off in the public demo, because the next visitor would inherit it. On your own install it works.',
+    'demo_login_hint' => 'This is a public demo — sign in with:',
 ];

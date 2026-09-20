@@ -18,6 +18,13 @@ release so far is marked pre-release for that reason.
   address was http, so a first look on localhost or a LAN redirected to a
   port that speaks no TLS. It now follows the declared site address, and
   the health page warns about plain http on a public address.
+- **Public demo mode** (`DOBA_DEMO=true`): builds a living demo hotel on
+  first boot, prints the admin login on every page, keeps the desk working
+  while making content, mail, settings and the updater read-only, never
+  mails or charges, and rebuilds itself nightly. See
+  `docs/demo-hosting.md`.
+- **Fixed:** the directory's ETag could be cut a second before the install
+  id was stored, so a hub's first conditional GET got a 200.
 - **Docker image** (`ghcr.io/gumslone/doba`, amd64 and arm64): one
   container, one `/data` volume, the same wizard; updating is pulling a
   newer image. The env writer now writes through a symlinked `.env`, which

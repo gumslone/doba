@@ -52,6 +52,12 @@ elif [ -n "$DOBA_URL" ]; then
     ' "$DATA/.env" "$DOBA_URL"
 fi
 
+# A public demo is a switch, not a procedure: DOBA_DEMO=true installs
+# itself with the demo hotel on first boot and rebuilds nightly.
+if [ "${DOBA_DEMO:-}" = "true" ] && ! grep -q '^DOBA_DEMO=' "$DATA/.env"; then
+    printf '\nDOBA_DEMO=true\n' >> "$DATA/.env"
+fi
+
 chown -R www-data:www-data "$DATA" "$APP/bootstrap/cache"
 
 # Caches from the previous image describe the previous code.
@@ -63,6 +69,10 @@ if [ -f "$DATA/storage/installed.lock" ]; then
     # and a hotel is better served by the site it had than by a container
     # that refuses to start.
     as_app "php artisan doba:update" || echo "doba: update did not complete — see the output above and Admin → Update"
+elif [ "${DOBA_DEMO:-}" = "true" ]; then
+    echo "doba: demo mode — building the demo hotel"
+    touch "${DOBA_SQLITE_PATH:-$DATA/database.sqlite}" && chown www-data:www-data "${DOBA_SQLITE_PATH:-$DATA/database.sqlite}"
+    as_app "php artisan doba:demo:reset" || echo "doba: the demo could not be built — see the output above"
 else
     echo "doba: not installed yet — open ${DOBA_URL:-http://localhost:8080} and follow the wizard."
     echo "doba: it will ask for the install token; read it with:"

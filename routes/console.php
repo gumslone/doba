@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Support\Demo\Demo;
 use App\Support\Scheduling\Heartbeat;
 use Illuminate\Support\Facades\Schedule;
 
@@ -48,3 +49,10 @@ Schedule::command('doba:guest-mail')->dailyAt('08:00')->withoutOverlapping();
 // The retention clock (§14): weekly, because the obligation is "not
 // longer than needed", not "at midnight sharp".
 Schedule::command('doba:guests:anonymise')->weeklyOn(1, '04:30')->withoutOverlapping();
+
+// The public demo rebuilds itself every night (§22): whatever a visitor
+// did to it is gone by breakfast. Registered only where DOBA_DEMO is on,
+// and the command itself refuses anywhere else.
+if (Demo::enabled()) {
+    Schedule::command('doba:demo:reset')->dailyAt((string) config('doba.demo.reset_at', '04:00'))->withoutOverlapping();
+}

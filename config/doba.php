@@ -281,6 +281,17 @@ return [
     */
 
     /*
+    | The public demo (§22). On, the install hands out its admin login on
+    | every page, makes the dangerous half of the admin read-only, never
+    | sends mail or takes a payment, and rebuilds itself nightly. It is
+    | also the ONLY switch that lets doba:demo:reset drop the database.
+    */
+    'demo' => [
+        'enabled' => (bool) env('DOBA_DEMO', false),
+        'reset_at' => env('DOBA_DEMO_RESET_AT', '04:00'),
+    ],
+
+    /*
     | The scheduler (§15). A cron line is the right way to run it; where a
     | host offers none, visitor traffic runs it instead, after the response.
     */

@@ -41,6 +41,7 @@ use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\VenueController;
+use App\Http\Middleware\DemoGuard;
 use App\Http\Middleware\SetLocale;
 use App\Support\Routing\Localization;
 use Illuminate\Http\Request;
@@ -114,7 +115,7 @@ Route::prefix('admin')->group(function (): void {
             ->name('admin.login.submit');
     });
 
-    Route::middleware('auth')->group(function (): void {
+    Route::middleware(['auth', DemoGuard::class])->group(function (): void {
         Route::post('logout', [AuthController::class, 'logout'])->name('admin.logout');
         Route::redirect('/', '/admin/pages');
 

@@ -105,6 +105,15 @@
 
         <main class="min-w-0 flex-1 px-4 py-8 lg:px-8">
             <div class="mx-auto max-w-5xl">
+                @if (\App\Support\Demo\Demo::enabled())
+                    <p class="mb-6 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-sky-900">
+                        <strong>{{ __('admin.demo_title') }}</strong> {{ __('admin.demo_admin_hint') }}
+                    </p>
+                @endif
+                @if (session('demo_blocked'))
+                    <p class="mb-6 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="status">{{ session('demo_blocked') }}</p>
+                @endif
+
                 {{-- Shown on every admin page until somebody confirms a test
                      message arrived. Mail is the one subsystem that fails
                      silently, so the warning is deliberately hard to ignore
