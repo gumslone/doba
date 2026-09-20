@@ -54,6 +54,12 @@ class DirectoryController extends Controller
             abort(404);
         }
 
+        // Minted BEFORE the stamp is read: the id is stored as a setting,
+        // so creating it during the first request would move updated_at
+        // after the ETag was cut from it — and when the clock ticked over a
+        // second in between, a hub's very next conditional GET got a 200.
+        PropertyDescriptor::installId();
+
         $updated = $descriptor->updatedAt();
         $etag = '"'.substr(hash('sha256', (string) $updated->getTimestamp().config('app.url')), 0, 32).'"';
 
