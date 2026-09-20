@@ -280,12 +280,27 @@ return [
     |
     */
 
+    /*
+    | The scheduler (§15). A cron line is the right way to run it; where a
+    | host offers none, visitor traffic runs it instead, after the response.
+    */
+    'scheduler' => [
+        'web_fallback' => (bool) env('DOBA_WEB_CRON', true),
+        // Seconds without a run before a visitor's request steps in.
+        'stale_after' => (int) env('DOBA_WEB_CRON_AFTER', 180),
+        'heartbeat_path' => env('DOBA_HEARTBEAT_PATH', storage_path('framework/scheduler-heartbeat.json')),
+    ],
+
     'install' => [
         'lock_path' => env('DOBA_INSTALL_LOCK', storage_path('installed.lock')),
         'token_path' => env('DOBA_INSTALL_TOKEN', storage_path('install-token.txt')),
         // Where the wizard and the settings screen write environment
         // values. Only tests point this anywhere but the real .env.
         'env_path' => env('DOBA_ENV_PATH', base_path('.env')),
+        // Where the wizard puts the SQLite file when the hotelier picks
+        // SQLite. A container points this at its data volume; anywhere
+        // else the framework's own database/ directory is right.
+        'sqlite_path' => env('DOBA_SQLITE_PATH', database_path('database.sqlite')),
     ],
 
     'backups' => [

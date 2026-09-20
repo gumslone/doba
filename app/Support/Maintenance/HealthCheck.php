@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Maintenance;
 
+use App\Support\Scheduling\Heartbeat;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,9 +59,11 @@ class HealthCheck
             $this->writable(),
             $this->appKey(),
             $this->debugMode(),
+            $this->https(),
             $this->database(),
             $this->schema(),
             $this->diskSpace(),
+            $this->scheduler(),
         ];
 
         if ($deep) {
@@ -204,6 +207,62 @@ class HealthCheck
                 ? 'APP_DEBUG is true in production. Error pages print configuration to whoever triggers them — set APP_DEBUG=false.'
                 : ($debug ? 'On, outside production.' : 'Off.'),
         );
+    }
+
+    /**
+     * A live hotel on plain http sends names, addresses and the admin
+     * password across the network readable. Not critical — a trial on
+     * localhost is legitimately http — but never silent.
+     *
+     * @return Check
+     */
+    protected function https(): array
+    {
+        $url = (string) config('app.url');
+        $production = config('app.env') === 'production';
+        $secure = str_starts_with($url, 'https://');
+        $local = (bool) preg_match('#^http://(localhost|127\.|10\.|192\.168\.|\[::1\])#', $url);
+
+        return $this->result(
+            'https',
+            $production && ! $secure && ! $local ? self::WARNING : self::OK,
+            'HTTPS',
+            match (true) {
+                $secure => 'The site address is https.',
+                $local => 'Plain http on a local address — fine for a look around, not for guests.',
+                default => 'The site address ('.$url.') is plain http. Guests\' details and the admin password travel unencrypted. Put a certificate in front (most hosts offer Let\'s Encrypt for free) and set APP_URL to the https address.',
+            },
+        );
+    }
+
+    /**
+     * Is anything running the scheduler, and is it a real cron?
+     *
+     * Never critical: the traffic-driven fallback keeps a hotel selling
+     * without one. But a visitor is a poor clock at four in the morning —
+     * a hold placed at 23:50 on a quiet site is released when the next
+     * person happens by — so the page says which one is doing the work,
+     * and prints the line that fixes it.
+     *
+     * @return Check
+     */
+    protected function scheduler(): array
+    {
+        $cron = Heartbeat::cronAge();
+        $any = Heartbeat::age();
+        $line = '* * * * * cd '.base_path().' && php artisan schedule:run >> /dev/null 2>&1';
+
+        if ($cron !== null && $cron < 600) {
+            return $this->result('scheduler', self::OK, 'Scheduled tasks', 'Run by cron, last a moment ago.');
+        }
+
+        if ($any !== null && $any < 3600) {
+            return $this->result('scheduler', self::WARNING, 'Scheduled tasks',
+                'Running from visitor traffic, not from cron. It works, but on a quiet night holds expire late and mail goes out late. Add this cron line on your host: '.$line);
+        }
+
+        return $this->result('scheduler', self::WARNING, 'Scheduled tasks',
+            'Nothing has run the scheduler recently. Holds are not expiring and guest mail is not being sent. Add this cron line on your host: '.$line);
     }
 
     /**

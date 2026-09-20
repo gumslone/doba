@@ -27,7 +27,13 @@ pest()->extend(TestCase::class)
             // Never the developer's real .env: a test that wrote it would
             // log them out of their own install, or worse.
             'doba.install.env_path' => storage_path('framework/testing/.env'),
+            // The traffic-driven scheduler is its own test's business: on
+            // everywhere, every request in the suite would run holds:release.
+            'doba.scheduler.web_fallback' => false,
+            'doba.scheduler.heartbeat_path' => storage_path('framework/testing/scheduler-heartbeat.json'),
         ]);
+
+        File::delete(storage_path('framework/testing/scheduler-heartbeat.json'));
 
         File::put($lock, 'testing');
 

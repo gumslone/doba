@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Middleware\CaptureReferral;
 use App\Http\Middleware\EnsureInstalled;
+use App\Http\Middleware\RunSchedulerWhenIdle;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use App\Models\Redirect;
@@ -49,6 +50,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Only on the site a guest browses: an aggregator's `?ref=` has to
         // survive them changing their dates twice before they book (§21).
         $middleware->web(append: CaptureReferral::class);
+
+        // The scheduler for a host with no cron: runs after the response,
+        // and only when nothing else has run it for a few minutes (§15).
+        $middleware->web(append: RunSchedulerWhenIdle::class);
 
         // Prepended, so an uninstalled copy answers the wizard rather than
         // whatever a half-configured route would have done — and so an

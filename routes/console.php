@@ -2,14 +2,20 @@
 
 declare(strict_types=1);
 
+use App\Support\Scheduling\Heartbeat;
 use Illuminate\Support\Facades\Schedule;
 
 /*
 | The per-install scheduler (§15). One cron line on the host runs
 | `php artisan schedule:run` every minute; everything below hangs off it.
+| Where no cron exists, RunSchedulerWhenIdle runs it from visitor traffic.
 | More entries join as their subsystems land: holds:release (every minute),
 | channels:sync (every 15 min), availability:reconcile (nightly), backups.
 */
+
+// First, so it beats even when a later entry throws: the proof that
+// something is running this file, and whether it was cron or a visitor.
+Schedule::call(static fn () => Heartbeat::beat())->everyMinute()->name('doba:heartbeat');
 
 Schedule::command('holds:release')->everyMinute();
 Schedule::command('channels:sync')->everyFifteenMinutes()->withoutOverlapping();
