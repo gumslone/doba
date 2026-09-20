@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doba — your hotel&#x27;s own booking site, without commission</title>
+<meta name="description" content="Free, open-source booking engine and multilingual website for independent hotels, guesthouses and apartments. Guests book with you directly: no commission, your guest data, install in ten minutes.">
+<link rel="canonical" href="https://gumslone.github.io/doba/">
+<link rel="alternate" hreflang="en" href="https://gumslone.github.io/doba/">
+<link rel="alternate" hreflang="de" href="https://gumslone.github.io/doba/de/">
+<link rel="alternate" hreflang="x-default" href="https://gumslone.github.io/doba/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Doba — your hotel&#x27;s own booking site, without commission">
+<meta property="og:description" content="Free, open-source booking engine and multilingual website for independent hotels, guesthouses and apartments. Guests book with you directly: no commission, your guest data, install in ten minutes.">
+<meta property="og:url" content="https://gumslone.github.io/doba/">
+<meta property="og:image" content="https://gumslone.github.io/doba/screenshots/home.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Doba", "applicationCategory": "BusinessApplication", "operatingSystem": "Linux, Docker, any PHP 8.4 web hosting", "description": "Free, open-source booking engine and multilingual website for independent hotels, guesthouses and apartments. Guests book with you directly: no commission, your guest data, install in ten minutes.", "url": "https://gumslone.github.io/doba/", "license": "https://opensource.org/licenses/MIT", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}, "codeRepository": "https://github.com/gumslone/doba", "inLanguage": ["en", "de", "fr", "nl", "pl", "uk"]}</script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">Doba<small>direct booking</small></a>
+    <nav class="top-nav" aria-label="Main">
+      <a href="#features">What you get</a><a href="#calculator">Calculator</a><a href="#install">Install</a>
+      <a class="gh" href="https://github.com/gumslone/doba">GitHub</a>
+      <a class="lang" href="de/" hreflang="de">Deutsch</a>
+    </nav>
+  </header>
+</div>
+
+<main>
+<div class="wrap hero">
+  <div class="eyebrow">Open source · MIT licence · free forever</div>
+  <h1>Your hotel's own booking site. <em>No commission.</em></h1>
+  <p class="lede">Doba is a complete booking engine and website for independent hotels, guesthouses and holiday apartments. Guests book with you directly, the money goes to you, and the guest list stays yours.</p>
+  <div class="cta">
+    <a class="btn btn-primary" href="https://codespaces.new/gumslone/doba">Try it in your browser</a>
+    <a class="btn btn-ghost" href="#install">Install in ten minutes</a>
+    <a class="btn" href="https://github.com/gumslone/doba" style="color:var(--soft)">View the code →</a>
+  </div>
+  <p class="hero-note">No sign-up, no credit card, no &quot;contact sales&quot;. It is software you download and own.</p>
+  <div class="hero-shot"><img src="screenshots/home.png" width="1600" height="1222" alt="" loading="eager"></div>
+</div>
+
+<section class="tint" id="calculator"><div class="wrap">
+  <div class="head"><div class="eyebrow">What the portals cost you</div><h2>Count what you pay in commission</h2><p class="lede">Move the sliders to your own house. The arithmetic is shown in full — a number you cannot check is a sales pitch.</p></div>
+  <div class="calc" id="calc">
+    <div>
+      <div class="row"><label for="c-rooms">Rooms or apartments <span class="val" id="v-rooms"></span></label><input type="range" id="c-rooms" min="1" max="80" value="12"></div>
+      <div class="row"><label for="c-occ">Occupancy over the year <span class="val" id="v-occ"></span></label><input type="range" id="c-occ" min="10" max="100" value="60"></div>
+      <div class="row two">
+        <div><label for="c-rate">Average price per night</label><input type="number" id="c-rate" min="10" max="2000" step="5" value="95"></div>
+        <div><label for="c-cur">Currency</label><select id="c-cur"><option>EUR</option><option>PLN</option><option>UAH</option><option>CHF</option><option>GBP</option><option>USD</option></select></div>
+      </div>
+      <div class="row"><label for="c-share">Share of nights booked through portals <span class="val" id="v-share"></span></label><input type="range" id="c-share" min="0" max="100" value="70"></div>
+      <div class="row" style="margin-bottom:0"><label for="c-comm">Portal commission <span class="val" id="v-comm"></span></label><input type="range" id="c-comm" min="8" max="25" step="0.5" value="15"></div>
+    </div>
+    <div class="result" aria-live="polite">
+      <div class="label">Commission paid per year</div>
+      <div class="big" id="r-paid">—</div>
+      <div class="line"><div class="label">If one in three of those guests booked direct, you keep</div><div class="mid" id="r-third">—</div></div>
+      <p class="need" style="margin-top:22px">rooms × 365 × occupancy × portal share = <b id="r-nights"></b> nights through portals, × price × commission.</p>
+    </div>
+  </div>
+  <p class="honest">Portals bring you guests you would never have reached, and Doba does not replace them. It makes sure the guests who already know your name — returning guests, people who looked you up after seeing you on a portal, friends of friends — can book with you in two minutes instead of costing you 15% every time.</p>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="head"><div class="eyebrow">What you get</div><h2>Everything a small house needs, nothing you have to rent</h2></div>
+  <div class="grid"><div class="feat"><div class="ico" aria-hidden="true">◷</div><h3>A real booking engine</h3><p>Live availability, seasons and rate plans, minimum stays, holds while the guest pays, and a guarantee against double bookings that is tested on every change.</p></div><div class="feat"><div class="ico" aria-hidden="true">€</div><h3>Payments to your account</h3><p>Stripe, PayPal, LiqPay, bank transfer or pay at the desk. Deposit now and balance later, city tax on its own line, refunds and credit notes.</p></div><div class="feat"><div class="ico" aria-hidden="true">🌐</div><h3>A website that gets found</h3><p>Your own site in six languages with the technical SEO done properly: hreflang, structured data, sitemap, fast pages. Ranking for &quot;hotel in your town&quot; is the point.</p></div><div class="feat"><div class="ico" aria-hidden="true">⌂</div><h3>Rooms and apartments</h3><p>Sell hotel rooms and holiday flats side by side: cleaning fee once per stay, minimum nights, bedrooms and bathrooms, two units on one booking.</p></div><div class="feat"><div class="ico" aria-hidden="true">☑</div><h3>The front desk</h3><p>Who arrives today and when, who is in the house, who leaves. Phone and walk-in bookings, room assignment, late check-out requests.</p></div><div class="feat"><div class="ico" aria-hidden="true">✓</div><h3>Housekeeping on a phone</h3><p>A list of doors to clean with one big button each. The door with a guest arriving this afternoon comes first. No guest names on it.</p></div><div class="feat"><div class="ico" aria-hidden="true">⇄</div><h3>Portal calendars in sync</h3><p>Two-way iCal with Booking.com, Airbnb and others, so a room sold there is closed here and the other way round.</p></div><div class="feat"><div class="ico" aria-hidden="true">§</div><h3>Invoices and the accountant</h3><p>Numbered invoices with VAT per rate, credit notes, and a monthly CSV your accountant can import.</p></div><div class="feat"><div class="ico" aria-hidden="true">♡</div><h3>Your guest book</h3><p>Every guest with their stays and what they spent, a returning-guest discount, verified reviews, and GDPR export and erasure as buttons.</p></div></div>
+</div></section>
+
+<section class="tint"><div class="wrap">
+  <div class="head"><div class="eyebrow">See it</div><h2>Built for the people who actually run the house</h2></div>
+  <div class="shots">
+    <div class="stack">
+      <figure><img src="screenshots/admin-front-desk.png" width="1440" height="1000" alt="" loading="lazy"><figcaption>The front desk: arrivals with the time each guest gave, who is in the house, who leaves today.</figcaption></figure>
+      <figure><img src="screenshots/booking-search.png" width="1600" height="1100" alt="" loading="lazy"><figcaption>What your guests see: search, live prices, book.</figcaption></figure>
+    </div>
+    <figure><img class="phone" src="screenshots/admin-housekeeping-phone.png" width="780" height="1688" alt="" loading="lazy"><figcaption style="text-align:center">Housekeeping, as it looks on a phone in a corridor.</figcaption></figure>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="head"><div class="eyebrow">How it compares</div><h2>Where Doba sits</h2></div>
+  <div class="scroll"><table class="cmp"><thead><tr><th></th><th>Booking portals</th><th>A website builder</th><th>Doba</th></tr></thead><tbody><tr><td>Commission per booking</td><td>15–18 %</td><td>0 %</td><td>0 %</td></tr><tr><td>Real availability and prices</td><td>yes</td><td>no</td><td>yes</td></tr><tr><td>Found for &quot;hotel in your town&quot;</td><td>they are, not you</td><td>maybe</td><td>that is the point</td></tr><tr><td>Guest data is yours</td><td>no</td><td>yes</td><td>yes</td></tr><tr><td>Monthly fee</td><td>—</td><td>€15–40</td><td>€0</td></tr><tr><td>Runs on €5/month hosting</td><td>—</td><td>—</td><td>yes</td></tr></tbody></table></div>
+</div></section>
+
+<section class="tint" id="install"><div class="wrap">
+  <div class="head"><div class="eyebrow">Install</div><h2>Three ways in, all ending at the same setup wizard</h2><p class="lede">The wizard asks for your hotel&#x27;s name, your rooms and your prices, and the calendar is live when it finishes. No command line needed.</p></div>
+  <div class="ways"><div class="way"><div class="tag">No technical knowledge</div><h3>Upload one file</h3><ol><li>Download <b>doba-installer.php</b> from the latest release.</li><li>Upload it to your web hosting with FTP.</li><li>Open it in your browser and follow the steps.</li></ol><p><a class="btn btn-ghost" href="https://github.com/gumslone/doba/releases">Download the installer</a></p><p class="need" style="margin-top:14px">Needs web hosting with PHP 8.4. Most hosts let you pick the PHP version in their control panel.</p></div><div class="way"><div class="tag">Home server, NAS or VPS</div><h3>Docker</h3><ol><li>Run this one command.</li><li>Open the address in your browser.</li><li>Updating later is pulling a newer image.</li></ol><pre>docker run -d -p 8080:80 \
+  -v doba-data:/data \
+  -e DOBA_URL=http://localhost:8080 \
+  ghcr.io/gumslone/doba</pre><p><a class="btn btn-ghost" href="https://github.com/gumslone/doba#installing">Docker details</a></p><p class="need" style="margin-top:14px">Works on a Raspberry Pi and a Synology too.</p></div><div class="way"><div class="tag">With a shell</div><h3>One line</h3><ol><li>Paste this on your server.</li><li>Point your web server at the <b>public</b> folder.</li><li>Open the site — the wizard takes over.</li></ol><pre>curl -fsSL \
+  https://raw.githubusercontent.com/gumslone/doba/main/scripts/install.sh \
+  | bash</pre><p><a class="btn btn-ghost" href="https://github.com/gumslone/doba/blob/main/scripts/install.sh">Read the script first</a></p><p class="need" style="margin-top:14px">Verifies the download checksum before unpacking anything.</p></div></div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="status">
+    <div class="eyebrow">Honest about where it is</div>
+    <h2 style="font-size:1.7rem;margin-bottom:16px">Young, tested, and looking for its first hotels</h2>
+    <p>Doba is new. It is covered by more than 600 automated tests on two databases, and no hotel has run on it in production yet — every release is marked pre-release for exactly that reason.</p><p>If you run a small house and are willing to be one of the first, you get the maintainer&#x27;s full attention: tell us what confused you and it gets fixed. Web agencies are welcome too — it is MIT-licensed, re-themeable, and yours to install for clients.</p>
+    <p style="margin-top:22px"><a class="btn btn-primary" href="https://github.com/gumslone/doba/discussions">Say hello in Discussions</a></p>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap cols"><div>Doba is free software under the MIT licence.<br>No cookies, no tracking, no web fonts on this page.</div><div><a href="https://github.com/gumslone/doba">GitHub</a> · <a href="https://github.com/gumslone/doba/releases">Releases</a> · <a href="https://github.com/gumslone/doba/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/gumslone/doba/blob/main/SECURITY.md">Security</a> · <a href="https://github.com/gumslone/doba/discussions">Discussions</a></div></div></footer>
+<script src="assets/calc.js" defer></script>
+</body>
+</html>
