@@ -58,12 +58,20 @@ class DemoStaySeeder extends Seeder
         ];
 
         // [room type code, check-in offset, nights, end state, arrival time]
+        //
+        // Ordered so the doors tell a true story: last week's guests left
+        // and their rooms were cleaned long ago; two guests left THIS
+        // morning, so two doors are dirty; and one of those doors has
+        // somebody arriving into it this afternoon — which is exactly the
+        // door housekeeping's list puts first.
         $stays = [
             ['DBL', -9, 3, BookingStatus::CheckedOut, null],
-            ['JSUITE', -6, 2, BookingStatus::CheckedOut, null],
-            ['DBL', -2, 2, BookingStatus::CheckedIn, null],       // leaving today
+            ['JSUITE', -7, 3, BookingStatus::CheckedOut, null],
+            ['DBL', -3, 3, BookingStatus::CheckedOut, null],      // left this morning -> 101 dirty
+            ['JSUITE', -2, 2, BookingStatus::CheckedOut, null],   // left this morning -> 201 dirty
+            ['DBL', -2, 2, BookingStatus::CheckedIn, null],       // leaving today, still in 102
             ['SGL', -1, 3, BookingStatus::CheckedIn, null],       // in the house
-            ['DBL', 0, 2, BookingStatus::Confirmed, '14:30'],     // arriving today
+            ['DBL', 0, 2, BookingStatus::Confirmed, '14:30'],     // arriving today, into 101
             ['APT2', 0, 4, BookingStatus::Confirmed, '17:00'],    // arriving today
             ['JSUITE', 5, 3, BookingStatus::Confirmed, null],
         ];
@@ -76,10 +84,12 @@ class DemoStaySeeder extends Seeder
             }
 
             [$first, $last, $email, $country] = $guests[$i % count($guests)];
+            $checkIn = $today->addDays($offset);
+            $checkOut = $checkIn->addDays($nights);
 
             try {
                 $booking = $service->place(
-                    $roomType, $today->addDays($offset), $today->addDays($offset + $nights),
+                    $roomType, $checkIn, $checkOut,
                     ['email' => $email, 'first_name' => $first, 'last_name' => $last, 'country' => $country],
                     adults: 2,
                 );
@@ -94,11 +104,25 @@ class DemoStaySeeder extends Seeder
 
             if (in_array($state, [BookingStatus::CheckedIn, BookingStatus::CheckedOut], true)) {
                 $booking = $service->transition($booking, BookingStatus::CheckedIn, 'demo');
+                // They arrived on their arrival day, not during the reset.
+                $booking->forceFill(['checked_in_at' => $checkIn->setTime(15, 40)])->save();
             }
 
             if ($state === BookingStatus::CheckedOut) {
                 $booking = $service->transition($booking, BookingStatus::CheckedOut, 'demo');
-                $this->review($booking, $i);
+                $leftToday = $checkOut->equalTo($today);
+
+                $booking->forceFill([
+                    'checked_out_at' => $leftToday ? min(CarbonImmutable::now(config('doba.timezone')), $today->setTime(9, 50)) : $checkOut->setTime(10, 15),
+                ])->save();
+
+                if (! $leftToday) {
+                    // Cleaned days ago; only this morning's departures are
+                    // still waiting for housekeeping.
+                    Room::query()->whereIn('id', $booking->rooms()->whereNotNull('room_id')->pluck('room_id'))
+                        ->where('status', 'dirty')->update(['status' => 'clean']);
+                    $this->review($booking, $i);
+                }
             }
         }
 
@@ -127,7 +151,7 @@ class DemoStaySeeder extends Seeder
             foreach ($roomType === null ? [] : $doors as $number) {
                 Room::query()->firstOrCreate(['number' => $number], [
                     'room_type_id' => $roomType->id,
-                    'floor' => ctype_digit($number) ? $number[0] : 'Annex',
+                    'floor' => ctype_digit($number) ? ($number[0] === '1' ? '1st floor' : '2nd floor') : 'Annex',
                     'status' => 'clean',
                 ]);
             }

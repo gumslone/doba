@@ -59,7 +59,7 @@
     <title>{{ $title ?? 'Admin' }} · Doba</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-neutral-100 text-neutral-900 antialiased">
+<body class="doba-admin min-h-screen bg-neutral-100 text-neutral-900 antialiased">
     {{--
         Plain <details> for the mobile toggle. No framework, no JavaScript
         at all: the §14 CSP forbids 'unsafe-eval', and a navigation that
@@ -118,7 +118,7 @@
                      message arrived. Mail is the one subsystem that fails
                      silently, so the warning is deliberately hard to ignore
                      and deliberately not dismissible. --}}
-                @unless (app(App\Support\Mail\MailSettings::class)->isConfirmed() || request()->is('admin/mail*'))
+                @unless (app(App\Support\Mail\MailSettings::class)->isConfirmed() || request()->is('admin/mail*') || \App\Support\Demo\Demo::enabled())
                     <p class="mb-6 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
                         <a href="/admin/mail" class="font-medium underline">{{ __('admin.mail_unconfirmed') }}</a>
                         — {{ __('admin.mail_unconfirmed_hint') }}

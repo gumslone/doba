@@ -7,7 +7,7 @@
     <title>Login · Doba</title>
     @vite(['resources/css/app.css'])
 </head>
-<body class="flex min-h-screen items-center justify-center bg-neutral-100">
+<body class="doba-admin flex min-h-screen items-center justify-center bg-neutral-100">
     <form method="POST" action="/admin/login" class="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-8">
         @csrf
         <h1 class="text-lg font-semibold">Doba</h1>

@@ -111,23 +111,34 @@ html {
 }
 
 body {
-    background: var(--paper);
-    color: var(--ink);
     font-family: var(--doba-font-body);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4 {
+/* Paper and ink are the guest site's; the admin sets its own with utilities. */
+:where(body:not(.doba-admin)) {
+    background: var(--paper);
+    color: var(--ink);
+}
+
+/*
+ * The theme's headings belong to the guest-facing site. Unlayered rules
+ * beat every Tailwind utility, so left global they also restyled the admin:
+ * a section label written as text-xs rendered as a 40px serif headline.
+ * :where() keeps the specificity at a bare element selector, so nothing on
+ * the public side changes its mind about who wins.
+ */
+:where(body:not(.doba-admin)) :is(h1, h2, h3, h4) {
     font-family: var(--doba-font-heading);
     font-weight: var(--h1-weight);
     line-height: 1.15;
     letter-spacing: var(--h1-tracking);
 }
 
-h1 { font-size: var(--h1-size); line-height: var(--h1-leading); }
-h2 { font-size: clamp(1.8rem, 3.2vw, 2.6rem); }
-h3 { font-size: 1.3rem; }
+:where(body:not(.doba-admin)) h1 { font-size: var(--h1-size); line-height: var(--h1-leading); }
+:where(body:not(.doba-admin)) h2 { font-size: clamp(1.8rem, 3.2vw, 2.6rem); }
+:where(body:not(.doba-admin)) h3 { font-size: 1.3rem; }
 
 img { max-width: 100%; display: block; }
 

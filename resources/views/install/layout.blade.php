@@ -13,7 +13,7 @@
     <title>{{ $title ?? __('install.title') }} · Doba</title>
     @vite(['resources/css/app.css'])
 </head>
-<body class="min-h-screen bg-neutral-100 text-neutral-900 antialiased">
+<body class="doba-admin min-h-screen bg-neutral-100 text-neutral-900 antialiased">
     <div class="mx-auto max-w-2xl px-4 py-10">
         <p class="mb-6 text-lg font-semibold">Doba</p>
 

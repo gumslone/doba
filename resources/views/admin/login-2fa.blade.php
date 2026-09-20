@@ -7,7 +7,7 @@
     <title>Login · Doba</title>
     @vite(['resources/css/app.css'])
 </head>
-<body class="flex min-h-screen items-center justify-center bg-neutral-100">
+<body class="doba-admin flex min-h-screen items-center justify-center bg-neutral-100">
     <form method="POST" action="/admin/login/2fa" class="mx-auto mt-24 w-full max-w-sm rounded border border-neutral-200 bg-white p-6">
         @csrf
         <h1 class="text-lg font-semibold">{{ __('admin.two_factor_title') }}</h1>
