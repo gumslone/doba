@@ -1,0 +1,24 @@
+name: Feature request
+description: Something a hotel needs that Doba does not do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The situation at the hotel, not the solution. "Guests keep ringing to ask whether parking is free" beats "add a parking field".
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How do you handle it today?
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea, if you have one
+  - type: dropdown
+    id: who
+    attributes:
+      label: You are
+      options: [A hotelier or host, A developer or agency working for one, Just interested]

@@ -972,10 +972,14 @@ wizard and the public API, is in
 
 ## Contributing
 
-Issues and pull requests are welcome. Before opening a PR, run
-`vendor/bin/pint`, `vendor/bin/phpstan analyse --memory-limit=1G` and
-`php artisan test`. Changes to routing, `hreflang`, canonicals, the sitemap or
-structured data need a test — those are the parts that fail silently.
+Issues and pull requests are welcome — and so is a note from anybody who
+ran it for a real property and found something confusing. Start with
+[CONTRIBUTING.md](CONTRIBUTING.md): how to set up, the house rules a
+reviewer checks, and the three commands to run before a PR. What changed in
+each release is in [CHANGELOG.md](CHANGELOG.md).
+
+Found a security problem? Please report it privately — see
+[SECURITY.md](SECURITY.md).
 
 ## Licence
 

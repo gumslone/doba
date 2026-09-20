@@ -1,0 +1,28 @@
+name: Installation problem
+description: The installer or the wizard stopped and you do not know why
+labels: [install]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        You do not need to be technical to file this. Tell us where it stopped and what the screen said — a screenshot is perfect.
+  - type: dropdown
+    id: how
+    attributes:
+      label: How did you install?
+      options: [doba-installer.php uploaded by FTP, install.sh in a shell, Docker, Cloned the repository, Not sure]
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Where is it hosted?
+      placeholder: e.g. IONOS shared hosting, Hetzner, my own server
+    validations:
+      required: true
+  - type: textarea
+    id: stopped
+    attributes:
+      label: Where did it stop, and what did it say?
+    validations:
+      required: true
