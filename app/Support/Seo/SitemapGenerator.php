@@ -81,6 +81,14 @@ final class SitemapGenerator
             }
         }
 
+        if ((bool) config('doba.features.vouchers') && Localization::hasRoute('vouchers', Localization::defaultLocale())) {
+            $vouchers = Localization::alternates('vouchers');
+
+            foreach ($vouchers as $url) {
+                $this->push($url, null, 'monthly', '0.5', $vouchers);
+            }
+        }
+
         if (Localization::hasRoute('contact', Localization::defaultLocale())) {
             $contact = Localization::alternates('contact');
 

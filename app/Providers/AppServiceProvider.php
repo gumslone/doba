@@ -55,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
                 'mail.default' => 'log',
                 'doba.features.online_payment' => false,
                 'doba.features.reviews' => true,
+                'doba.features.vouchers' => true,
                 'doba.seo.noindex' => true,
             ]);
         }

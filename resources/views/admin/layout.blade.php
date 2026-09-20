@@ -31,6 +31,7 @@
             ['/admin/rate-plans', __('admin.rate_plans'), 'admin/rate-plans*'],
             ['/admin/extras', __('admin.extras'), 'admin/extras*'],
             ['/admin/promo-codes', __('admin.promo_codes'), 'admin/promo-codes*'],
+            ['/admin/vouchers', __('admin.vouchers'), 'admin/vouchers*', \App\Models\GiftVoucher::query()->where('status', 'pending')->count()],
             ['/admin/channels', __('admin.channels'), 'admin/channels*'],
             ['/admin/directory', __('admin.directory'), 'admin/directory*'],
         ],

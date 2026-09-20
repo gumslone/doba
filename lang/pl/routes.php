@@ -16,4 +16,5 @@ return [
     'events' => 'wydarzenia',
     'contact' => 'kontakt',
     'dining' => 'restauracja',
+    'vouchers' => 'vouchery',
 ];

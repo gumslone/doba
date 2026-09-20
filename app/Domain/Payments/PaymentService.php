@@ -277,6 +277,49 @@ class PaymentService
     }
 
     /**
+     * Record money that arrived some other way than through a gateway's
+     * checkout — a gift voucher today — as a captured payment.
+     *
+     * The same effects a succeeded webhook has, in the same order: the
+     * payment row, the booking's paid and due amounts, the webhook to
+     * partners, and confirmation of a pending booking once its deposit is
+     * covered. The caller holds the row locks; this opens no transaction
+     * of its own so that a voucher's balance and the payment it funds
+     * commit or roll back together.
+     *
+     * @param  array<string,mixed>  $payload
+     */
+    public function recordExternal(Booking $booking, string $gateway, int $amount, string $idempotencyKey, array $payload = []): Payment
+    {
+        $payment = Payment::query()->create([
+            'booking_id' => $booking->id,
+            'gateway' => $gateway,
+            'gateway_payment_id' => $idempotencyKey,
+            'type' => $booking->paid_amount > 0 || $amount < $booking->balance_due ? 'balance' : 'full',
+            'status' => PaymentStatus::Paid,
+            'amount' => $amount,
+            'currency' => $booking->currency,
+            'payload' => $payload,
+            'paid_at' => now(),
+            'idempotency_key' => $idempotencyKey,
+        ]);
+
+        $booking->increment('paid_amount', $amount);
+        $booking->decrement('balance_due', $amount);
+
+        $booking = $booking->fresh();
+
+        app(Webhooks::class)->emit('payment.succeeded', $this->paymentPayload($payment, $booking));
+
+        // A hold the voucher has paid the deposit of is a booking.
+        if ($booking->status === BookingStatus::Pending && $booking->paid_amount >= $booking->deposit_due) {
+            $this->bookings->transition($booking, BookingStatus::Confirmed, 'Paid with a gift voucher');
+        }
+
+        return $payment;
+    }
+
+    /**
      * Staff-initiated refund, partial or full (§8).
      */
     public function refund(PaymentGateway $gateway, Payment $payment, ?int $amount = null): Payment

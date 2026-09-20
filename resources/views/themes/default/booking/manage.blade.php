@@ -69,6 +69,29 @@
             </div>
         @endif
 
+        @if (session('voucher_redeemed'))
+            <p class="mt-6 rounded border border-green-200 bg-green-50 p-4 text-green-900" role="status">{{ session('voucher_redeemed') }}</p>
+        @endif
+
+        @if (config('doba.features.vouchers') && $booking->balance_due > 0 && in_array($booking->status, [BookingStatus::Pending, BookingStatus::Confirmed, BookingStatus::CheckedIn], true))
+            {{-- A voucher is money, so it sits with the money: next to the
+                 balance, not among the promo codes (§8). --}}
+            <details class="mt-4 rounded border border-neutral-200 p-4" @if (session('booking_error')) open @endif>
+                <summary class="cursor-pointer font-medium">{{ __('vouchers.redeem_title') }}</summary>
+                <p class="mt-2 text-sm text-neutral-600">{{ __('vouchers.redeem_hint') }}</p>
+                <form method="POST" class="mt-3 flex flex-wrap items-end gap-3"
+                      action="{{ Localization::route('booking.voucher', ['reference' => $booking->reference, 'token' => $token]) }}">
+                    @csrf
+                    <div>
+                        <label for="voucher_code" class="block text-sm font-medium">{{ __('vouchers.redeem_label') }}</label>
+                        <input id="voucher_code" name="voucher_code" required maxlength="40" autocomplete="off" placeholder="GV-XXXX-XXXX"
+                               class="mt-1 rounded border border-neutral-300 px-3 py-2 font-mono uppercase">
+                    </div>
+                    <button type="submit" class="rounded border border-neutral-900 px-5 py-2.5">{{ __('vouchers.redeem_button') }}</button>
+                </form>
+            </details>
+        @endif
+
         @if (session('booking_notice'))
             <p class="mt-6 rounded border border-green-200 bg-green-50 p-4 text-green-800" role="status">
                 {{ session('booking_notice') }}

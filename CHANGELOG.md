@@ -18,6 +18,11 @@ release so far is marked pre-release for that reason.
   address was http, so a first look on localhost or a LAN redirected to a
   port that speaks no TLS. It now follows the declared site address, and
   the health page warns about plain http on a public address.
+- **Gift vouchers** (`FEATURE_VOUCHERS=true`): ordered on the website in six
+  languages, paid to the hotel directly, activated in the admin and mailed
+  to the buyer as a PDF; or sold at the desk. Redeemed by code on the
+  guest's booking page as a *payment* — never a discount — with the rest
+  kept for next time, and refunded back onto the voucher.
 - **Unfinished-booking reminder** (`DOBA_MAIL_RECOVERY=true`, off by
   default): one mail about an hour after a guest's unpaid hold expires,
   only while the room is still free, with a link back to the same room and

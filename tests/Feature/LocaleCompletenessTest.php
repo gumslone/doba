@@ -19,7 +19,7 @@ use PHPUnit\Framework\Assert;
  * not in en. This test makes the whole class impossible.
  */
 it('ships the same guest-facing keys in every language', function (): void {
-    $files = ['booking', 'common', 'contact', 'events', 'extras', 'invoice', 'mail', 'menu', 'promo', 'routes', 'seo', 'style'];
+    $files = ['booking', 'common', 'contact', 'events', 'extras', 'invoice', 'mail', 'menu', 'promo', 'routes', 'seo', 'style', 'vouchers'];
 
     // Staff-facing keys that live in otherwise guest-facing files. The
     // admin UI is English-only by design, and these ride along in

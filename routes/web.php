@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\AdminSecurityController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUpdateController;
 use App\Http\Controllers\Admin\AdminVenueController;
+use App\Http\Controllers\Admin\AdminVoucherController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\PhotoController;
 use App\Http\Controllers\Admin\StyleController;
@@ -41,6 +42,7 @@ use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\VenueController;
+use App\Http\Controllers\VoucherController;
 use App\Http\Middleware\DemoGuard;
 use App\Http\Middleware\SetLocale;
 use App\Support\Routing\Localization;
@@ -185,6 +187,14 @@ Route::prefix('admin')->group(function (): void {
         Route::post('enquiries/{enquiry}/reply', [AdminEnquiryController::class, 'reply'])->name('admin.enquiries.reply');
         Route::post('enquiries/{enquiry}/status', [AdminEnquiryController::class, 'status'])->name('admin.enquiries.status');
         Route::post('enquiries/{enquiry}/delete', [AdminEnquiryController::class, 'destroy'])->name('admin.enquiries.destroy');
+
+        Route::get('vouchers', [AdminVoucherController::class, 'index'])->name('admin.vouchers');
+        Route::post('vouchers', [AdminVoucherController::class, 'store'])->name('admin.vouchers.store');
+        Route::post('vouchers/instructions', [AdminVoucherController::class, 'instructions'])->name('admin.vouchers.instructions');
+        Route::get('vouchers/{voucher}.pdf', [AdminVoucherController::class, 'download'])->name('admin.vouchers.download');
+        Route::post('vouchers/{voucher}/activate', [AdminVoucherController::class, 'activate'])->name('admin.vouchers.activate');
+        Route::post('vouchers/{voucher}/void', [AdminVoucherController::class, 'void'])->name('admin.vouchers.void');
+        Route::post('vouchers/{voucher}/resend', [AdminVoucherController::class, 'resend'])->name('admin.vouchers.resend');
 
         Route::get('reviews', [AdminReviewController::class, 'index'])->name('admin.reviews');
         Route::post('reviews/{review}/publish', [AdminReviewController::class, 'publish'])->name('admin.reviews.publish');
@@ -341,12 +351,28 @@ foreach ($locales as $locale) {
             Route::post($booking.'/manage/{reference}/{token}/review', [BookingController::class, 'storeReview'])
                 ->middleware('throttle:booking')
                 ->name('booking.review');
+            // Paying with a gift voucher (§8): throttled hard, because a
+            // voucher code is a bearer instrument and this is where one
+            // would be guessed.
+            Route::post($booking.'/manage/{reference}/{token}/voucher', [BookingController::class, 'redeemVoucher'])
+                ->middleware('throttle:6,1')
+                ->name('booking.voucher');
             Route::post($booking.'/manage/{reference}/{token}/late-checkout', [BookingController::class, 'requestLateCheckout'])
                 ->middleware('throttle:booking')
                 ->name('booking.late-checkout');
             Route::post($booking.'/manage/{reference}/{token}/cancel', [BookingController::class, 'cancel'])
                 ->middleware('throttle:booking')
                 ->name('booking.cancel');
+
+            // Gift vouchers (§8). Registered always, so the URLs exist for
+            // Localization::route(); the controller 404s while the feature
+            // is off, which is what an install that does not sell them
+            // should look like.
+            $vouchers = Localization::segment('vouchers', $locale);
+            Route::get($vouchers, [VoucherController::class, 'show'])->name('vouchers');
+            Route::post($vouchers, [VoucherController::class, 'store'])
+                ->middleware('throttle:contact')
+                ->name('vouchers.store');
 
             $contact = Localization::segment('contact', $locale);
 

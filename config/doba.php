@@ -53,6 +53,9 @@ return [
         'promo_codes' => (bool) env('FEATURE_PROMO', true),
         'extras' => (bool) env('FEATURE_EXTRAS', true),
         'reviews' => (bool) env('FEATURE_REVIEWS', false),
+        // Sold on the website, paid to the hotel directly, activated in the
+        // admin. Off until the hotel has written its payment instructions.
+        'vouchers' => (bool) env('FEATURE_VOUCHERS', false),
         'multi_property' => false, // always false in this model
     ],
 
@@ -284,6 +287,17 @@ return [
     | send a live hotel back to the install wizard.
     |
     */
+
+    /*
+    | Gift vouchers (§8). Amounts in minor units.
+    */
+    'vouchers' => [
+        'amounts' => array_map(static fn (string $a): int => (int) round(((float) $a) * 100), array_filter(explode(',', (string) env('DOBA_VOUCHER_AMOUNTS', '50,100,150,250')))),
+        'min' => (int) env('DOBA_VOUCHER_MIN', 2500),
+        'max' => (int) env('DOBA_VOUCHER_MAX', 200000),
+        // Valid to the end of the year, this many years on.
+        'valid_years' => (int) env('DOBA_VOUCHER_VALID_YEARS', 3),
+    ],
 
     /*
     | The public demo (§22). On, the install hands out its admin login on

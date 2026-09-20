@@ -11,6 +11,8 @@ use App\Domain\Booking\PromoCodeException;
 use App\Domain\Invoicing\InvoiceRenderer;
 use App\Domain\Payments\GatewayRegistry;
 use App\Domain\Payments\PaymentService;
+use App\Domain\Vouchers\VoucherException;
+use App\Domain\Vouchers\VoucherService;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Middleware\CaptureReferral;
@@ -20,6 +22,7 @@ use App\Models\PromoCode;
 use App\Models\Review;
 use App\Models\RoomType;
 use App\Support\Hotel\HotelSettings;
+use App\Support\Money;
 use App\Support\Routing\Localization;
 use App\Support\Seo\Seo;
 use Carbon\CarbonImmutable;
@@ -449,6 +452,29 @@ class BookingController extends Controller
         ]);
 
         return redirect($manage)->with('booking_notice', __('booking.review_thanks'));
+    }
+
+    /**
+     * Pay with a gift voucher (§8): as much of it as the booking still owes.
+     */
+    public function redeemVoucher(Request $request, string $reference, string $token, VoucherService $vouchers): RedirectResponse
+    {
+        $booking = $this->findByToken($reference, $token);
+        $validated = $request->validate(['voucher_code' => ['required', 'string', 'max:40']]);
+        $back = Localization::route('booking.manage', compact('reference', 'token'));
+
+        try {
+            $redemption = $vouchers->redeem($validated['voucher_code'], $booking);
+        } catch (VoucherException $e) {
+            return redirect($back)->with('booking_error', __($e->getMessage()));
+        }
+
+        $left = (int) $redemption->voucher()->value('balance');
+
+        return redirect($back)->with('voucher_redeemed', trim(
+            __('vouchers.redeemed', ['amount' => Money::format($redemption->amount, $booking->currency)])
+            .' '.($left > 0 ? __('vouchers.remaining', ['amount' => Money::format($left, $booking->currency)]) : '')
+        ));
     }
 
     public function requestLateCheckout(Request $request, string $reference, string $token): RedirectResponse

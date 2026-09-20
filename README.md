@@ -302,7 +302,32 @@ Everything below is implemented and covered by tests.
   name and a home address, and sequential numbers make a public URL trivially
   enumerable. The schema refuses to delete a booking that has been invoiced.
 
-### Channel sync (§9)
+#### Gift vouchers (§8)
+
+`FEATURE_VOUCHERS=true` adds a voucher page to the site, in every language.
+A voucher is **money received in advance** — a means of payment, never a
+discount — so it never touches a price or an invoice line; redeeming one
+records a payment through the same path a card takes.
+
+- **Ordered online, paid to you.** The buyer chooses an amount, a name and a
+  message, and is mailed your payment instructions (bank details, a payment
+  link, "pay at the desk" — free text under *Admin → Gift vouchers*). The
+  order is worth nothing until you press *Payment received*; then the buyer
+  gets the voucher as a PDF to print or forward. No card data, no second
+  payment flow, no chargebacks — which is how small houses sell vouchers by
+  phone today.
+- **Or sold at the desk**, active at once, printable from the list.
+- **Redeemed by code** on the guest's booking page. It takes only what is
+  still owed and keeps the rest for next time; a pending booking is confirmed
+  once the voucher covers its deposit. Every movement happens under a row
+  lock, so a balance is never spent twice, and a refund goes back onto the
+  voucher rather than to a bank.
+- Codes are `GV-XXXX-XXXX` from an alphabet without look-alikes, accepted
+  however a person types them, and redemption is rate-limited because a code
+  is a bearer instrument. Valid to the end of the year, three years on
+  (`DOBA_VOUCHER_VALID_YEARS`).
+
+## Channel sync (§9)
 
 Tier-1 two-way iCal, which is what an independent hotel actually runs.
 

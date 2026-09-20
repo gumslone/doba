@@ -8,4 +8,5 @@ return [
     'events' => 'evenements',
     'contact' => 'contact',
     'dining' => 'restauration',
+    'vouchers' => 'bons-cadeaux',
 ];

@@ -22,9 +22,19 @@ final class GatewayRegistry
         'manual' => ManualGateway::class,
     ];
 
+    /**
+     * Gateways a hotel cannot choose as its checkout — they exist so a
+     * payment recorded another way can still be refunded through the one
+     * refund path.
+     */
+    public const INTERNAL = [
+        'voucher' => VoucherGateway::class,
+    ];
+
     public static function make(string $name): PaymentGateway
     {
         $class = self::GATEWAYS[$name]
+            ?? self::INTERNAL[$name]
             ?? throw new InvalidArgumentException("Unknown payment gateway [{$name}].");
 
         return app($class);

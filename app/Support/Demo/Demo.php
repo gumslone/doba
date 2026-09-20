@@ -38,12 +38,14 @@ final class Demo
         'extras',
         'reviews',
         'guests',
+        'vouchers',
     ];
 
     /** Writes refused even inside a writable section. */
     public const BLOCKED = [
         'guests/*/erase',      // leaves the next visitor an empty guest book
         'enquiries/*/reply',   // sends mail
+        'vouchers/instructions', // free text shown to the next visitor's buyer
     ];
 
     public static function enabled(): bool

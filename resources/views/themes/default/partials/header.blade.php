@@ -57,6 +57,9 @@
         @foreach ($menuPages as $page)
             <a href="{{ Localization::route('page', ['slug' => $page->slug()]) }}">{{ $page->t('title') }}</a>
         @endforeach
+        @if (config('doba.features.vouchers'))
+            <a href="{{ Localization::route('vouchers') }}">{{ __('vouchers.title') }}</a>
+        @endif
         <a href="{{ Localization::route('contact') }}">{{ __('contact.title') }}</a>
     </nav>
 
