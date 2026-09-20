@@ -26,8 +26,14 @@ ini_set('display_errors', '0');
 if (PHP_VERSION_ID < 70400) {
     header('Content-Type: text/plain; charset=utf-8');
     echo "This server runs PHP " . PHP_VERSION . ".\n";
-    echo "Doba needs PHP 8.4 or newer. Ask your hosting provider to switch\n";
-    echo "the PHP version for this site, then reload this page.\n";
+    echo "Doba needs PHP 8.4 or newer.\n\n";
+    echo "This is one setting in your hosting control panel, not a reinstall:\n";
+    echo "  cPanel:       Software > MultiPHP Manager (or Select PHP Version)\n";
+    echo "  Plesk:        Websites & Domains > your domain > PHP Settings\n";
+    echo "  DirectAdmin:  Domain Setup > your domain > PHP Version Selector\n";
+    echo "  Other hosts:  look for \"PHP version\" or \"PHP settings\" under hosting or domains\n\n";
+    echo "Choose 8.4 (or the newest offered), save, wait a minute, reload this page.\n";
+    echo "Not in the list? Write to your host: \"Please enable PHP 8.4 for my domain.\"\n";
     exit;
 }
 
@@ -88,6 +94,83 @@ class DobaWebInstaller
                     ? $this->dir
                     : $this->dir . ' is not writable by PHP, so nothing can be installed into it.',
             ),
+        );
+    }
+
+    /**
+     * Which control panel this is, as far as a script can tell.
+     *
+     * The person reading the refusal is not the person who can diagnose
+     * it: "switch to PHP 8.4" means nothing without "here, in this menu".
+     * So the panel is guessed from the traces it leaves on the filesystem
+     * and in the environment, and its steps are shown first. A wrong guess
+     * costs nothing — every panel's steps are listed underneath.
+     *
+     * @param  array<string,mixed>|null  $server  $_SERVER, injectable for tests
+     */
+    public function detectPanel(?array $server = null): ?string
+    {
+        $server = $server === null ? $_SERVER : $server;
+        $software = strtolower((string) (isset($server['SERVER_SOFTWARE']) ? $server['SERVER_SOFTWARE'] : ''));
+        $docRoot = (string) (isset($server['DOCUMENT_ROOT']) ? $server['DOCUMENT_ROOT'] : $this->dir);
+
+        if (@is_dir('/usr/local/cpanel') || preg_match('#^/home\d*/[^/]+/public_html#', $docRoot)) {
+            return 'cpanel';
+        }
+
+        if (@is_dir('/usr/local/psa') || strpos($docRoot, '/var/www/vhosts/') === 0) {
+            return 'plesk';
+        }
+
+        if (@is_dir('/usr/local/directadmin') || preg_match('#^/home/[^/]+/domains/[^/]+/public_html#', $docRoot)) {
+            return 'directadmin';
+        }
+
+        if (strpos($docRoot, '/kunden/homepages/') === 0 || strpos($docRoot, '/homepages/') === 0) {
+            return 'ionos';
+        }
+
+        if (strpos($software, 'litespeed') !== false) {
+            return 'cpanel';   // LiteSpeed shared hosting is almost always cPanel + CloudLinux
+        }
+
+        return null;
+    }
+
+    /**
+     * Where to switch the PHP version, per panel. Menu names as the
+     * panels print them; "or" where a host renames the entry.
+     *
+     * @return array<string, array{name: string, steps: array<int, string>}>
+     */
+    public function phpHelp(): array
+    {
+        return array(
+            'cpanel' => array('name' => 'cPanel', 'steps' => array(
+                'Log in to cPanel and find the "Software" section.',
+                'Open "MultiPHP Manager" — on some hosts it is called "Select PHP Version".',
+                'Tick your domain, choose PHP 8.4 in the drop-down, press "Apply".',
+            )),
+            'plesk' => array('name' => 'Plesk', 'steps' => array(
+                'Open "Websites & Domains" and find your domain.',
+                'Click "PHP Settings" (or "PHP" under the "Dev Tools" / "Hosting" tab).',
+                'Set "PHP version" to 8.4, press "OK" at the bottom.',
+            )),
+            'directadmin' => array('name' => 'DirectAdmin', 'steps' => array(
+                'Open "Account Manager" → "Domain Setup" and click your domain.',
+                'Find "PHP Version Selector".',
+                'Choose 8.4 and press "Save".',
+            )),
+            'ionos' => array('name' => 'IONOS', 'steps' => array(
+                'Log in, open "Hosting", then "PHP" (or "Manage PHP version").',
+                'Next to your domain press "Change PHP version".',
+                'Choose PHP 8.4 and save.',
+            )),
+            'other' => array('name' => 'Any other host', 'steps' => array(
+                'In your hosting control panel, look for "PHP version", "PHP settings" or "PHP configuration" — usually under "Hosting", "Domains" or "Websites".',
+                'Choose 8.4 (or the newest version offered) for this domain and save.',
+                'Strato, Hetzner, all-inkl, OVH, home.pl and most others have exactly this setting; the name of the menu differs.',
+            )),
         );
     }
 
@@ -449,7 +532,9 @@ $page = function (string $title, string $body): void {
         . '.ok{color:#166534}.fail{color:#b91c1c}.note{background:#fffbeb;border:1px solid #fde68a;padding:.75rem 1rem;border-radius:6px}'
         . 'ul{padding-left:1.2rem}li{margin:.4rem 0}input[type=text],input[type=url]{width:100%;padding:.5rem;border:1px solid #ccc;border-radius:4px;font:inherit}'
         . 'button{background:#1a1a1a;color:#fff;border:0;padding:.65rem 1.4rem;border-radius:6px;font:inherit;cursor:pointer}'
-        . 'label{display:block;margin:1rem 0 .25rem;font-weight:600}.hint{color:#555;font-size:.9em}</style>'
+        . 'label{display:block;margin:1rem 0 .25rem;font-weight:600}.hint{color:#555;font-size:.9em}'
+        . '.help{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:1rem 1.25rem;margin:1.5rem 0}.help h2{margin:.2rem 0 .6rem;font-size:1.15rem}'
+        . '.help details{margin:.5rem 0;background:#fff;border:1px solid #dbeafe;border-radius:6px;padding:.5rem .9rem}.help summary{cursor:pointer;font-weight:600}.help em{font-weight:400;color:#1d4ed8}</style>'
         . '</head><body><h1>' . htmlspecialchars($title) . '</h1>' . $body . '</body></html>';
 };
 
@@ -517,9 +602,43 @@ foreach ($requirements as $requirement) {
         . htmlspecialchars($requirement['detail']) . '</li>';
 }
 
+$phpHelp = '';
+
+if (PHP_VERSION_ID < 80400 || isset($_GET['php-help'])) {
+    $detected = $installer->detectPanel();
+    $panels = $installer->phpHelp();
+
+    // The guessed panel first, opened; the rest folded underneath.
+    if ($detected !== null && isset($panels[$detected])) {
+        $panels = array($detected => $panels[$detected]) + $panels;
+    }
+
+    $phpHelp = '<div class="help"><h2>How to switch to PHP 8.4</h2>'
+        . '<p>This is one setting in your hosting control panel — not a reinstall, and nothing on your site is lost. '
+        . 'This server runs PHP ' . htmlspecialchars(PHP_VERSION) . '.</p>';
+
+    foreach ($panels as $key => $panel) {
+        $phpHelp .= '<details' . ($key === $detected || ($detected === null && $key === 'other') ? ' open' : '') . '>'
+            . '<summary>' . htmlspecialchars($panel['name'])
+            . ($key === $detected ? ' <em>— this looks like your host</em>' : '') . '</summary><ol>';
+
+        foreach ($panel['steps'] as $step) {
+            $phpHelp .= '<li>' . htmlspecialchars($step) . '</li>';
+        }
+
+        $phpHelp .= '</ol></details>';
+    }
+
+    $phpHelp .= '<p>Then wait a minute and <a href="">reload this page</a>.</p>'
+        . '<p class="hint">8.4 is not in the list? Send your host this: <br><code>Hello, please enable PHP 8.4 for my domain '
+        . htmlspecialchars(isset($_SERVER['HTTP_HOST']) ? (string) $_SERVER['HTTP_HOST'] : '') . '. Thank you.</code><br>'
+        . 'Every serious host offers it; if yours refuses, it is the host that needs replacing.</p></div>';
+}
+
 $page('Install Doba', '<p>This downloads the newest Doba release from GitHub, verifies it, and unpacks it here. '
     . 'All configuration happens afterwards, in a wizard.</p>'
     . '<ul>' . $list . '</ul>'
+    . $phpHelp
     . '<form method="post">'
     . '<label for="token">Proof this server is yours</label>'
     . '<p class="hint">A file named <code>' . htmlspecialchars(DobaWebInstaller::TOKEN_FILE) . '</code> was just written '

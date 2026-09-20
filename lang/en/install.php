@@ -34,7 +34,7 @@ return [
     'writable' => 'writable',
     'not_writable' => 'not writable',
     'sqlite_only' => 'not loaded — SQLite only',
-    'fix_php' => 'This server runs an older PHP. Doba needs :version or newer; most hosting panels let you switch PHP version per site.',
+    'fix_php' => 'This server runs an older PHP. Doba needs :version or newer. It is one setting in your hosting panel, not a reinstall — cPanel: Software → MultiPHP Manager. Plesk: Websites & Domains → PHP Settings. DirectAdmin: Domain Setup → PHP Version Selector. Elsewhere look for "PHP version" under hosting or domains. Not offered? Ask your host to enable PHP :version for your domain.',
     'fix_extension' => 'Enable the :extension extension in your hosting panel, or install it with: sudo apt install php8.4-:extension',
     'fix_sqlite' => 'Enable pdo_sqlite in your hosting panel. Without it Doba cannot use a file database, and you would need MySQL.',
     'fix_writable' => 'Give the web server write access to :path — usually chmod 775, or chown to the web user.',

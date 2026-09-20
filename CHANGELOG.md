@@ -18,6 +18,14 @@ release so far is marked pre-release for that reason.
   address was http, so a first look on localhost or a LAN redirected to a
   port that speaks no TLS. It now follows the declared site address, and
   the health page warns about plain http on a public address.
+- **The installer explains PHP versions.** When the host runs an older PHP,
+  `doba-installer.php` guesses the control panel (cPanel, Plesk,
+  DirectAdmin, IONOS) and shows where the setting lives, step by step, with
+  a message to send the host if 8.4 is not offered.
+- **A landing page for hoteliers** at gumslone.github.io/doba, in English
+  and German, with a commission calculator.
+- **Fixed:** the guest theme's heading styles leaked into the admin and
+  overrode every size utility there.
 - **Public demo mode** (`DOBA_DEMO=true`): builds a living demo hotel on
   first boot, prints the admin login on every page, keeps the desk working
   while making content, mail, settings and the updater read-only, never

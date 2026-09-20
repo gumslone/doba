@@ -153,3 +153,36 @@ it('marks the session cookie Secure on an https site, and only there', function 
     $this->installer->writeEnv('http://localhost:8000');
     expect((string) file_get_contents($this->dir.'/.env'))->not->toContain('SESSION_SECURE_COOKIE=true');
 });
+
+it('guesses the control panel, so the PHP advice starts with the right menu', function (): void {
+    $installer = new DobaWebInstaller(sys_get_temp_dir());
+
+    expect($installer->detectPanel(['DOCUMENT_ROOT' => '/home/alpenhof/public_html']))->toBe('cpanel')
+        ->and($installer->detectPanel(['DOCUMENT_ROOT' => '/home2/alpenhof/public_html/booking']))->toBe('cpanel')
+        ->and($installer->detectPanel(['DOCUMENT_ROOT' => '/var/www/vhosts/alpenhof.example/httpdocs']))->toBe('plesk')
+        ->and($installer->detectPanel(['DOCUMENT_ROOT' => '/home/alpenhof/domains/alpenhof.example/public_html']))->toBe('directadmin')
+        ->and($installer->detectPanel(['DOCUMENT_ROOT' => '/kunden/homepages/12/d123456/htdocs']))->toBe('ionos')
+        // No idea is an answer too: every panel is listed, none is claimed.
+        ->and($installer->detectPanel(['DOCUMENT_ROOT' => '/srv/www/site']))->toBeNull();
+});
+
+it('tells a beginner where the PHP version lives, panel by panel', function (): void {
+    $help = (new DobaWebInstaller(sys_get_temp_dir()))->phpHelp();
+
+    expect(array_keys($help))->toBe(['cpanel', 'plesk', 'directadmin', 'ionos', 'other'])
+        ->and($help['cpanel']['steps'][1])->toContain('MultiPHP Manager')
+        ->and($help['plesk']['steps'][1])->toContain('PHP Settings');
+
+    foreach ($help as $panel) {
+        expect($panel['steps'])->not->toBeEmpty();
+    }
+
+    // The page itself, as a host with old PHP would serve it.
+    $source = file_get_contents(base_path('scripts/doba-installer.php'));
+
+    expect($source)->toContain('How to switch to PHP 8.4')
+        ->and($source)->toContain('please enable PHP 8.4 for my domain')
+        // Still parses on the oldest PHP it promises to explain itself on:
+        // no match, no enums, no readonly, no nullsafe in this file.
+        ->and($source)->not->toMatch('/\bmatch\s*\(|\?->|\breadonly\b|\benum\s+\w+/');
+});
