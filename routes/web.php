@@ -188,6 +188,7 @@ Route::prefix('admin')->group(function (): void {
         Route::post('enquiries/{enquiry}/status', [AdminEnquiryController::class, 'status'])->name('admin.enquiries.status');
         Route::post('enquiries/{enquiry}/delete', [AdminEnquiryController::class, 'destroy'])->name('admin.enquiries.destroy');
 
+        Route::get('bookings/{booking}/registration.pdf', [AdminBookingController::class, 'registration'])->name('admin.bookings.registration');
         Route::get('vouchers', [AdminVoucherController::class, 'index'])->name('admin.vouchers');
         Route::post('vouchers', [AdminVoucherController::class, 'store'])->name('admin.vouchers.store');
         Route::post('vouchers/instructions', [AdminVoucherController::class, 'instructions'])->name('admin.vouchers.instructions');
@@ -351,6 +352,11 @@ foreach ($locales as $locale) {
             Route::post($booking.'/manage/{reference}/{token}/review', [BookingController::class, 'storeReview'])
                 ->middleware('throttle:booking')
                 ->name('booking.review');
+            // Online check-in (§12): the registration form, before arrival.
+            Route::get($booking.'/manage/{reference}/{token}/check-in', [BookingController::class, 'checkIn'])->name('booking.checkin');
+            Route::post($booking.'/manage/{reference}/{token}/check-in', [BookingController::class, 'storeCheckIn'])
+                ->middleware('throttle:booking')
+                ->name('booking.checkin.store');
             // Paying with a gift voucher (§8): throttled hard, because a
             // voucher code is a bearer instrument and this is where one
             // would be guessed.

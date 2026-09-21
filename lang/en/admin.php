@@ -731,4 +731,10 @@ return [
     'voucher_status_void' => 'cancelled',
     'voucher_status_expired' => 'expired',
     'voucher_status_pending' => 'unpaid',
+
+    // Online check-in (§12)
+    'checked_in_online' => 'checked in online — print form',
+    'settings_checkin' => 'Online check-in',
+    'settings_checkin_hint' => 'Shown on the guest\'s booking page once they have checked in online, from the day before arrival: the key-box code, which entrance, where to park. Leave empty if the key is always handed over in person.',
+    'settings_checkin_instructions' => 'Arrival instructions',
 ];

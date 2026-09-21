@@ -8,6 +8,7 @@ use App\Domain\Availability\AvailabilityService;
 use App\Domain\Booking\BookingService;
 use App\Domain\Booking\NoAvailabilityException;
 use App\Domain\Booking\PromoCodeException;
+use App\Domain\Guests\OnlineCheckIn;
 use App\Domain\Invoicing\InvoiceRenderer;
 use App\Domain\Payments\GatewayRegistry;
 use App\Domain\Payments\PaymentService;
@@ -18,9 +19,11 @@ use App\Enums\PaymentStatus;
 use App\Http\Middleware\CaptureReferral;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
+use App\Models\BookingRegistration;
 use App\Models\PromoCode;
 use App\Models\Review;
 use App\Models\RoomType;
+use App\Support\Countries;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Money;
 use App\Support\Routing\Localization;
@@ -31,6 +34,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -290,7 +294,7 @@ class BookingController extends Controller
             ->alternates(Localization::alternates('booking.confirmation', compact('reference')));
 
         return view('booking.confirmation', [
-            'booking' => $booking->load('rooms.roomType.translations', 'extras.extra.translations', 'guest', 'invoice'),
+            'booking' => $booking->load('rooms.roomType.translations', 'extras.extra.translations', 'guest', 'invoice', 'registration'),
         ]);
     }
 
@@ -452,6 +456,83 @@ class BookingController extends Controller
         ]);
 
         return redirect($manage)->with('booking_notice', __('booking.review_thanks'));
+    }
+
+    /**
+     * Online check-in (§12): the registration form, before arrival.
+     */
+    public function checkIn(string $reference, string $token, Seo $seo): View|RedirectResponse
+    {
+        $booking = $this->findByToken($reference, $token)->load('guest', 'registration');
+
+        if (! OnlineCheckIn::isOpen($booking)) {
+            return redirect(Localization::route('booking.manage', compact('reference', 'token')));
+        }
+
+        $seo->title(__('checkin.title'))->noindex();
+
+        return view('booking.checkin', [
+            'booking' => $booking,
+            'token' => $token,
+            'people' => max(1, $booking->adults + $booking->children),
+            'party' => $booking->registration->party ?? [],
+            'documents' => (string) config('doba.checkin.require_document', 'foreign'),
+        ]);
+    }
+
+    public function storeCheckIn(Request $request, string $reference, string $token): RedirectResponse
+    {
+        $booking = $this->findByToken($reference, $token)->load('guest');
+        $back = Localization::route('booking.manage', compact('reference', 'token'));
+
+        if (! OnlineCheckIn::isOpen($booking)) {
+            return redirect($back);
+        }
+
+        $people = max(1, $booking->adults + $booking->children);
+        $codes = array_keys(Countries::names());
+
+        $validated = $request->validate([
+            'party' => ['required', 'array', 'size:'.$people],
+            'party.*.first_name' => ['required', 'string', 'max:80'],
+            'party.*.last_name' => ['required', 'string', 'max:80'],
+            'party.*.date_of_birth' => ['required', 'date', 'before_or_equal:today', 'after:1900-01-01'],
+            'party.*.nationality' => ['required', Rule::in($codes)],
+            'party.0.street' => ['required', 'string', 'max:160'],
+            'party.0.postal_code' => ['required', 'string', 'max:20'],
+            'party.0.city' => ['required', 'string', 'max:120'],
+            'party.0.country' => ['required', Rule::in($codes)],
+            'party.*.document_type' => ['nullable', Rule::in(['passport', 'id_card', 'other'])],
+            'party.*.document_number' => ['nullable', 'string', 'max:40'],
+            'arrival_time' => ['nullable', 'date_format:H:i'],
+        ]);
+
+        $party = [];
+
+        foreach (array_values($validated['party']) as $i => $person) {
+            if (OnlineCheckIn::needsDocument($person['nationality']) && (empty($person['document_type']) || empty($person['document_number']))) {
+                return back()->withInput()->withErrors(["party.$i.document_number" => __('checkin.error_document')]);
+            }
+
+            // Every key, in a fixed order, whatever the form sent: the
+            // printed form reads this years later.
+            $party[] = array_map(
+                static fn (string $key): ?string => isset($person[$key]) && $person[$key] !== '' ? trim((string) $person[$key]) : null,
+                array_combine(BookingRegistration::FIELDS, BookingRegistration::FIELDS),
+            );
+        }
+
+        BookingRegistration::query()->updateOrCreate(['booking_id' => $booking->id], [
+            'party' => $party,
+            'submitted_at' => CarbonImmutable::now(),
+            'ip_address' => $request->ip(),
+        ]);
+
+        if (($validated['arrival_time'] ?? null) !== null) {
+            $booking->forceFill(['arrival_time' => $validated['arrival_time']])->save();
+        }
+
+        return redirect($back)->with('booking_notice', __('checkin.saved'));
     }
 
     /**

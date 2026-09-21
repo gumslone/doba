@@ -41,4 +41,7 @@ return [
     'recovery_intro' => 'Rozpoczęto rezerwację w :hotel na :date, ale nie została dokończona. Pokój jest nadal dostępny, a dokończenie zajmie minutę.',
     'recovery_button' => 'Dokończ rezerwację',
     'recovery_outro' => 'Jeśli plany się zmieniły, nie trzeba nic robić: nic nie zostało pobrane i nic nie jest zablokowane. Nie napiszemy w tej sprawie ponownie.',
+
+    // Online check-in (§12)
+    'pre_arrival_checkin' => 'Oszczędź czas w recepcji: zamelduj się online na stronie rezerwacji, a po przyjeździe wystarczy podpis.',
 ];

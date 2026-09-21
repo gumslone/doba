@@ -128,6 +128,19 @@
         </section>
 
         <section class="rounded border border-neutral-200 bg-white p-5">
+            <h2 class="font-medium">{{ __('admin.settings_checkin') }}</h2>
+            <p class="mt-1 text-xs text-neutral-500">{{ __('admin.settings_checkin_hint') }}</p>
+            <div class="mt-4 grid gap-3">
+                @foreach ($locales as $locale)
+                    <div>
+                        <label for="checkin_{{ $locale }}" class="{{ $label }}">{{ __('admin.settings_checkin_instructions') }} <span class="font-mono text-xs uppercase text-neutral-500">{{ $locale }}</span></label>
+                        <textarea id="checkin_{{ $locale }}" name="translations[checkin.instructions][{{ $locale }}]" rows="3" maxlength="2000" class="{{ $field }}">{{ $t('checkin.instructions', $locale) }}</textarea>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+
+        <section class="rounded border border-neutral-200 bg-white p-5">
             <h2 class="font-medium">{{ __('admin.settings_usps') }}</h2>
             <p class="mt-1 text-xs text-neutral-500">{{ __('admin.settings_usps_hint') }}</p>
             <div class="mt-4 space-y-2">

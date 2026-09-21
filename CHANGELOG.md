@@ -18,6 +18,12 @@ release so far is marked pre-release for that reason.
   address was http, so a first look on localhost or a LAN redirected to a
   port that speaks no TLS. It now follows the declared site address, and
   the health page warns about plain http on a public address.
+- **Online check-in** (`FEATURE_ONLINE_CHECKIN=true`): from three days before
+  arrival the guest fills in the registration form for the whole party on
+  their booking page, in six languages; the desk prints it for the
+  signature. Stored encrypted, included in GDPR exports, destroyed on
+  erasure and a year after departure. Arrival instructions (a key-box
+  code) appear only to a checked-in guest, around arrival.
 - **Gift vouchers** (`FEATURE_VOUCHERS=true`): ordered on the website in six
   languages, paid to the hotel directly, activated in the admin and mailed
   to the buyer as a PDF; or sold at the desk. Redeemed by code on the

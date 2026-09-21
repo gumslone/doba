@@ -22,6 +22,14 @@ class AnonymiseGuestsCommand extends Command
 
     public function handle(GuestPrivacy $privacy): int
     {
+        // Registration forms have their own, much shorter clock, and it
+        // runs whether or not the guest book's retention is switched on.
+        $purged = $privacy->purgeRegistrations();
+
+        if ($purged > 0) {
+            $this->info('Destroyed '.$purged.' registration form(s) past their retention period.');
+        }
+
         $months = (int) config('doba.privacy.retention_months');
 
         if ($months <= 0) {

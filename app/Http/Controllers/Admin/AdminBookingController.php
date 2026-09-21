@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Domain\Booking\BookingService;
 use App\Domain\Booking\NoAvailabilityException;
+use App\Domain\Guests\RegistrationRenderer;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
@@ -14,6 +15,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 
@@ -151,5 +153,23 @@ class AdminBookingController extends Controller
         ])->save();
 
         return back()->with('saved', __('admin.booking_saved'));
+    }
+
+    /**
+     * The registration form the guest filled in online, for the signature.
+     * Behind the admin session and never cached: it is the most sensitive
+     * document this system can produce.
+     */
+    public function registration(Booking $booking, RegistrationRenderer $renderer): Response
+    {
+        abort_if($booking->registration === null, 404);
+
+        $booking->load('rooms.room', 'rooms.roomType.translations');
+
+        return response($renderer->render($booking), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="registration-'.$booking->reference.'.pdf"',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 }

@@ -31,7 +31,7 @@ class AdminFrontDeskController extends Controller
     {
         $date = $this->date($request);
 
-        $with = ['guest', 'rooms.roomType.translations', 'rooms.room'];
+        $with = ['guest', 'rooms.roomType.translations', 'rooms.room', 'registration'];
 
         return view('admin.front-desk.index', [
             'date' => $date,

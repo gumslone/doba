@@ -30,6 +30,10 @@
 {{ __('mail.pre_arrival_balance', ['amount' => Money::format($booking->balance_due, $booking->currency, $locale)], $locale) }}
 @endif
 
+@if (\App\Domain\Guests\OnlineCheckIn::enabled() && ! $booking->registration)
+{{ __('mail.pre_arrival_checkin', [], $locale) }}
+@endif
+
 @if (! $booking->arrival_time)
 {{ __('mail.pre_arrival_time_ask', [], $locale) }}
 @endif

@@ -43,6 +43,7 @@ class AdminSettingsController extends Controller
         'general' => ['tagline'],
         'seo' => ['title', 'description'],
         'policy' => ['cancellation'],
+        'checkin' => ['instructions'],
     ];
 
     public function edit(HotelSettings $hotel): View

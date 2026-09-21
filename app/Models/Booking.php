@@ -67,6 +67,16 @@ class Booking extends Model
     ];
 
     /**
+     * The registration form, if the guest checked in online.
+     *
+     * @return HasOne<BookingRegistration, $this>
+     */
+    public function registration(): HasOne
+    {
+        return $this->hasOne(BookingRegistration::class);
+    }
+
+    /**
      * The guest's verdict on this stay, once they have left it.
      *
      * @return HasOne<Review, $this>

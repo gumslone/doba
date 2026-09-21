@@ -30,4 +30,7 @@ return [
     'recovery_intro' => 'Sie haben eine Buchung im :hotel für :date begonnen und nicht abgeschlossen. Das Zimmer ist noch frei — dort weiterzumachen, wo Sie aufgehört haben, dauert eine Minute.',
     'recovery_button' => 'Buchung abschließen',
     'recovery_outro' => 'Falls Sie es sich anders überlegt haben, müssen Sie nichts tun: Es wurde nichts berechnet und nichts reserviert. Wir schreiben Ihnen dazu nicht noch einmal.',
+
+    // Online check-in (§12)
+    'pre_arrival_checkin' => 'Sparen Sie Zeit an der Rezeption: Checken Sie auf Ihrer Buchungsseite online ein, dann unterschreiben Sie bei der Ankunft nur noch.',
 ];

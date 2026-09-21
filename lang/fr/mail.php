@@ -30,4 +30,7 @@ return [
     'recovery_intro' => 'Vous avez commencé une réservation à :hotel pour le :date sans la terminer. La chambre est toujours disponible, et reprendre là où vous vous étiez arrêté ne prend qu’une minute.',
     'recovery_button' => 'Terminer ma réservation',
     'recovery_outro' => 'Si vous avez changé d’avis, ne faites rien : rien n’a été débité et rien n’est retenu. Nous ne vous écrirons plus à ce sujet.',
+
+    // Online check-in (§12)
+    'pre_arrival_checkin' => 'Gagnez du temps à la réception : enregistrez-vous en ligne depuis votre page de réservation, il ne restera qu’à signer à votre arrivée.',
 ];

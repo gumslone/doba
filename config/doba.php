@@ -56,6 +56,9 @@ return [
         // Sold on the website, paid to the hotel directly, activated in the
         // admin. Off until the hotel has written its payment instructions.
         'vouchers' => (bool) env('FEATURE_VOUCHERS', false),
+        // The registration form, filled in before arrival from the guest's
+        // booking page; the desk prints it for the signature.
+        'online_checkin' => (bool) env('FEATURE_ONLINE_CHECKIN', false),
         'multi_property' => false, // always false in this model
     ],
 
@@ -287,6 +290,23 @@ return [
     | send a live hotel back to the install wizard.
     |
     */
+
+    /*
+    | Online check-in (§12).
+    */
+    'checkin' => [
+        // Days before arrival the form opens.
+        'open_days' => (int) env('DOBA_CHECKIN_OPEN_DAYS', 3),
+        // Whose ID document is asked for: none | foreign | all. Registration
+        // law differs by country — set what yours requires.
+        'require_document' => env('DOBA_CHECKIN_DOCUMENT', 'foreign'),
+        // "Foreign" is measured against this ISO country code.
+        'home_country' => env('DOBA_CHECKIN_HOME_COUNTRY', 'DE'),
+        // Show arrival instructions (a key-box code) only once the stay is paid.
+        'instructions_require_paid' => (bool) env('DOBA_CHECKIN_INSTRUCTIONS_PAID', false),
+        // Registration forms are destroyed this many days after departure.
+        'retain_days' => (int) env('DOBA_CHECKIN_RETAIN_DAYS', 365),
+    ],
 
     /*
     | Gift vouchers (§8). Amounts in minor units.

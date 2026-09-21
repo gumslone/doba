@@ -30,4 +30,7 @@ return [
     'recovery_intro' => 'U bent een boeking bij :hotel voor :date begonnen en heeft die niet afgerond. De kamer is nog beschikbaar; verdergaan waar u was gebleven kost een minuut.',
     'recovery_button' => 'Boeking afronden',
     'recovery_outro' => 'Bent u van gedachten veranderd, dan hoeft u niets te doen: er is niets afgeschreven en er wordt niets vastgehouden. Wij schrijven u hier niet nog eens over.',
+
+    // Online check-in (§12)
+    'pre_arrival_checkin' => 'Bespaar tijd aan de balie: check online in via uw boekingspagina, dan hoeft u bij aankomst alleen nog te tekenen.',
 ];

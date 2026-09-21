@@ -21,6 +21,34 @@
             </p>
         @endif
 
+        @if (\App\Domain\Guests\OnlineCheckIn::isOpen($booking))
+            {{-- The one thing to do before travelling, so it sits above
+                 everything there is merely to read (§12). --}}
+            <div class="mt-6 rounded-lg border border-neutral-900 p-5">
+                <h2 class="text-lg font-medium">{{ __('checkin.title') }}</h2>
+                @if ($booking->registration)
+                    <p class="mt-1 text-green-800">✓ {{ __('checkin.done') }}</p>
+                    <a href="{{ Localization::route('booking.checkin', ['reference' => $booking->reference, 'token' => $token]) }}" class="mt-2 inline-block text-sm underline">{{ __('checkin.edit') }}</a>
+                @else
+                    <p class="mt-1 text-neutral-600">{{ __('checkin.lede') }}</p>
+                    <a href="{{ Localization::route('booking.checkin', ['reference' => $booking->reference, 'token' => $token]) }}" class="btn-primary mt-3 inline-block rounded px-5 py-2.5">{{ __('checkin.start') }}</a>
+                @endif
+            </div>
+        @elseif (\App\Domain\Guests\OnlineCheckIn::enabled() && $booking->status === BookingStatus::Confirmed && ! $booking->registration)
+            <p class="mt-6 text-sm text-neutral-500">{{ __('checkin.opens_on', ['date' => $booking->check_in->subDays((int) config('doba.checkin.open_days', 3))->translatedFormat('j F')]) }}</p>
+        @endif
+
+        @if ($booking->registration && ($instructions = $hotel->get('checkin.instructions')))
+            <div class="mt-6 rounded-lg border border-green-300 bg-green-50 p-5">
+                <h2 class="text-lg font-medium">{{ __('checkin.instructions_title') }}</h2>
+                @if (\App\Domain\Guests\OnlineCheckIn::showsInstructions($booking))
+                    <p class="mt-2 whitespace-pre-line text-green-950">{{ $instructions }}</p>
+                @elseif (config('doba.checkin.instructions_require_paid') && $booking->balance_due > 0)
+                    <p class="mt-2 text-green-900">{{ __('checkin.instructions_locked') }}</p>
+                @endif
+            </div>
+        @endif
+
         <p class="mt-4 text-neutral-600">
             {{ __('booking.status') }}:
             <strong>{{ __('booking.status_'.$booking->status->value) }}</strong>

@@ -54,6 +54,10 @@
                                 </span>
                             @endif
                             <a href="/admin/bookings/{{ $booking->id }}/edit" class="ml-1 font-mono text-xs text-neutral-400 hover:underline">{{ $booking->reference }}</a>
+                            @if ($booking->registration)
+                                {{-- Checked in from home: print, sign, hand over the key. --}}
+                                <a href="/admin/bookings/{{ $booking->id }}/registration.pdf" target="_blank" class="ml-1 rounded bg-sky-100 px-1.5 py-0.5 text-xs text-sky-900 hover:underline">{{ __('admin.checked_in_online') }} ↗</a>
+                            @endif
                             <p class="text-neutral-500">
                                 {{ $room($booking) }} · {{ $nights($booking) }} ·
                                 {{ trans_choice('admin.guest_count', $booking->adults + $booking->children, ['count' => $booking->adults + $booking->children]) }}

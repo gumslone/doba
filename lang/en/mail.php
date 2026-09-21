@@ -41,4 +41,7 @@ return [
     'recovery_intro' => 'You started a booking at :hotel for :date and did not finish it. The room is still available, and picking up where you left off takes a minute.',
     'recovery_button' => 'Finish my booking',
     'recovery_outro' => 'If you changed your mind, do nothing: nothing was charged and nothing is being held. We will not write again about this.',
+
+    // Online check-in (§12)
+    'pre_arrival_checkin' => 'Save time at the desk: check in online from your booking page and you only need to sign when you arrive.',
 ];

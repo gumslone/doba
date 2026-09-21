@@ -6,6 +6,7 @@ namespace App\Domain\Guests;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\BookingRegistration;
 use App\Models\Guest;
 use App\Models\Review;
 use Carbon\CarbonImmutable;
@@ -48,7 +49,7 @@ class GuestPrivacy
      */
     public function export(Guest $guest): array
     {
-        $guest->load(['bookings.rooms.roomType', 'bookings.extras.extra.translations', 'bookings.invoice']);
+        $guest->load(['bookings.rooms.roomType', 'bookings.extras.extra.translations', 'bookings.invoice', 'bookings.registration']);
 
         return [
             'exported_at' => CarbonImmutable::now()->toIso8601String(),
@@ -80,6 +81,9 @@ class GuestPrivacy
                 'currency' => $booking->currency,
                 'guest_notes' => $booking->guest_notes,
                 'invoice_number' => $booking->invoice?->number,
+                // Theirs to see, like everything else held about them —
+                // and the part they are most entitled to ask about.
+                'registration_form' => $booking->registration?->party,
                 'booked_at' => $booking->created_at?->toIso8601String(),
             ])->values()->all(),
         ];
@@ -113,6 +117,11 @@ class GuestPrivacy
             // erasure not having happened.
             Review::query()->where('guest_id', $guest->id)->delete();
 
+            // The registration forms: dates of birth and document numbers
+            // of everybody who travelled with them. The most sensitive
+            // thing held here, and nothing else refers to it.
+            BookingRegistration::query()->whereIn('booking_id', $guest->bookings()->select('id'))->delete();
+
             $guest->forceFill([
                 'email' => self::erasedEmail($guest),
                 'first_name' => 'Guest',
@@ -138,6 +147,23 @@ class GuestPrivacy
      * write in. A returning guest simply becomes a new profile; the
      * hotel loses a "welcome back" it had no right to keep this long.
      */
+    /**
+     * Destroy registration forms whose stay ended longer ago than the
+     * hotel is obliged to keep them. Far shorter than the guest book's
+     * own clock: a name and a stay history is marketing data, a passport
+     * number is a liability.
+     */
+    public function purgeRegistrations(): int
+    {
+        $cutoff = CarbonImmutable::today(config('doba.timezone'))
+            ->subDays(max(1, (int) config('doba.checkin.retain_days', 365)))
+            ->toDateString();
+
+        return BookingRegistration::query()
+            ->whereHas('booking', static fn ($q) => $q->where('check_out', '<', $cutoff))
+            ->delete();
+    }
+
     public function anonymiseDue(): int
     {
         $months = (int) config('doba.privacy.retention_months');

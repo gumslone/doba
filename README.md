@@ -898,6 +898,19 @@ booking list to work them out from.
   arriving today first (earliest stated arrival on top), then the rest,
   then doors still occupied by somebody leaving today, without a button.
   No guest names on it; housekeeping needs the door, not the person.
+- **Online check-in** (`FEATURE_ONLINE_CHECKIN=true`). From three days
+  before arrival the guest fills in the registration form for everybody in
+  the party on their booking page; the arrival row then says *checked in
+  online* and links to the form as a PDF with a signature line — print,
+  sign, hand over the key. Whose ID document is asked for is one setting
+  (`DOBA_CHECKIN_DOCUMENT=none|foreign|all`), because registration law
+  differs by country. The party's details sit in **one encrypted column**:
+  nobody needs to search by passport number, and a leaked dump should not
+  contain any. They are part of a GDPR export, go with an erasure, and are
+  destroyed `DOBA_CHECKIN_RETAIN_DAYS` (365) after departure — a far shorter
+  clock than the guest book's. Arrival instructions written under *Hotel
+  settings* (a key-box code, which entrance) show only to a guest who has
+  checked in, from the day before arrival, and optionally only once paid.
 - **Late checkout is a request, never an answer.** A guest asks from their
   manage link; the desk grants a time or declines, because the room may be
   sold to somebody arriving at three. The two are separate columns
