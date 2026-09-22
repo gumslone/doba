@@ -59,6 +59,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title>{{ $title ?? 'Admin' }} · Doba</title>
+    {{-- Installable on a phone: the front desk and the housekeeping list
+         as an app icon, no store, no build — a manifest and two PNGs. --}}
+    <link rel="manifest" href="/admin.webmanifest">
+    <link rel="apple-touch-icon" href="/icons/doba-192.png">
+    <meta name="theme-color" content="#2f5d4a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Doba">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="doba-admin min-h-screen bg-neutral-100 text-neutral-900 antialiased">

@@ -1,0 +1,14 @@
+{
+  "name": "Doba front desk",
+  "short_name": "Doba",
+  "description": "The front desk, housekeeping and bookings of your hotel.",
+  "start_url": "/admin/front-desk",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#f5f5f4",
+  "theme_color": "#2f5d4a",
+  "icons": [
+    { "src": "/icons/doba-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/doba-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
