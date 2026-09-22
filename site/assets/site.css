@@ -9,7 +9,8 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
-img { max-width: 100%; display: block; }
+/* height:auto, or the width/height attributes squeeze every scaled image. */
+img { max-width: 100%; height: auto; display: block; }
 a { color: var(--moss); }
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.12; letter-spacing: -.01em; margin: 0; }
