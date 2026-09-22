@@ -1073,6 +1073,12 @@ wizard and the public API, is in
 | 6 | Public REST API + ARI push + webhooks + **OpenAPI 3.1 contract** | **done** |
 | 7 | Full Filament panel (**verified reviews** and **returning-guest discount** landed early) | as needed |
 
+## For web agencies
+
+Installing Doba for clients, re-theming it, and keeping it updated without a
+support contract: [`docs/for-agencies.md`](docs/for-agencies.md). It is
+MIT-licensed; nothing phones home.
+
 ## Contributing
 
 Issues and pull requests are welcome — and so is a note from anybody who
