@@ -2,17 +2,95 @@
   "ci": {
     "collect": {
       "numberOfRuns": 1,
-      "settings": { "preset": "desktop", "chromeFlags": "--no-sandbox --disable-gpu" }
+      "settings": {
+        "preset": "desktop",
+        "chromeFlags": "--no-sandbox --disable-gpu"
+      }
     },
     "assert": {
       "assertions": {
-        "is-crawlable": "off",
-        "categories:performance": ["error", { "minScore": 0.9 }],
-        "categories:accessibility": ["error", { "minScore": 0.95 }],
-        "categories:best-practices": ["warn", { "minScore": 0.9 }],
-        "categories:seo": ["error", { "minScore": 0.95 }]
+        "categories:performance": [
+          "error",
+          {
+            "minScore": 0.9
+          }
+        ],
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 0.95
+          }
+        ],
+        "categories:best-practices": [
+          "warn",
+          {
+            "minScore": 0.9
+          }
+        ],
+        "document-title": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "meta-description": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "http-status-code": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "link-text": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "crawlable-anchors": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "robots-txt": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "image-alt": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "hreflang": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "canonical": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "font-size": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ]
       }
     },
-    "upload": { "target": "temporary-public-storage" }
+    "upload": {
+      "target": "temporary-public-storage"
+    }
   }
 }
