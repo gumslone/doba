@@ -9,6 +9,11 @@ release so far is marked pre-release for that reason.
 
 ## v0.4.0 — 2026-09-22
 
+- **Fixed before release:** the new `.htaccess` used a `LocationMatch`
+  section, which Apache does not allow there and answers with a 500 to
+  every request. Caught by the image smoke test; a test now forbids such
+  directives in `.htaccess`.
+
 - Project housekeeping: contributing guide, security policy, issue
   templates and this changelog.
 - **The scheduler without cron.** Where a host offers no cron, visitor
