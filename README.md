@@ -501,6 +501,13 @@ Room descriptions, pages and menus are the hotel's own content, translated
 per locale in the admin — a language with no translation for a page simply
 does not serve that page, rather than serving it half-English.
 
+**The admin speaks them too.** Which languages guests are served is a
+business decision; which language a receptionist reads is theirs alone, so
+each member of staff picks their own under *Your account* (the login screen
+offers them as well), and it may be one the hotel does not publish in. The
+install wizard is translated as well. `tests/Feature/AdminLanguageTest.php`
+pins key parity and placeholder survival across all six.
+
 ## Installing
 
 Four ways onto a server, all ending at the same wizard:
@@ -794,6 +801,17 @@ writing it: a hotel with no address filled in sent `"address": []` instead of
 `{}`, an untranslated room type did the same with its names, and
 `hold_expires_at` was whatever string the database driver happened to store —
 ISO 8601 on one engine, `2026-09-07 12:00:00` on another.
+
+## Google free booking links
+
+Google shows a free link to the hotel's own site, with a price, next to the
+portals — if the hotel enters its rates in its Google Business Profile.
+*Admin → Google rates* is the column to copy from: per night for the next 90
+days, the lowest final price a guest could actually book on the website
+(visitor's tax included, one-night-bookable rooms only), plus the booking
+URL to paste in. What a real automated feed would take, and why it belongs
+in the directory hub rather than in each install, is in
+[`docs/google-free-booking-links.md`](docs/google-free-booking-links.md).
 
 ## Reports
 

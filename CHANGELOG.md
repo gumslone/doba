@@ -18,6 +18,15 @@ release so far is marked pre-release for that reason.
   address was http, so a first look on localhost or a LAN redirected to a
   port that speaks no TLS. It now follows the declared site address, and
   the health page warns about plain http on a public address.
+- **The admin panel in six languages.** Every member of staff picks their
+  own language under *Your account*; the login screen offers them too. The
+  install wizard is translated as well. A test pins key parity and
+  placeholder survival across all of them.
+- **Google rates**: an admin page (and CSV) listing, per night for the next
+  90 days, the lowest final price a guest could book on the website — the
+  column to copy into the Google Business Profile so the hotel's own site
+  gets a free booking link with a price next to the portals. The research
+  behind it is in `docs/google-free-booking-links.md`.
 - **Online check-in** (`FEATURE_ONLINE_CHECKIN=true`): from three days before
   arrival the guest fills in the registration form for the whole party on
   their booking page, in six languages; the desk prints it for the
