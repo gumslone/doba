@@ -19,7 +19,7 @@
                     @csrf
                     {{-- Invisible to people; a bot fills it in and is refused. --}}
                     <div style="position:absolute;left:-9999px" aria-hidden="true">
-                        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                        <label>Website <input type="text" name="website" tabindex="-1"></label>
                     </div>
 
                     <fieldset>
@@ -40,7 +40,7 @@
 
                     <div>
                         <label for="recipient_name" class="block text-sm font-medium">{{ __('vouchers.recipient_name') }}</label>
-                        <input id="recipient_name" name="recipient_name" maxlength="120" value="{{ old('recipient_name') }}" class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
+                        <input type="text" id="recipient_name" name="recipient_name" maxlength="120" value="{{ old('recipient_name') }}" class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
                         <p class="mt-1 text-xs text-neutral-500">{{ __('vouchers.recipient_hint') }}</p>
                     </div>
 
@@ -53,7 +53,7 @@
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label for="buyer_name" class="block text-sm font-medium">{{ __('vouchers.buyer_name') }} *</label>
-                            <input id="buyer_name" name="buyer_name" required maxlength="120" autocomplete="name" value="{{ old('buyer_name') }}" class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
+                            <input type="text" id="buyer_name" name="buyer_name" required maxlength="120" autocomplete="name" value="{{ old('buyer_name') }}" class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
                             @error('buyer_name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>

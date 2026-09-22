@@ -296,4 +296,45 @@ final class StylePreset
     {
         return array_keys(self::all());
     }
+
+    /** The defaults app.css carries, for the tokens the derived ones are cut from. */
+    public const BASE = [
+        '--paper' => '#fbfaf7',
+        '--paper-2' => '#f3f0e9',
+        '--surface' => '#ffffff',
+        '--ink-faint' => '#7b8582',
+        '--doba-primary' => '#20362c',
+        '--doba-accent' => '#a8823f',
+        '--on-primary' => '#ffffff',
+        '--on-accent' => '#ffffff',
+    ];
+
+    /**
+     * Text-safe colours derived from whatever the preset and the hotelier
+     * chose (§3): the accent as it may be used for TEXT, the faint ink
+     * that still reads on the tinted ground, the calendar's price colour,
+     * and button grounds their labels can be read on. The brand colours
+     * themselves are never changed — only the places text sits in them.
+     *
+     * @param  array<string,string>  $vars  the emitted overrides
+     * @return array<string,string>
+     */
+    public static function derived(array $vars): array
+    {
+        $get = static fn (string $key): string => Contrast::normalise($vars[$key] ?? null) ?? self::BASE[$key];
+
+        $paper = $get('--paper');
+        $tint = $get('--paper-2');
+        $primary = $get('--doba-primary');
+        $accent = $get('--doba-accent');
+        $darkest = Contrast::ratio('#000000', $paper) < Contrast::ratio('#000000', $tint) ? $paper : $tint;
+
+        return [
+            '--doba-accent-text' => Contrast::ensure($accent, $darkest),
+            '--ink-faint' => Contrast::ensure($get('--ink-faint'), $darkest),
+            '--doba-moss' => Contrast::ensure(Contrast::mix($primary, '#ffffff', 0.38), $darkest),
+            '--doba-accent-btn' => Contrast::ensure($accent, $get('--on-accent')),
+            '--doba-primary-btn' => Contrast::ensure($primary, $get('--on-primary')),
+        ];
+    }
 }

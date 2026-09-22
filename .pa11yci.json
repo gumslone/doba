@@ -1,0 +1,20 @@
+{
+  "defaults": {
+    "standard": "WCAG2AA",
+    "runners": ["htmlcs"],
+    "timeout": 60000,
+    "wait": 500,
+    "chromeLaunchConfig": { "args": ["--no-sandbox", "--disable-gpu"] },
+    "hideElements": "iframe"
+  },
+  "urls": [
+    "${BASE}/en",
+    "${BASE}/de",
+    "${BASE}/en/rooms",
+    "${BASE}/en/rooms/lake-apartment",
+    "${BASE}/en/booking/search?check_in=${CI_DATE}&check_out=${CO_DATE}&adults=2",
+    "${BASE}/en/contact",
+    "${BASE}/en/gift-vouchers",
+    "${BASE}/admin/login"
+  ]
+}

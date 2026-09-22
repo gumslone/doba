@@ -78,12 +78,12 @@
     $brandingCss = (string) $hotel->get('branding.custom_css', '');
 @endphp
 
-@if ($presetVars !== [] || $brandingVars !== [])
-    {{-- Settings-driven styling (§3): colours, fonts and the whole style
-         preset are data, never a theme file. Defaults live in app.css;
-         only overrides are emitted, so the house look costs nothing. --}}
-    <style>:root{ @foreach (array_merge($presetVars, $brandingVars) as $var => $value){{ $var }}:{{ $value }}; @endforeach }</style>
-@endif
+@php $themeVars = array_merge($presetVars, $brandingVars); @endphp
+{{-- Settings-driven styling (§3): colours, fonts and the whole style
+     preset are data, never a theme file. Defaults live in app.css; the
+     overrides are emitted here, followed by the text-safe colours derived
+     from them so an eyebrow in the brand gold still reads at 4.5:1. --}}
+<style>:root{ @foreach (array_merge($themeVars, \App\Support\Theme\StylePreset::derived($themeVars)) as $var => $value){{ $var }}:{{ $value }}; @endforeach }</style>
 
 @if ($brandingCss !== '')
     {{-- Every "<" is emitted as the CSS escape \3c: inside a string it

@@ -103,7 +103,7 @@
                 </div>
 
                 <p class="mt-3 text-sm">
-                    <a href="{{ Maps::link($hotel) }}" target="_blank" rel="noopener" class="underline underline-offset-4" style="color:var(--doba-accent)">
+                    <a href="{{ Maps::link($hotel) }}" target="_blank" rel="noopener" class="underline underline-offset-4" style="color:var(--doba-accent-text, var(--doba-accent))">
                         {{ __('contact.map_open') }} ↗
                     </a>
                 </p>

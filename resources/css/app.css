@@ -179,7 +179,8 @@ summary:focus-visible {
     font-size: var(--eyebrow-size);
     letter-spacing: var(--eyebrow-tracking);
     text-transform: var(--eyebrow-transform);
-    color: var(--doba-accent);
+    /* Text-safe: the accent darkened by the theme until it reads (§3). */
+    color: var(--doba-accent-text, var(--doba-accent));
     font-weight: 600;
     margin-bottom: .9rem;
 }
@@ -209,9 +210,9 @@ summary:focus-visible {
     white-space: nowrap;
 }
 
-.btn--primary { background: var(--doba-primary); color: var(--on-primary); }
+.btn--primary { background: var(--doba-primary-btn, var(--doba-primary)); color: var(--on-primary); }
 .btn--primary:hover { background: var(--doba-primary-hover); }
-.btn--gold { background: var(--doba-accent); color: var(--on-accent); }
+.btn--gold { background: var(--doba-accent-btn, var(--doba-accent)); color: var(--on-accent); }
 .btn--gold:hover { background: var(--doba-accent-hover); }
 .btn--ghost { border-color: var(--line); background: var(--surface); color: var(--ink); }
 .btn--ghost:hover { border-color: var(--ink-faint); }
@@ -269,7 +270,7 @@ header.site .wrap { display: flex; align-items: center; gap: 28px; min-height: 7
     font-size: .6rem;
     letter-spacing: .24em;
     text-transform: uppercase;
-    color: var(--doba-accent);
+    color: var(--doba-accent-text, var(--doba-accent));
     margin-top: 2px;
 }
 
@@ -286,6 +287,8 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 /* --- hero --- */
 .hero {
     position: relative;
+    /* Behind the photo: what a failed image, and a contrast checker, see. */
+    background: var(--doba-primary);
     min-height: min(88vh, 760px);
     display: flex;
     align-items: flex-end;
@@ -321,7 +324,7 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
     letter-spacing: .04em;
     margin-bottom: 22px;
 }
-.stars { color: #e8c877; letter-spacing: .1em; }
+.stars { color: var(--doba-accent-text, var(--doba-accent)); letter-spacing: .1em; }
 
 /* --- booking bar --- */
 .bookbar { position: relative; z-index: 40; margin-top: -46px; }
@@ -600,7 +603,7 @@ footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9p
 .notice--warn { background: var(--doba-accent-tint); border: 1px solid #e3d5b8; color: #6b5220; }
 .notice--error { background: #fbeeeb; border: 1px solid #e8cdc6; color: var(--danger); }
 
-.prose a { color: var(--doba-accent); }
+.prose a { color: var(--doba-accent-text, var(--doba-accent)); }
 
 @media (max-width: 980px) {
     .bookbar-card { grid-template-columns: 1fr 1fr; }
@@ -720,7 +723,7 @@ footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9p
     font-size: var(--eyebrow-size);
     letter-spacing: var(--eyebrow-tracking);
     text-transform: var(--eyebrow-transform);
-    color: var(--doba-accent);
+    color: var(--doba-accent-text, var(--doba-accent));
     font-weight: 600;
     padding-bottom: 10px;
 }

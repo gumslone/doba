@@ -154,3 +154,62 @@ jobs:
 
       - name: Static analysis
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+  # SEO is the pitch, and nothing above proves the pages stay fast and
+  # accessible. This boots the demo hotel and runs an accessibility audit
+  # (WCAG 2.1 AA, HTML CodeSniffer) and Lighthouse over the pages a guest
+  # actually lands on, failing the build below the thresholds in
+  # lighthouserc.json.
+  pages:
+    name: Accessibility & Lighthouse
+    runs-on: ubuntu-latest
+    needs: [static-analysis]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_sqlite, mbstring, intl, gd, zip, curl, openssl
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install and build
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm ci
+          npm run build
+
+      - name: Boot the demo hotel
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          printf 'DOBA_DEMO=true\nAPP_URL=http://127.0.0.1:8000\nDB_CONNECTION=sqlite\nDB_DATABASE=%s/database/database.sqlite\nDOBA_HSTS=false\nMAIL_MAILER=log\n' "$PWD" >> .env
+          touch database/database.sqlite
+          php artisan doba:demo:reset
+          PHP_CLI_SERVER_WORKERS=4 php artisan serve --host=127.0.0.1 --port=8000 > /tmp/serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8000/up && break; sleep 1; done
+          curl -fsS -o /dev/null http://127.0.0.1:8000/en
+
+      - name: Accessibility (pa11y-ci, WCAG 2.1 AA)
+        run: |
+          export BASE=http://127.0.0.1:8000
+          export CI_DATE=$(date -d '+10 days' +%F) CO_DATE=$(date -d '+13 days' +%F)
+          sed "s#\${BASE}#$BASE#g; s#\${CI_DATE}#$CI_DATE#g; s#\${CO_DATE}#$CO_DATE#g" .pa11yci.json > /tmp/pa11yci.json
+          npx --yes pa11y-ci@3 --config /tmp/pa11yci.json
+
+      - name: Lighthouse
+        run: |
+          npx --yes @lhci/cli@0.14 autorun \
+            --collect.url=http://127.0.0.1:8000/en \
+            --collect.url=http://127.0.0.1:8000/en/rooms/lake-apartment \
+            --collect.url=http://127.0.0.1:8000/en/booking/search?check_in=$(date -d '+10 days' +%F)\&check_out=$(date -d '+13 days' +%F)\&adults=2
+
+      - name: Server log on failure
+        if: failure()
+        run: tail -50 /tmp/serve.log
