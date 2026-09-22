@@ -714,6 +714,13 @@ vendor/bin/pint --test && vendor/bin/phpstan analyse --memory-limit=1G
 CI runs the suite against **both SQLite and MySQL** on every push — that matrix
 is the only thing that keeps the "portable" promise honest.
 
+A third job boots the demo hotel and runs an **accessibility audit (WCAG 2.1
+AA, HTML CodeSniffer)** and **Lighthouse** over the pages a guest lands on,
+failing below the thresholds in `lighthouserc.json`. SEO is the pitch, and
+this is what proves the pages stay fast and readable. The theme derives
+text-safe colours from any preset or brand colour (`StylePreset::derived()`),
+so a hotel's gold can be its gold and still read at 4.5:1.
+
 ## Partner API
 
 `/api/v1`, versioned in the path, for anything that calls the hotel: a

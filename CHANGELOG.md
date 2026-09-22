@@ -18,6 +18,17 @@ release so far is marked pre-release for that reason.
   address was http, so a first look on localhost or a LAN redirected to a
   port that speaks no TLS. It now follows the declared site address, and
   the health page warns about plain http on a public address.
+- **Accessibility and page speed are now tested in CI.** Every push boots
+  the demo hotel and runs a WCAG 2.1 AA audit and Lighthouse over the pages
+  a guest lands on. The first run found that the brand gold and the faint
+  grey failed 4.5:1 on 47 elements per page; the theme now derives
+  text-safe colours from whatever preset or brand colour a hotel picks, so
+  an eyebrow in the house gold is darkened exactly as far as it needs.
+- **The admin installs as a phone app** (a web manifest and icons): the
+  front desk and the housekeeping list from the home screen.
+- **The thank-you mail says why to come back direct**: a guest who now
+  qualifies for the returning-guest discount is told the percentage and
+  given the link.
 - **The admin panel in six languages.** Every member of staff picks their
   own language under *Your account*; the login screen offers them too. The
   install wizard is translated as well. A test pins key parity and

@@ -17,6 +17,10 @@
 {{ __('mail.post_stay_review_ask', [], $locale) }}
 @endif
 
+@if ($loyaltyPercent !== null)
+{{ __('mail.post_stay_book_again', ['percent' => $loyaltyPercent, 'url' => $bookAgainUrl], $locale) }}
+@endif
+
 <x-mail::button :url="$manageUrl">
 {{ __('booking.manage_title', [], $locale) }}
 </x-mail::button>

@@ -40,8 +40,17 @@ class PostStay extends Mailable
 
     public function content(): Content
     {
+        // "Come back": a returning-guest discount they now qualify for is
+        // the best reason to book direct next time, so it is said here,
+        // once, with the link that will apply it.
+        $bps = (int) config('doba.loyalty.discount_bps', 0);
+        $qualifies = $bps > 0 && $this->booking->guest !== null
+            && $this->booking->guest->stays_count >= max(1, (int) config('doba.loyalty.min_stays', 1));
+
         return new Content(markdown: 'emails.post-stay', with: [
             'booking' => $this->booking,
+            'loyaltyPercent' => $qualifies ? rtrim(rtrim(number_format($bps / 100, 2, '.', ''), '0'), '.') : null,
+            'bookAgainUrl' => Localization::route('rooms.index', [], $this->booking->locale),
             'manageUrl' => Localization::route('booking.manage', [
                 'reference' => $this->booking->reference,
                 'token' => $this->booking->manage_token,

@@ -44,4 +44,5 @@ return [
 
     // Online check-in (§12)
     'pre_arrival_checkin' => 'Oszczędź czas w recepcji: zamelduj się online na stronie rezerwacji, a po przyjeździe wystarczy podpis.',
+    'post_stay_book_again' => 'Następnym razem zarezerwuj bezpośrednio u nas na :url — jako stały gość otrzymasz :percent% zniżki.',
 ];

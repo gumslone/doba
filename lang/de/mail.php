@@ -33,4 +33,5 @@ return [
 
     // Online check-in (§12)
     'pre_arrival_checkin' => 'Sparen Sie Zeit an der Rezeption: Checken Sie auf Ihrer Buchungsseite online ein, dann unterschreiben Sie bei der Ankunft nur noch.',
+    'post_stay_book_again' => 'Buchen Sie beim nächsten Mal direkt bei uns unter :url — als Stammgast erhalten Sie :percent% Rabatt.',
 ];

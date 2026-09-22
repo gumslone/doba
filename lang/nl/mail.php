@@ -33,4 +33,5 @@ return [
 
     // Online check-in (§12)
     'pre_arrival_checkin' => 'Bespaar tijd aan de balie: check online in via uw boekingspagina, dan hoeft u bij aankomst alleen nog te tekenen.',
+    'post_stay_book_again' => 'Boek de volgende keer rechtstreeks bij ons via :url — als terugkerende gast krijgt u :percent% korting.',
 ];

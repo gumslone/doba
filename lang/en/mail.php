@@ -44,4 +44,5 @@ return [
 
     // Online check-in (§12)
     'pre_arrival_checkin' => 'Save time at the desk: check in online from your booking page and you only need to sign when you arrive.',
+    'post_stay_book_again' => 'Next time, book with us directly at :url — as a returning guest you get :percent% off.',
 ];
