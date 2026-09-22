@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminEnquiryController;
 use App\Http\Controllers\Admin\AdminEventController;
 use App\Http\Controllers\Admin\AdminExtraController;
 use App\Http\Controllers\Admin\AdminFrontDeskController;
+use App\Http\Controllers\Admin\AdminGoogleRatesController;
 use App\Http\Controllers\Admin\AdminGuestController;
 use App\Http\Controllers\Admin\AdminHousekeepingController;
 use App\Http\Controllers\Admin\AdminInvoiceController;
@@ -44,6 +45,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\VenueController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Middleware\DemoGuard;
+use App\Http\Middleware\SetAdminLocale;
 use App\Http\Middleware\SetLocale;
 use App\Support\Routing\Localization;
 use Illuminate\Http\Request;
@@ -105,7 +107,7 @@ Route::post('webhooks/coinbase', [PaymentWebhookController::class, 'coinbase'])-
 | The pre-Filament admin area. Locale-less on purpose: staff URLs are not
 | content, and 'admin' is a RESERVED segment no CMS slug can claim.
 */
-Route::prefix('admin')->group(function (): void {
+Route::prefix('admin')->middleware(SetAdminLocale::class)->group(function (): void {
     Route::middleware('guest')->group(function (): void {
         Route::get('login', [AuthController::class, 'showLogin'])->name('admin.login');
         Route::get('login/2fa', [AuthController::class, 'challenge'])->name('admin.login.2fa');
@@ -154,6 +156,7 @@ Route::prefix('admin')->group(function (): void {
         Route::post('security/2fa/disable', [AdminSecurityController::class, 'disable'])->name('admin.security.2fa.disable');
         Route::post('security/2fa/recovery', [AdminSecurityController::class, 'regenerateCodes'])->name('admin.security.2fa.recovery');
         Route::post('security/password', [AdminSecurityController::class, 'changePassword'])->name('admin.security.password');
+        Route::post('security/locale', [AdminSecurityController::class, 'locale'])->name('admin.security.locale');
 
         Route::get('settings', [AdminSettingsController::class, 'edit'])->name('admin.settings');
         Route::post('settings', [AdminSettingsController::class, 'update'])->name('admin.settings.update');
@@ -189,6 +192,9 @@ Route::prefix('admin')->group(function (): void {
         Route::post('enquiries/{enquiry}/delete', [AdminEnquiryController::class, 'destroy'])->name('admin.enquiries.destroy');
 
         Route::get('bookings/{booking}/registration.pdf', [AdminBookingController::class, 'registration'])->name('admin.bookings.registration');
+        Route::get('google-rates', [AdminGoogleRatesController::class, 'index'])->name('admin.google-rates');
+        Route::get('google-rates/export', [AdminGoogleRatesController::class, 'export'])->name('admin.google-rates.export');
+
         Route::get('vouchers', [AdminVoucherController::class, 'index'])->name('admin.vouchers');
         Route::post('vouchers', [AdminVoucherController::class, 'store'])->name('admin.vouchers.store');
         Route::post('vouchers/instructions', [AdminVoucherController::class, 'instructions'])->name('admin.vouchers.instructions');

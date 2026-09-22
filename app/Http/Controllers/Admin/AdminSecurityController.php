@@ -6,12 +6,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Demo\Demo;
+use App\Support\Routing\AdminLocale;
 use App\Support\Security\TwoFactor;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 /**
@@ -130,5 +133,29 @@ class AdminSecurityController extends Controller
         auth()->logoutOtherDevices($validated['password']);
 
         return redirect('/admin/security')->with('saved', __('admin.password_changed'));
+    }
+
+    /**
+     * The language this person reads the panel in.
+     *
+     * On a public demo the account is shared by every visitor, so the
+     * choice is kept in the visitor's session instead of on the user: one
+     * person trying the German admin must not switch it for the next.
+     */
+    public function locale(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'locale' => ['required', Rule::in(array_keys(AdminLocale::available()))],
+        ]);
+
+        $request->session()->put(AdminLocale::SESSION_KEY, $validated['locale']);
+
+        if (! Demo::enabled()) {
+            $request->user()->forceFill(['locale' => $validated['locale']])->save();
+        }
+
+        app()->setLocale($validated['locale']);
+
+        return redirect('/admin/security')->with('saved', __('admin.language_saved'));
     }
 }

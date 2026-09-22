@@ -39,6 +39,7 @@ final class Demo
         'reviews',
         'guests',
         'vouchers',
+        'security/locale',   // kept in the visitor's session, never on the shared account
     ];
 
     /** Writes refused even inside a writable section. */

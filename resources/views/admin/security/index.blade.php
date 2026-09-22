@@ -24,6 +24,20 @@
     @endif
 
     <section class="mb-8 rounded border border-neutral-200 bg-white p-5">
+        <h2 class="font-medium">{{ __('admin.language') }}</h2>
+        <p class="mt-1 text-sm text-neutral-600">{{ __('admin.language_hint') }}</p>
+        <form method="POST" action="/admin/security/locale" class="mt-3 flex flex-wrap items-end gap-3">
+            @csrf
+            <select name="locale" class="rounded border border-neutral-300 px-3 py-2" aria-label="{{ __('admin.language') }}">
+                @foreach (\App\Support\Routing\AdminLocale::available() as $code => $name)
+                    <option value="{{ $code }}" @selected(app()->getLocale() === $code)>{{ $name }}</option>
+                @endforeach
+            </select>
+            <button type="submit" class="rounded border border-neutral-300 px-4 py-2 text-sm">{{ __('admin.save') }}</button>
+        </form>
+    </section>
+
+    <section class="mb-8 rounded border border-neutral-200 bg-white p-5">
         <h2 class="font-medium">{{ __('admin.two_factor') }}</h2>
 
         @if ($enabled)

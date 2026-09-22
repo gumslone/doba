@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -37,5 +37,14 @@
             {{ __('admin.sign_in') }}
         </button>
     </form>
+
+    @php $adminLocales = \App\Support\Routing\AdminLocale::available(); @endphp
+    @if (count($adminLocales) > 1)
+        <nav class="fixed bottom-6 left-0 right-0 flex flex-wrap justify-center gap-x-4 gap-y-1 px-4 text-sm text-neutral-500" aria-label="Language">
+            @foreach ($adminLocales as $code => $name)
+                <a href="/admin/login?lang={{ $code }}" hreflang="{{ $code }}" @class(['hover:text-neutral-900', 'font-semibold text-neutral-900' => app()->getLocale() === $code])>{{ $name }}</a>
+            @endforeach
+        </nav>
+    @endif
 </body>
 </html>

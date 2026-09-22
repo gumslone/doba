@@ -737,4 +737,19 @@ return [
     'settings_checkin' => 'Online check-in',
     'settings_checkin_hint' => 'Shown on the guest\'s booking page once they have checked in online, from the day before arrival: the key-box code, which entrance, where to park. Leave empty if the key is always handed over in person.',
     'settings_checkin_instructions' => 'Arrival instructions',
+
+    // Admin language, Google rates
+    'language' => 'Language',
+    'language_hint' => 'The language you read the admin in. It is yours alone: colleagues keep their own, and the languages guests see are set under Hotel settings.',
+    'language_saved' => 'Language saved.',
+    'google_rates' => 'Google rates',
+    'google_rates_intro' => 'Google shows a free link to your own website, with a price, next to the booking portals — if you enter your rates in your Google Business Profile. This is the column to copy from: per night, the lowest price a guest could book on your website right now.',
+    'google_rates_how' => 'How to use it',
+    'google_rates_step_1' => 'Open your Google Business Profile and go to the rates for your hotel.',
+    'google_rates_step_2' => 'Set the booking page link to your own booking search:',
+    'google_rates_step_3' => 'Copy the prices below into the calendar. They are final prices for :guests guests including visitor’s tax, because Google compares what it shows with what your website charges. Come back when your prices change.',
+    'google_rates_date' => 'Night',
+    'google_rates_price' => 'Price to enter',
+    'google_rates_room_price' => 'Room price',
+    'google_rates_sold_out' => 'nothing bookable for one night',
 ];

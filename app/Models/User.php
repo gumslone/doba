@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 
 /**
+ * @property string|null $locale
  * @property string|null $totp_secret
  * @property CarbonImmutable|null $totp_confirmed_at
  * @property array<int,string>|null $totp_recovery_codes
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'locale',
     ];
 
     /**

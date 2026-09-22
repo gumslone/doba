@@ -34,6 +34,7 @@
             ['/admin/vouchers', __('admin.vouchers'), 'admin/vouchers*', \App\Models\GiftVoucher::query()->where('status', 'pending')->count()],
             ['/admin/channels', __('admin.channels'), 'admin/channels*'],
             ['/admin/directory', __('admin.directory'), 'admin/directory*'],
+            ['/admin/google-rates', __('admin.google_rates'), 'admin/google-rates*'],
         ],
         __('admin.group_website') => [
             ['/admin/pages', __('admin.pages'), 'admin/pages*'],
@@ -52,7 +53,7 @@
     ];
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
