@@ -197,7 +197,14 @@ jobs:
           curl -fsS -o /dev/null http://127.0.0.1:8000/en
 
       - name: Accessibility (pa11y-ci, WCAG 2.1 AA)
+        # pa11y-ci bundles a 2021 Chromium that cannot evaluate color-mix(),
+        # so every theme token derived with it collapses and the audit
+        # reports white-on-white where a real browser shows the brand
+        # colours. The runner's current Chrome is the browser guests have.
+        env:
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: |
+          google-chrome --version
           export BASE=http://127.0.0.1:8000
           export CI_DATE=$(date -d '+10 days' +%F) CO_DATE=$(date -d '+13 days' +%F)
           sed "s#\${BASE}#$BASE#g; s#\${CI_DATE}#$CI_DATE#g; s#\${CO_DATE}#$CO_DATE#g" .pa11yci.json > /tmp/pa11yci.json
