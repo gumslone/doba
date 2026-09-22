@@ -7,7 +7,7 @@ update. Full notes with install and update instructions are on the
 Doba is pre-1.0: no hotel has run on it in production yet, and every
 release so far is marked pre-release for that reason.
 
-## Unreleased
+## v0.4.0 — 2026-09-22
 
 - Project housekeeping: contributing guide, security policy, issue
   templates and this changelog.
@@ -72,6 +72,10 @@ release so far is marked pre-release for that reason.
   container, one `/data` volume, the same wizard; updating is pulling a
   newer image. The env writer now writes through a symlinked `.env`, which
   also fixes release-per-folder deploys.
+
+Five migrations: gift vouchers, booking registrations, a reply on enquiries,
+a recovery stamp on bookings, and a language on users. Every new feature is
+off until switched on.
 
 ## v0.3.0 — 2026-09-09
 
