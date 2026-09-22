@@ -455,7 +455,7 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 .iconbtn:hover:not(:disabled) { border-color: var(--ink-faint); color: var(--ink); }
 .iconbtn:disabled { opacity: .35; cursor: not-allowed; }
 .months { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
-.month h4 { font-size: 1.02rem; text-align: center; margin-bottom: 14px; }
+.month h3 { font-size: 1.02rem; text-align: center; margin-bottom: 14px; }
 .dow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 5px; }
 .dow span { text-align: center; font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
@@ -559,7 +559,7 @@ nav.main a:hover { color: var(--ink); border-bottom-color: var(--doba-accent); }
 
 /* --- footer --- */
 footer.site { background: var(--footer-bg); color: var(--footer-ink); padding: 64px 0 0; font-size: .88rem; }
-footer.site h5 {
+footer.site h2 {
     font-family: var(--doba-font-body);
     font-size: .7rem;
     letter-spacing: .16em;
@@ -672,7 +672,7 @@ footer.site ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9p
 .tbl td:last-child, .tbl th:last-child { text-align: right; }
 
 .pol { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 26px; }
-.pol h4 {
+.pol h3 {
     font-family: var(--doba-font-body); font-size: .7rem; letter-spacing: .13em;
     text-transform: uppercase; color: var(--ink-faint); margin-bottom: 8px; font-weight: 600;
 }

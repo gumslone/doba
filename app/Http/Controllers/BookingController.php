@@ -60,6 +60,7 @@ class BookingController extends Controller
         // they keep the header's language switcher working mid-booking,
         // carrying the chosen dates across the switch.
         $seo->title(__('booking.search_title'))
+            ->description(__('booking.search_title').' · '.$hotel->name)
             ->noindex()
             ->alternates(Localization::alternates(
                 'booking.search',

@@ -23,3 +23,16 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Text compression (§10): a 240 KB stylesheet is 40 KB on the wire.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml text/xml application/xml
+</IfModule>
+
+# Vite writes a content hash into every asset name, so a build file can be
+# cached forever: a changed file is a new name.
+<IfModule mod_headers.c>
+    <LocationMatch "^/build/">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </LocationMatch>
+</IfModule>

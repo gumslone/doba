@@ -137,7 +137,7 @@
                 <div class="grid grid--3">
                     @foreach ($reviews as $review)
                         <article class="card stack">
-                            <div aria-label="{{ __('common.review_rating', ['rating' => $review->rating]) }}">
+                            <div role="img" aria-label="{{ __('common.review_rating', ['rating' => $review->rating]) }}">
                                 <span aria-hidden="true">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</span>
                             </div>
                             @if ($review->title)

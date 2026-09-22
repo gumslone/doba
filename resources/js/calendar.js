@@ -211,7 +211,7 @@ class DobaCalendar {
         const wrapper = document.createElement('div');
         wrapper.className = 'month';
 
-        const title = document.createElement('h4');
+        const title = document.createElement('h3');
         const label = new Intl.DateTimeFormat(this.config.locale, { month: 'long', year: 'numeric' }).format(base);
         title.textContent = label.charAt(0).toUpperCase() + label.slice(1);
         wrapper.append(title);
@@ -285,7 +285,15 @@ class DobaCalendar {
                 button.append(price);
             }
 
-            button.setAttribute('aria-label', `${key}${info.available ? '' : ' — ' + this.config.strings.leg_closed}`);
+            // Read out as "22 September 2026, €125" — the visible day number
+            // and price stay part of the name, the month and year are added
+            // for ears only. An aria-label would REPLACE the visible text,
+            // which is the one thing an accessible name must never do.
+            const spoken = document.createElement('span');
+            spoken.className = 'sr-only';
+            spoken.textContent = ', ' + new Intl.DateTimeFormat(this.config.locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(key + 'T12:00:00'))
+                + (info.available ? '' : ' — ' + this.config.strings.leg_closed);
+            button.append(spoken);
         }
 
         button.className = classes.join(' ');

@@ -21,7 +21,7 @@
     <div class="wrap">
         <div class="fcols">
             <div>
-                <h5>{{ $hotel->name }}</h5>
+                <h2>{{ $hotel->name }}</h2>
                 @if ($tagline = $hotel->get('general.tagline'))
                     <p style="max-width:36ch;color:#9fb0a5">{{ $tagline }}</p>
                 @endif
@@ -40,7 +40,7 @@
             </div>
 
             <div>
-                <h5>{{ __('common.explore') }}</h5>
+                <h2>{{ __('common.explore') }}</h2>
                 <ul>
                     <li><a href="{{ Localization::route('rooms.index') }}">{{ __('common.rooms') }}</a></li>
                     <li><a href="{{ Localization::route('events.index') }}">{{ __('events.title') }}</a></li>
@@ -53,7 +53,7 @@
 
             @if ($legal->isNotEmpty())
                 <div>
-                    <h5>{{ __('common.legal') }}</h5>
+                    <h2>{{ __('common.legal') }}</h2>
                     <ul>
                         @foreach ($legal as $page)
                             <li><a href="{{ Localization::route('page', ['slug' => $page->slug()]) }}">{{ $page->t('title') }}</a></li>
@@ -63,7 +63,7 @@
             @endif
 
             <div>
-                <h5>{{ __('contact.title') }}</h5>
+                <h2>{{ __('contact.title') }}</h2>
                 <ul>
                     @if ($phone = $hotel->get('contact.phone'))
                         <li><a href="tel:{{ preg_replace('/[^+0-9]/', '', $phone) }}">{{ $phone }}</a></li>

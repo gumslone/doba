@@ -43,7 +43,7 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
     DOBA_DATA=/data \
     DOBA_SQLITE_PATH=/data/database.sqlite
 
-RUN a2enmod rewrite headers expires \
+RUN a2enmod rewrite headers expires deflate \
     && sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf \
     && printf '<Directory ${APACHE_DOCUMENT_ROOT}>\n    AllowOverride All\n    Require all granted\n</Directory>\nServerName doba\nServerTokens Prod\nServerSignature Off\n' > /etc/apache2/conf-available/doba.conf \
     && a2enconf doba \

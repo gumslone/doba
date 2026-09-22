@@ -192,6 +192,7 @@ jobs:
           printf 'DOBA_DEMO=true\nAPP_URL=http://127.0.0.1:8000\nDB_CONNECTION=sqlite\nDB_DATABASE=%s/database/database.sqlite\nDOBA_HSTS=false\nMAIL_MAILER=log\n' "$PWD" >> .env
           touch database/database.sqlite
           php artisan doba:demo:reset
+          php artisan storage:link
           PHP_CLI_SERVER_WORKERS=4 php artisan serve --host=127.0.0.1 --port=8000 > /tmp/serve.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8000/up && break; sleep 1; done
           curl -fsS -o /dev/null http://127.0.0.1:8000/en

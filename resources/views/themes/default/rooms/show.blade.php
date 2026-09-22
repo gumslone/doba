@@ -101,9 +101,9 @@
                         <div style="display:grid;gap:26px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
                             @foreach ($inclusions as $category => $amenities)
                                 <div>
-                                    <h4 style="font-family:var(--doba-font-body);font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:10px">
+                                    <h3 style="font-family:var(--doba-font-body);font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:10px">
                                         {{ __('extras.category_'.$category) }}
-                                    </h4>
+                                    </h3>
                                     <ul style="list-style:none;margin:0;padding:0;display:grid;gap:7px;font-size:.9rem;color:var(--ink-soft)">
                                         @foreach ($amenities as $amenity)
                                             <li style="display:flex;gap:9px;align-items:center">
@@ -235,16 +235,16 @@
                     <h2>{{ __('common.good_to_know') }}</h2>
                     <div class="pol">
                         <div>
-                            <h4>{{ __('common.check_in_label') }}</h4>
+                            <h3>{{ __('common.check_in_label') }}</h3>
                             <p>{{ __('common.check_in_from', ['time' => config('doba.checkin_from')]) }}</p>
                         </div>
                         <div>
-                            <h4>{{ __('common.check_out_label') }}</h4>
+                            <h3>{{ __('common.check_out_label') }}</h3>
                             <p>{{ __('common.check_out_until', ['time' => config('doba.checkout_until')]) }}</p>
                         </div>
                         @if ($policy = $hotel->get('policy.cancellation'))
                             <div>
-                                <h4>{{ __('common.cancellation') }}</h4>
+                                <h3>{{ __('common.cancellation') }}</h3>
                                 <p>{{ $policy }}</p>
                             </div>
                         @endif
