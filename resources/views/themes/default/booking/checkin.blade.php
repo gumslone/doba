@@ -32,7 +32,7 @@
                         <div><label class="{{ $label }}" for="p{{ $i }}_last">{{ __('checkin.last_name') }} *</label>
                             <input id="p{{ $i }}_last" name="party[{{ $i }}][last_name]" required maxlength="80" autocomplete="{{ $i === 0 ? 'family-name' : 'off' }}" value="{{ $value($i, 'last_name', $i === 0 ? $booking->guest?->last_name : null) }}" class="{{ $field }}"></div>
                         <div><label class="{{ $label }}" for="p{{ $i }}_dob">{{ __('checkin.date_of_birth') }} *</label>
-                            <input type="date" id="p{{ $i }}_dob" name="party[{{ $i }}][date_of_birth]" required max="{{ now()->toDateString() }}" value="{{ $value($i, 'date_of_birth') }}" class="{{ $field }}"></div>
+                            <input type="date" id="p{{ $i }}_dob" name="party[{{ $i }}][date_of_birth]" required max="{{ \App\Support\Hotel\Clock::today()->toDateString() }}" value="{{ $value($i, 'date_of_birth') }}" class="{{ $field }}"></div>
                         <div><label class="{{ $label }}" for="p{{ $i }}_nat">{{ __('checkin.nationality') }} *</label>
                             <select id="p{{ $i }}_nat" name="party[{{ $i }}][nationality]" required class="{{ $field }}">
                                 <option value=""></option>

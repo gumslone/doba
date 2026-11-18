@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Support\Hotel\Clock;
 use App\Support\Hotel\HotelSettings;
 use App\Support\Install\EnvWriter;
 use App\Support\Routing\Localization;
@@ -56,7 +57,7 @@ class AdminSettingsController extends Controller
             'timezones' => timezone_identifiers_list(),
             'usps' => is_array($all['general.usps'] ?? null) ? $all['general.usps'] : [],
             'env' => [
-                'timezone' => (string) config('app.timezone'),
+                'timezone' => (string) config('doba.timezone'),
                 'currency' => (string) config('doba.currency'),
                 'checkin_from' => (string) config('doba.checkin_from'),
                 'checkout_until' => (string) config('doba.checkout_until'),
@@ -151,6 +152,7 @@ class AdminSettingsController extends Controller
         // very response already renders the new check-in time.
         $env = [
             'APP_TIMEZONE' => $validated['env']['timezone'],
+            'DOBA_TIMEZONE' => $validated['env']['timezone'],
             'DOBA_CURRENCY' => strtoupper($validated['env']['currency']),
             'DOBA_CHECKIN_FROM' => $validated['env']['checkin_from'],
             'DOBA_CHECKOUT_UNTIL' => $validated['env']['checkout_until'],
@@ -162,8 +164,9 @@ class AdminSettingsController extends Controller
             return back()->withInput()->withErrors(['env.timezone' => $e->getMessage()]);
         }
 
+        Clock::use($env['DOBA_TIMEZONE']);
+
         config([
-            'app.timezone' => $env['APP_TIMEZONE'],
             'doba.currency' => $env['DOBA_CURRENCY'],
             'doba.checkin_from' => $env['DOBA_CHECKIN_FROM'],
             'doba.checkout_until' => $env['DOBA_CHECKOUT_UNTIL'],

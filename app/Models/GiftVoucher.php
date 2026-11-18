@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Casts\AsDateString;
+use App\Support\Hotel\Clock;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -100,9 +101,12 @@ class GiftVoucher extends Model
 
     public function isExpired(?CarbonImmutable $on = null): bool
     {
-        $on ??= CarbonImmutable::today(config('doba.timezone'));
+        $on ??= Clock::today();
 
-        return $this->expires_on !== null && $on->gt($this->expires_on);
+        // As dates, not instants: the stored day is a calendar day, and
+        // comparing it as UTC midnight refused a voucher for the whole of
+        // its last valid day at any hotel west of Greenwich.
+        return $this->expires_on !== null && $on->toDateString() > $this->expires_on->toDateString();
     }
 
     public function isSpendable(): bool

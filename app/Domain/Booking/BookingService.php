@@ -17,6 +17,7 @@ use App\Models\PromoCode;
 use App\Models\RatePlan;
 use App\Models\Room;
 use App\Models\RoomType;
+use App\Support\Hotel\Clock;
 use App\Support\Webhooks\Webhooks;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -345,8 +346,8 @@ class BookingService
                 continue; // the saver rate, forfeited by design
             }
 
-            $deadline = $booking->check_in
-                ->startOfDay()
+            // Counted back from midnight at the hotel on the arrival day.
+            $deadline = Clock::startOfDay($booking->check_in)
                 ->subHours($room->cancellation_hours_snapshot ?? 0);
 
             if ($at->lte($deadline)) {

@@ -152,7 +152,7 @@
                         <p class="text-neutral-500">
                             {{ $room($booking) }} · {{ $nights($booking) }}
                             @if ($booking->checked_in_at)
-                                · {{ __('admin.arrived_at', ['time' => $booking->checked_in_at->translatedFormat('j M, H:i')]) }}
+                                · {{ __('admin.arrived_at', ['time' => \App\Support\Hotel\Clock::local($booking->checked_in_at)->translatedFormat('j M, H:i')]) }}
                             @endif
                         </p>
                         <p class="mt-0.5 text-xs text-neutral-500">
@@ -188,7 +188,7 @@
                         <strong>{{ $booking->guest?->last_name }}, {{ $booking->guest?->first_name }}</strong>
                         <p class="text-neutral-500">
                             {{ $room($booking) }} ·
-                            {{ __('admin.left_at', ['time' => $booking->checked_out_at?->translatedFormat('H:i')]) }}
+                            {{ __('admin.left_at', ['time' => \App\Support\Hotel\Clock::local($booking->checked_out_at)?->translatedFormat('H:i')]) }}
                         </p>
                     </li>
                 @empty

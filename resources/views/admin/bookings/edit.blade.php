@@ -98,7 +98,7 @@
                 <h2 class="font-medium">{{ __('admin.booking_history') }}</h2>
                 <ul class="mt-3 space-y-1 text-xs text-neutral-600">
                     @foreach ($booking->statusHistory->sortByDesc('created_at') as $entry)
-                        <li>{{ $entry->created_at?->format('Y-m-d H:i') }} — {{ $entry->to_status?->value ?? $entry->to_status }}@if ($entry->reason): {{ $entry->reason }}@endif</li>
+                        <li>{{ \App\Support\Hotel\Clock::local($entry->created_at)?->format('Y-m-d H:i') }} — {{ $entry->to_status?->value ?? $entry->to_status }}@if ($entry->reason): {{ $entry->reason }}@endif</li>
                     @endforeach
                 </ul>
             </section>

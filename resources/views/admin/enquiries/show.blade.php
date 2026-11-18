@@ -11,7 +11,7 @@
     <div class="mb-6 flex flex-wrap items-baseline justify-between gap-3">
         <h1 class="text-2xl font-semibold">{{ $enquiry->name }}</h1>
         <span class="text-sm text-neutral-500">
-            {{ __('admin.enquiry_status_'.$enquiry->status->value) }} · {{ $enquiry->created_at?->format('Y-m-d H:i') }} · {{ strtoupper($enquiry->locale) }}
+            {{ __('admin.enquiry_status_'.$enquiry->status->value) }} · {{ \App\Support\Hotel\Clock::local($enquiry->created_at)?->format('Y-m-d H:i') }} · {{ strtoupper($enquiry->locale) }}
         </span>
     </div>
 
@@ -58,7 +58,7 @@
                     <h2 class="text-sm font-medium text-green-900">
                         {{ __('admin.enquiry_replied_by', [
                             'name' => $enquiry->repliedBy?->name ?? '—',
-                            'when' => $enquiry->replied_at?->format('Y-m-d H:i') ?? '—',
+                            'when' => \App\Support\Hotel\Clock::local($enquiry->replied_at)?->format('Y-m-d H:i') ?? '—',
                         ]) }}
                     </h2>
                     <p class="mt-2 whitespace-pre-line text-sm text-green-950">{{ $enquiry->reply }}</p>

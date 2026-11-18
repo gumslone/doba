@@ -52,7 +52,7 @@
                 <label for="timezone" class="block text-sm font-medium">{{ __('install.timezone') }}</label>
                 <select id="timezone" name="timezone" class="mt-1 w-full rounded border border-neutral-300 px-3 py-2">
                     @foreach ($timezones as $timezone)
-                        <option value="{{ $timezone }}" @selected(old('timezone', config('app.timezone')) === $timezone)>{{ $timezone }}</option>
+                        <option value="{{ $timezone }}" @selected(old('timezone', config('doba.timezone')) === $timezone)>{{ $timezone }}</option>
                     @endforeach
                 </select>
             </div>

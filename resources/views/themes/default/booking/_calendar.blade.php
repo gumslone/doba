@@ -2,7 +2,7 @@
     use App\Support\Routing\Localization;
 
     $dayNames = [];
-    $monday = now()->startOfWeek();
+    $monday = \App\Support\Hotel\Clock::now()->startOfWeek();
 
     for ($i = 0; $i < 7; $i++) {
         $dayNames[] = $monday->copy()->addDays($i)->translatedFormat('D');

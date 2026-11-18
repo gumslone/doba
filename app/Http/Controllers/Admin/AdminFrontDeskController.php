@@ -186,7 +186,7 @@ class AdminFrontDeskController extends Controller
         // is counted in the hotel's frame — this one was not, which is
         // why CI, running at 22:00 UTC, saw a desk with no arrivals.
         return preg_match('/^\d{4}-\d{2}-\d{2}$/', $requested) === 1
-            ? CarbonImmutable::parse($requested)->startOfDay()
+            ? CarbonImmutable::parse($requested, config('doba.timezone'))->startOfDay()
             : CarbonImmutable::today(config('doba.timezone'));
     }
 }

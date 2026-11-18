@@ -74,6 +74,9 @@ it('saves plain, per-language and runtime settings in one go', function (): void
     $env = (string) file_get_contents(config('doba.install.env_path'));
 
     expect($env)->toContain('APP_TIMEZONE=Europe/Vienna')
+        // The key the hotel timezone is read from: for a long time only
+        // APP_TIMEZONE was written, and nothing read it.
+        ->toContain('DOBA_TIMEZONE=Europe/Vienna')
         ->toContain('DOBA_CURRENCY=EUR')
         ->toContain('DOBA_CHECKIN_FROM=14:00')
         ->and(config('doba.checkout_until'))->toBe('10:30');

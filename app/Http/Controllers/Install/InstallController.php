@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RoomType;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Hotel\Clock;
 use App\Support\Install\EnvWriter;
 use App\Support\Install\Installer;
 use App\Support\Install\Requirements;
@@ -267,6 +268,7 @@ class InstallController extends Controller
         // step is the exception — migrations need it on disk immediately.
         $this->stageEnv($request, [
             'APP_TIMEZONE' => $validated['timezone'],
+            'DOBA_TIMEZONE' => $validated['timezone'],
             'DOBA_CURRENCY' => strtoupper($validated['currency']),
             'DOBA_CHECKIN_FROM' => $validated['checkin_from'],
             'DOBA_CHECKOUT_UNTIL' => $validated['checkout_until'],
@@ -274,8 +276,9 @@ class InstallController extends Controller
 
         // Applied at runtime so the rest of the wizard already behaves as
         // the finished hotel will.
+        Clock::use($validated['timezone']);
+
         config([
-            'app.timezone' => $validated['timezone'],
             'doba.currency' => strtoupper($validated['currency']),
             'doba.checkin_from' => $validated['checkin_from'],
             'doba.checkout_until' => $validated['checkout_until'],

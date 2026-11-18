@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Casts\AsDateString;
 use App\Enums\DiscountType;
+use App\Support\Hotel\Clock;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -149,26 +150,28 @@ class PromoCode extends Model
         ?Guest $guest = null,
         ?CarbonInterface $at = null,
     ): ?string {
-        $at = CarbonImmutable::instance($at ?? now())->startOfDay();
-        $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
+        // Calendar dates, compared as dates: "valid until the 30th" means
+        // the hotel's 30th, all of it, wherever the server's clock is.
+        $at = ($at === null ? Clock::today() : CarbonImmutable::instance($at))->toDateString();
+        $checkIn = CarbonImmutable::instance($checkIn)->toDateString();
 
         if (! $this->is_active) {
             return 'promo.error_invalid';
         }
 
-        if ($this->valid_from !== null && $at->lt($this->valid_from)) {
+        if ($this->valid_from !== null && $at < $this->valid_from->toDateString()) {
             return 'promo.error_not_yet_valid';
         }
 
-        if ($this->valid_to !== null && $at->gt($this->valid_to)) {
+        if ($this->valid_to !== null && $at > $this->valid_to->toDateString()) {
             return 'promo.error_expired';
         }
 
-        if ($this->stay_from !== null && $checkIn->lt($this->stay_from)) {
+        if ($this->stay_from !== null && $checkIn < $this->stay_from->toDateString()) {
             return 'promo.error_stay_window';
         }
 
-        if ($this->stay_to !== null && $checkIn->gt($this->stay_to)) {
+        if ($this->stay_to !== null && $checkIn > $this->stay_to->toDateString()) {
             return 'promo.error_stay_window';
         }
 

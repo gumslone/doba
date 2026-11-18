@@ -47,7 +47,7 @@
                         <tbody>
                             @foreach (Venue::DAYS as $day)
                                 @php $periods = $venue->opening_hours[$day] ?? []; @endphp
-                                <tr @class(['is-today' => $day === Venue::DAYS[now()->dayOfWeekIso - 1]])>
+                                <tr @class(['is-today' => $day === Venue::DAYS[\App\Support\Hotel\Clock::now()->dayOfWeekIso - 1]])>
                                     <th scope="row">{{ __('menu.day_'.$day) }}</th>
                                     <td>
                                         @forelse ($periods as $period)

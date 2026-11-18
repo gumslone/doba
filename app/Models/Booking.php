@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Casts\AsDateString;
 use App\Enums\BookingStatus;
+use App\Support\Hotel\Clock;
 use App\Support\Hotel\HotelSettings;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
@@ -233,7 +234,7 @@ class Booking extends Model
             0,
             3
         ));
-        $year = now()->format('Y');
+        $year = Clock::now()->format('Y');
 
         $sequence = static::query()
             ->where('reference', 'like', "{$prefix}-{$year}-%")

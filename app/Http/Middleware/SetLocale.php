@@ -30,8 +30,12 @@ class SetLocale
 
         // Dates, times and currency are formatted with intl per locale (§10),
         // and Carbon needs telling separately from the app locale.
+        //
+        // The locale only. This used to switch PHP's default timezone to
+        // the hotel's as well — for guest pages alone, so cron, the admin
+        // and webhooks read and wrote the same columns in another zone.
+        // The whole process runs on the hotel's clock now (config/app.php).
         Carbon::setLocale($locale);
-        date_default_timezone_set((string) config('doba.timezone', 'UTC'));
 
         $response = $next($request);
 

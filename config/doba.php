@@ -21,7 +21,20 @@ return [
 
     'currency' => env('DOBA_CURRENCY', 'EUR'),
 
-    'timezone' => env('DOBA_TIMEZONE', 'Europe/Berlin'),
+    // The hotel's timezone: business dates, stored timestamps and every
+    // time shown to a person. config/app.php applies the same value to
+    // the whole process, so no two parts of the system can disagree.
+    //
+    // The wizard and the settings screen wrote their choice to
+    // APP_TIMEZONE for a long time, which nothing read — so that value,
+    // where a hotelier set one, is honoured first. They write both now.
+    'timezone' => (static function (): string {
+        $chosen = env('APP_TIMEZONE');
+
+        return is_string($chosen) && $chosen !== '' && $chosen !== 'UTC'
+            ? $chosen
+            : (string) env('DOBA_TIMEZONE', 'Europe/Berlin');
+    })(),
 
     /*
     |--------------------------------------------------------------------------

@@ -65,7 +65,21 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // The hotel's timezone, for the whole process — web, admin, cron,
+    // API and webhooks alike. Doba keeps hotel wall-clock time, because
+    // almost everything it stores is a calendar date or a time a person
+    // at the desk will read. What must never happen is two processes
+    // disagreeing, which is what this line used to cause by saying UTC
+    // while the guest site switched itself to the hotel's zone: a
+    // 20-minute hold lasted 80 minutes in Berlin and expired on arrival
+    // in New York. See config/doba.php for where the value comes from.
+    'timezone' => (static function (): string {
+        $chosen = env('APP_TIMEZONE');
+
+        return is_string($chosen) && $chosen !== '' && $chosen !== 'UTC'
+            ? $chosen
+            : (string) env('DOBA_TIMEZONE', 'Europe/Berlin');
+    })(),
 
     /*
     |--------------------------------------------------------------------------

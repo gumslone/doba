@@ -66,7 +66,7 @@
                                 —
                             @endif
                         </td>
-                        <td class="px-4 py-3 font-normal text-neutral-500">{{ $enquiry->created_at?->format('Y-m-d H:i') }}</td>
+                        <td class="px-4 py-3 font-normal text-neutral-500">{{ \App\Support\Hotel\Clock::local($enquiry->created_at)?->format('Y-m-d H:i') }}</td>
                         <td class="px-4 py-3 font-normal">
                             <span @class([
                                 'rounded px-1.5 py-0.5 text-xs',

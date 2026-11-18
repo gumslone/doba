@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasMedia;
 use App\Models\Concerns\HasTranslations;
+use App\Support\Hotel\Clock;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -67,8 +68,11 @@ class Event extends Model implements HasMedia
         // stays listed until it actually ends.
         return $query
             ->where(static fn (Builder $q) => $q
-                ->where('starts_at', '>=', now()->startOfDay())
-                ->orWhere('ends_at', '>=', now()))
+                // Event times are the hotel's wall clock exactly as the
+                // hotelier typed them, so they are compared with the
+                // hotel's wall clock — not with UTC.
+                ->where('starts_at', '>=', Clock::today()->toDateTimeString())
+                ->orWhere('ends_at', '>=', Clock::now()->toDateTimeString()))
             ->orderBy('starts_at');
     }
 

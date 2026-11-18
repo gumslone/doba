@@ -81,7 +81,7 @@
 
         <div class="fbottom">
             <span>
-                © {{ date('Y') }} {{ $hotel->name }} ·
+                © {{ \App\Support\Hotel\Clock::now()->format('Y') }} {{ $hotel->name }} ·
                 {{ __('common.powered_by') }}
                 <a href="https://github.com/gumslone/doba" rel="noopener"><strong style="color:#cbd8ce">Doba</strong></a>
             </span>

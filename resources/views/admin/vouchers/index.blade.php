@@ -31,7 +31,7 @@
                         <div>
                             <span class="font-mono font-medium">{{ $voucher->code }}</span>
                             · <strong>{{ Money::format($voucher->initial_amount, $voucher->currency) }}</strong>
-                            <div class="text-neutral-500">{{ $voucher->buyer_name }} · {{ $voucher->buyer_email }} · {{ $voucher->created_at?->format('Y-m-d H:i') }}</div>
+                            <div class="text-neutral-500">{{ $voucher->buyer_name }} · {{ $voucher->buyer_email }} · {{ \App\Support\Hotel\Clock::local($voucher->created_at)?->format('Y-m-d H:i') }}</div>
                         </div>
                         <div class="flex gap-2">
                             <form method="POST" action="/admin/vouchers/{{ $voucher->id }}/activate" data-confirm="{{ __('admin.voucher_activate_confirm', ['amount' => Money::format($voucher->initial_amount, $voucher->currency)]) }}">@csrf

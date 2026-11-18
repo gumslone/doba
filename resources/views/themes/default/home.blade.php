@@ -146,7 +146,7 @@
                             <p>{{ $review->body }}</p>
                             <p class="text-muted">
                                 {{ $review->guest?->first_name }} ·
-                                {{ $review->published_at?->translatedFormat('F Y') }}
+                                {{ \App\Support\Hotel\Clock::local($review->published_at)?->translatedFormat('F Y') }}
                                 · {{ __('common.verified_stay') }}
                             </p>
                             @if ($review->hotel_response)
