@@ -39,6 +39,11 @@ RUN npm run build
 # ---- Runtime ----
 FROM base AS runtime
 
+# A reverse proxy on the Docker host reaches the container from a private
+# address; a visitor hitting the published port directly keeps their own
+# public one. So private ranges are believed and nobody else is.
+ENV TRUSTED_PROXIES="127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
     DOBA_DATA=/data \
     DOBA_SQLITE_PATH=/data/database.sqlite

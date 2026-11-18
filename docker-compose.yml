@@ -21,8 +21,9 @@ services:
       - "8080:80"
     environment:
       # The public address of the site. Change it when you put a domain
-      # and https in front (Caddy, Traefik, nginx-proxy — Doba trusts the
-      # proxy's forwarded headers).
+      # and https in front (Caddy, Traefik, nginx-proxy). A proxy on a
+      # private address is trusted for the visitor's real IP; one on a
+      # public address must be listed in TRUSTED_PROXIES.
       DOBA_URL: http://localhost:8080
     volumes:
       # Everything the hotel owns: .env, photos, invoices, backups, logs

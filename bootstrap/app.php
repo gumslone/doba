@@ -33,10 +33,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // group — sitemap.xml, robots.txt, /up, webhooks — have no locale to
         // negotiate and address every locale explicitly instead.
         //
-        // Behind Apache with mod_proxy_fcgi the app must trust the proxy, or
-        // every canonical URL, redirect and hreflang href it generates comes
-        // out as http:// on an HTTPS-only site.
-        $middleware->trustProxies(at: '*');
+        // Which proxies are believed is config/trustedproxy.php, read by
+        // the framework's own middleware — deliberately not "*" here: that
+        // let any visitor choose their own IP address, and with it step
+        // around every rate limit. https in generated URLs does not depend
+        // on it; AppServiceProvider forces the scheme from APP_URL.
 
         $middleware->redirectGuestsTo('/admin/login');
         // The screen a hotel opens in the morning, not the CMS.

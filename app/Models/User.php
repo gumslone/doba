@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
  * @property string|null $totp_secret
  * @property CarbonImmutable|null $totp_confirmed_at
  * @property array<int,string>|null $totp_recovery_codes
+ * @property int|null $totp_last_step
  */
 class User extends Authenticatable
 {

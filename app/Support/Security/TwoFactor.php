@@ -61,6 +61,33 @@ class TwoFactor
     }
 
     /**
+     * The same, at login — where a code must work exactly once.
+     *
+     * A code stays valid for about ninety seconds. Without remembering
+     * which time step was last used, anyone who saw one typed could type
+     * it again straight away.
+     */
+    public function verifyOnce(User $user, string $code): bool
+    {
+        $code = preg_replace('/\s+/', '', $code) ?? '';
+
+        if ($user->totp_secret === null || preg_match('/^\d{6}$/', $code) !== 1) {
+            return false;
+        }
+
+        $step = $this->google2fa->verifyKeyNewer($user->totp_secret, $code, (int) $user->totp_last_step, 1);
+
+        if ($step === false) {
+            return false;
+        }
+
+        // `true` only when no earlier step was given to compare against.
+        $user->forceFill(['totp_last_step' => $step === true ? $this->google2fa->getTimestamp() : $step])->save();
+
+        return true;
+    }
+
+    /**
      * Eight codes, shown once, stored hashed. Each is spent on use.
      *
      * @return array{plain:array<int,string>,hashed:array<int,string>}
