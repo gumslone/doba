@@ -65,6 +65,7 @@ return [
     'error_too_far' => 'Ta data wykracza poza nasz kalendarz.',
     'error_gone' => 'Przykro nam — ten pokój nie jest już wolny w tych terminach.',
     'error_just_taken' => 'Przykro nam — ten pokój został właśnie zarezerwowany. Oto co jest jeszcze wolne.',
+    'error_rate' => 'Prosimy wybrać jedną z taryf dostępnych dla tego pobytu.',
     'error_terms' => 'Zaakceptuj, proszę, warunki rezerwacji i anulowania.',
     'error_not_cancellable' => 'Tej rezerwacji nie można już anulować online. Skontaktuj się z nami.',
 

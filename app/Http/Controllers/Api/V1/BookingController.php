@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Availability\AvailabilityService;
 use App\Domain\Booking\BookingService;
 use App\Domain\Booking\NoAvailabilityException;
 use App\Domain\Booking\PromoCodeException;
@@ -13,7 +14,6 @@ use App\Models\ApiClient;
 use App\Models\ApiIdempotencyKey;
 use App\Models\Booking;
 use App\Models\PromoCode;
-use App\Models\RatePlan;
 use App\Models\RoomType;
 use App\Support\Api\Problem;
 use App\Support\Api\Wire;
@@ -172,12 +172,41 @@ class BookingController extends Controller
         }
 
         $roomType = RoomType::query()->where('code', $data['room_type'])->sole();
+        $checkIn = CarbonImmutable::parse($data['check_in']);
+        $checkOut = CarbonImmutable::parse($data['check_out']);
+        $availability = app(AvailabilityService::class);
+
+        // The rules the availability endpoint quotes by, enforced where
+        // the booking is made: a partner must not be able to sell what
+        // the hotel's own site would refuse — a stay in the past, a night
+        // under the minimum, more people than the room sleeps. Whether a
+        // unit is free is place()'s answer, with the date that is full.
+        if (($reason = $availability->validateStay($checkIn, $checkOut)) !== null) {
+            return Problem::validation(['check_in' => [__($reason)]]);
+        }
+
+        if (! $availability->allowsStay($roomType, $checkIn, $checkOut, (int) ($data['units'] ?? 1), (int) $data['adults'], (int) ($data['children'] ?? 0))) {
+            return Problem::validation(['room_type' => [__('booking.error_gone')]]);
+        }
+
+        $ratePlan = null;
+
+        if (isset($data['rate_plan'])) {
+            // A plan the engine would not offer for these dates must not
+            // set the price, any more than it may on the website.
+            $ratePlan = collect($availability->ratePlansFor($roomType, $checkIn, $checkOut))
+                ->firstWhere('plan.code', $data['rate_plan'])['plan'] ?? null;
+
+            if ($ratePlan === null) {
+                return Problem::validation(['rate_plan' => [__('booking.error_rate')]]);
+            }
+        }
 
         try {
             $booking = $bookings->place(
                 $roomType,
-                CarbonImmutable::parse($data['check_in']),
-                CarbonImmutable::parse($data['check_out']),
+                $checkIn,
+                $checkOut,
                 [
                     'email' => $data['guest']['email'],
                     'first_name' => $data['guest']['first_name'],
@@ -189,9 +218,7 @@ class BookingController extends Controller
                 children: (int) ($data['children'] ?? 0),
                 units: (int) ($data['units'] ?? 1),
                 locale: $data['locale'] ?? config('app.locale'),
-                ratePlan: isset($data['rate_plan'])
-                    ? RatePlan::query()->where('code', $data['rate_plan'])->first()
-                    : null,
+                ratePlan: $ratePlan,
                 promoCode: isset($data['promo_code'])
                     ? PromoCode::findByCode($data['promo_code'])
                     : null,

@@ -210,7 +210,7 @@
             </p>
         @endif
 
-        @if ($booking->status->canTransitionTo(BookingStatus::Cancelled))
+        @if ($booking->status->guestMayCancel())
             <form method="POST"
                   action="{{ Localization::route('booking.cancel', ['reference' => $booking->reference, 'token' => $token]) }}"
                   data-confirm="{{ __('booking.cancel_confirm') }}"

@@ -65,6 +65,7 @@ return [
     'error_too_far' => 'Dieses Datum liegt weiter in der Zukunft als unser Kalender reicht.',
     'error_gone' => 'Leider ist dieses Zimmer für diese Daten nicht mehr frei.',
     'error_just_taken' => 'Leider wurde dieses Zimmer gerade gebucht. Das ist noch frei.',
+    'error_rate' => 'Bitte wählen Sie einen der für diesen Aufenthalt angebotenen Tarife.',
     'error_terms' => 'Bitte akzeptieren Sie die Buchungs- und Stornobedingungen.',
     'error_not_cancellable' => 'Diese Buchung kann online nicht mehr storniert werden. Bitte kontaktieren Sie uns.',
 

@@ -65,6 +65,7 @@ return [
     'error_too_far' => 'Cette date dépasse notre calendrier.',
     'error_gone' => 'Désolé — cette chambre n’est plus libre à ces dates.',
     'error_just_taken' => 'Désolé — cette chambre vient d’être réservée. Voici ce qui reste.',
+    'error_rate' => 'Veuillez choisir l’un des tarifs proposés pour ce séjour.',
     'error_terms' => 'Veuillez accepter les conditions de réservation et d’annulation.',
     'error_not_cancellable' => 'Cette réservation ne peut plus être annulée en ligne. Contactez-nous.',
 

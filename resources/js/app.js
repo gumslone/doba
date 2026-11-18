@@ -1,5 +1,6 @@
 import 'trix';
 import initCalendars from './calendar';
+import initCheckout from './checkout';
 import initBehaviours from './behaviours';
 import initDisclosures from './disclosures';
 import initGrid from './grid';
@@ -18,6 +19,7 @@ import { initStylePresets } from './styles-admin';
 const boot = () => {
     initBehaviours();
     initCalendars();
+    initCheckout();
     initDisclosures();
     initGrid();
     initStylePresets();

@@ -6,6 +6,19 @@
         use App\Support\Routing\Localization;
 
         $nights = (int) $stay['check_in']->diffInDays($stay['check_out']);
+        $units = (int) ($stay['units'] ?? 1);
+        $party = $stay['adults'] + $stay['children'];
+
+        // Every line the guest will owe, worked out before the booking
+        // exists — and kept current by resources/js/checkout.js as they
+        // pick a rate and tick extras. The figure beside the button used
+        // to be the cheapest rate with nothing added, whatever was chosen.
+        $cityTax = \App\Domain\Booking\BookingService::cityTax($stay['adults'], $stay['children'], $nights);
+        $cleaningFee = max(0, $roomType->cleaning_fee) * $units;
+        $chosenExtras = $extras->reject->is_included
+            ->filter(fn ($extra) => (bool) old("extras.{$extra->id}"))
+            ->sum(fn ($extra) => $extra->totalFor($nights, $party, 1));
+        $grandTotal = $total + $chosenExtras + $cityTax + $cleaningFee;
     @endphp
 
     <section class="mx-auto max-w-4xl px-4 py-12">
@@ -122,6 +135,7 @@
                             <label class="plan @if (($selected['plan'] ?? null)?->is($plan)) on @endif"
                                    style="grid-template-columns:22px 1fr auto">
                                 <input type="radio" name="rate_plan" value="{{ $plan->id }}"
+                                       data-plan-total="{{ $offer['total'] * $units }}"
                                        @checked(($selected['plan'] ?? null)?->is($plan))>
                                 <div>
                                     <h3>{{ $plan->t('name') }}</h3>
@@ -174,6 +188,7 @@
                             <label class="flex items-baseline justify-between gap-4">
                                 <span>
                                     <input type="checkbox" name="extras[{{ $extra->id }}]" value="1"
+                                           data-extra-total="{{ $extra->totalFor($nights, $party, 1) }}"
                                            @checked(old("extras.{$extra->id}"))>
                                     <span class="ml-1 font-medium">{{ $extra->t('name') }}</span>
                                     @if ($description = $extra->t('description'))
@@ -204,6 +219,15 @@
                     </label>
                 </fieldset>
 
+                {{-- The total, directly above the button that commits to
+                     it. On a phone the summary column is far below this
+                     point; a guest must not have to scroll past the
+                     button to learn what pressing it costs. --}}
+                <p class="flex items-baseline justify-between gap-4 border-t border-neutral-200 pt-4 text-lg">
+                    <span class="font-medium">{{ __('booking.total') }}</span>
+                    <strong data-sum-total>{{ Money::format($grandTotal) }}</strong>
+                </p>
+
                 <button type="submit" class="btn-primary rounded px-6 py-3 text-lg">{{ __('booking.book') }}</button>
             </form>
 
@@ -215,7 +239,12 @@
                     sizes="320px"
                     class="mt-4 aspect-[4/3] w-full rounded object-cover" />
 
-                <dl class="mt-4 space-y-2 text-sm">
+                <dl class="mt-4 space-y-2 text-sm"
+                    data-checkout-summary
+                    data-currency="{{ config('doba.currency') }}"
+                    data-locale="{{ str_replace('_', '-', app()->getLocale()) }}"
+                    data-room="{{ $total }}"
+                    data-fixed="{{ $cityTax + $cleaningFee }}">
                     <div class="flex justify-between gap-4">
                         <dt class="text-neutral-500">{{ __('booking.room') }}</dt>
                         <dd class="text-right font-medium">{{ $roomType->t('name') }}</dd>
@@ -244,13 +273,16 @@
                                 <span class="block text-sm font-normal text-neutral-500">{{ __('booking.rooms_count', ['count' => $stay['units']]) }}</span>
                             @endif
                         </dt>
-                        <dd class="text-right font-semibold">{{ Money::format($total) }}</dd>
+                        <dd class="text-right font-semibold" data-sum-room>{{ Money::format($total) }}</dd>
                     </div>
 
-                    @php
-                        $cityTax = \App\Domain\Booking\BookingService::cityTax($stay['adults'], $stay['children'], $nights);
-                        $cleaningFee = max(0, $roomType->cleaning_fee) * ($stay['units'] ?? 1);
-                    @endphp
+                    @if ($extras->isNotEmpty())
+                        <div class="flex justify-between gap-4" data-sum-extras-row @if ($chosenExtras === 0) hidden @endif>
+                            <dt class="text-neutral-500">{{ __('booking.extras_title') }}</dt>
+                            <dd class="text-right" data-sum-extras>{{ Money::format($chosenExtras) }}</dd>
+                        </div>
+                    @endif
+
                     {{-- Before the booking exists, not after: a guest must
                          see every line they will owe while they can still
                          walk away (§7). --}}
@@ -266,12 +298,10 @@
                             <dd class="text-right">{{ Money::format($cityTax) }}</dd>
                         </div>
                     @endif
-                    @if ($cityTax > 0 || $cleaningFee > 0)
-                        <div class="flex justify-between gap-4">
-                            <dt class="font-medium">{{ __('booking.total') }}</dt>
-                            <dd class="text-right font-semibold">{{ Money::format($total + $cityTax + $cleaningFee) }}</dd>
-                        </div>
-                    @endif
+                    <div class="flex justify-between gap-4 border-t border-neutral-200 pt-3 text-base">
+                        <dt class="font-medium">{{ __('booking.total') }}</dt>
+                        <dd class="text-right font-semibold" data-sum-total>{{ Money::format($grandTotal) }}</dd>
+                    </div>
                 </dl>
 
                 <p class="mt-3 text-xs text-neutral-500">{{ __('seo.direct_booking_note') }}</p>

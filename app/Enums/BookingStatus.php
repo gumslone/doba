@@ -48,6 +48,19 @@ enum BookingStatus: string
         };
     }
 
+    /**
+     * May the GUEST cancel, from their own link?
+     *
+     * Before they arrive, yes. Once they are in the room, no: the state
+     * machine allows checked-in → cancelled because the desk needs it,
+     * but offered to the guest it put tonight's occupied room back on
+     * sale and credited the whole invoice at the press of a button.
+     */
+    public function guestMayCancel(): bool
+    {
+        return $this === self::Pending || $this === self::Confirmed;
+    }
+
     public function canTransitionTo(self $to): bool
     {
         return in_array($to, $this->allowedTransitions(), true);

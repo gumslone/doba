@@ -118,7 +118,11 @@ class BookingController extends Controller
         // The plan the guest picked on the room page, if it is still
         // eligible; otherwise the cheapest one. Never trust the query
         // string to name a plan the engine would refuse.
-        $selected = collect($plans)->firstWhere('plan.id', $request->integer('rate_plan')) ?? ($plans[0] ?? null);
+        //
+        // old() first: a guest sent back with an error keeps the rate they
+        // had chosen, and the total beside the button stays the right one.
+        $wanted = (int) (old('rate_plan') ?? $request->integer('rate_plan'));
+        $selected = collect($plans)->firstWhere('plan.id', $wanted) ?? ($plans[0] ?? null);
 
         return view('booking.checkout', [
             'stay' => $stay,
@@ -153,13 +157,30 @@ class BookingController extends Controller
                 ->with('booking_error', __('booking.error_range'));
         }
 
+        // The same question the checkout page asked before it showed the
+        // form — asked again, because the form is only a suggestion. A
+        // POST written by hand used to skip all of it: one night in a flat
+        // let for a week, sixteen people in a room for five, arrival on a
+        // day closed to arrivals. place() checks only that units are free —
+        // and still answers for that, with its own "just taken" message.
+        if (! $availability->allowsStay($roomType, $stay['check_in'], $stay['check_out'], $stay['units'], $stay['adults'], $stay['children'])) {
+            return redirect(Localization::route('booking.search', $this->stayQuery($stay)))
+                ->with('booking_error', __('booking.error_gone'));
+        }
+
         // Re-resolved server-side: a posted plan id is a request, not a
         // fact, and an ineligible plan must never set the price.
-        $ratePlan = null;
+        $eligible = collect($availability->ratePlansFor($roomType, $stay['check_in'], $stay['check_out']));
+        $ratePlan = $eligible->firstWhere('plan.id', (int) ($validated['rate_plan'] ?? 0))['plan'] ?? null;
 
-        if ($planId = ($validated['rate_plan'] ?? null)) {
-            $eligible = collect($availability->ratePlansFor($roomType, $stay['check_in'], $stay['check_out']));
-            $ratePlan = $eligible->firstWhere('plan.id', (int) $planId)['plan'] ?? null;
+        // Where the hotel sells rate plans, a booking is on one of them.
+        // Leaving the field out used to book at the base price with no
+        // cancellation terms at all — refundable for ever, even at a
+        // hotel whose only rate is non-refundable.
+        if ($ratePlan === null && $eligible->isNotEmpty()) {
+            return redirect(Localization::route('booking.checkout', $this->stayQuery($stay) + ['room_type' => $roomType->id]))
+                ->withInput()
+                ->with('booking_error', __('booking.error_rate'));
         }
 
         // Same treatment as the rate plan: a posted code is a request, not
@@ -181,7 +202,7 @@ class BookingController extends Controller
                 : $promoCode->rejectionReason(
                     $stay['check_in'],
                     (int) $stay['check_in']->diffInDays($stay['check_out']),
-                    0,
+                    null,   // not priced yet; place() checks the minimum
                     [$roomType->id],
                 );
 
@@ -594,7 +615,7 @@ class BookingController extends Controller
     {
         $booking = $this->findByToken($reference, $token);
 
-        if (! $booking->status->canTransitionTo(BookingStatus::Cancelled)) {
+        if (! $booking->status->guestMayCancel()) {
             return redirect(Localization::route('booking.manage', compact('reference', 'token')))
                 ->with('booking_error', __('booking.error_not_cancellable'));
         }

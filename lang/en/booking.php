@@ -65,6 +65,7 @@ return [
     'error_too_far' => 'That date is further ahead than our calendar goes.',
     'error_gone' => 'Sorry — that room is no longer free for those dates.',
     'error_just_taken' => 'Sorry — that room was just taken. Here is what is still free.',
+    'error_rate' => 'Please choose one of the rates offered for this stay.',
     'error_terms' => 'Please accept the booking and cancellation terms.',
     'error_not_cancellable' => 'This booking can no longer be cancelled online. Please contact us.',
 

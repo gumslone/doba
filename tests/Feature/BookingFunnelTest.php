@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Domain\Booking\BookingService;
 use App\Enums\BookingStatus;
 use App\Mail\BookingConfirmed;
 use App\Models\Availability;
@@ -136,6 +137,46 @@ it('does not show a booking to someone who only knows its number', function (): 
     $this->get('/en/booking/pay/'.$booking->reference)->assertNotFound();
     $this->get('/en/booking/confirmation/'.$booking->reference.'/'.str_repeat('a', 40))->assertNotFound();
     $this->get('/en/booking/pay/'.$booking->reference.'/'.str_repeat('a', 40))->assertNotFound();
+});
+
+it('applies the hotel\'s rules to the form post itself, not only to the page before it', function (array $change, array $row): void {
+    // The checkout page refuses all of these — but a POST written by hand
+    // never sees the checkout page, and used to be booked and confirmed.
+    Availability::query()->where('room_type_id', $this->roomType->id)
+        ->where('date', $this->checkIn->toDateString())
+        ->update($row);
+
+    $this->post('/en/booking', array_merge(stayQuery($this->checkIn) + [
+        'room_type' => $this->roomType->id,
+        'first_name' => 'Anna',
+        'last_name' => 'Kowalska',
+        'email' => 'anna@example.com',
+        'terms' => '1',
+    ], $change))
+        ->assertRedirect()
+        ->assertSessionHas('booking_error', __('booking.error_gone'));
+
+    expect(Booking::query()->count())->toBe(0);
+})->with([
+    'more people than the room sleeps' => [['adults' => 9, 'children' => 7], []],
+    'more adults than it has beds for' => [['adults' => 3], []],
+    'fewer nights than the minimum' => [[], ['min_stay' => 5]],
+    'arrival on a day closed to arrivals' => [[], ['closed_to_arrival' => true]],
+]);
+
+it('refuses a single night in a flat that is let for a week', function (): void {
+    $flat = funnelRoom('APT', ['kind' => RoomType::APARTMENT, 'min_nights' => 7]);
+    openNights($flat, $this->checkIn, 10);
+
+    $this->post('/en/booking', stayQuery($this->checkIn, 1) + [
+        'room_type' => $flat->id,
+        'first_name' => 'Anna',
+        'last_name' => 'Kowalska',
+        'email' => 'anna@example.com',
+        'terms' => '1',
+    ])->assertSessionHas('booking_error', __('booking.error_gone'));
+
+    expect(Booking::query()->count())->toBe(0);
 });
 
 it('reports each unusable date range instead of searching', function (string $query, string $key): void {
@@ -274,6 +315,27 @@ it('lets the guest cancel their own booking and releases the room', function ():
     expect(Availability::query()->where('date', $this->checkIn->toDateString())->first())
         ->booked->toBe(0)
         ->held->toBe(0);
+});
+
+it('does not let a guest who is already in the room cancel the stay from their phone', function (): void {
+    $this->post('/en/booking', stayQuery($this->checkIn) + [
+        'room_type' => $this->roomType->id,
+        'first_name' => 'Anna', 'last_name' => 'K', 'email' => 'a@example.com', 'terms' => '1',
+    ]);
+
+    $booking = Booking::sole();
+    app(BookingService::class)->transition($booking, BookingStatus::CheckedIn, 'arrived');
+
+    $manage = "/en/booking/manage/{$booking->reference}/{$booking->manage_token}";
+
+    // No button…
+    $this->get($manage)->assertOk()->assertDontSee(__('booking.cancel_confirm'));
+
+    // …and no way round it. It used to free tonight's occupied room.
+    $this->post($manage.'/cancel')->assertSessionHas('booking_error', __('booking.error_not_cancellable'));
+
+    expect($booking->fresh()->status)->toBe(BookingStatus::CheckedIn)
+        ->and(Availability::query()->where('date', $this->checkIn->toDateString())->first()->booked)->toBe(1);
 });
 
 it('refuses a cancellation with a forged token', function (): void {

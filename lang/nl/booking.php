@@ -65,6 +65,7 @@ return [
     'error_too_far' => 'Die datum ligt verder vooruit dan onze kalender reikt.',
     'error_gone' => 'Helaas — die kamer is niet meer vrij op deze data.',
     'error_just_taken' => 'Helaas — die kamer is net geboekt. Dit is nog vrij.',
+    'error_rate' => 'Kies een van de tarieven die voor dit verblijf worden aangeboden.',
     'error_terms' => 'Accepteer de boekings- en annuleringsvoorwaarden.',
     'error_not_cancellable' => 'Deze boeking kan niet meer online worden geannuleerd. Neem contact met ons op.',
 

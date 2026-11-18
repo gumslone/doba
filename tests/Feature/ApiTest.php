@@ -194,6 +194,27 @@ it('reports a sold-out stay as its own problem type', function (): void {
         ->and($response->json('date'))->toBe($this->checkIn->toDateString());
 });
 
+it('holds a partner to the rules the website sells by', function (): void {
+    // More people than the room sleeps.
+    $this->postJson('/api/v1/bookings', ($this->payload)(['adults' => 9]), ($this->auth)(['Idempotency-Key' => 'r1']))
+        ->assertStatus(422)
+        ->assertJsonPath('errors.room_type.0', __('booking.error_gone'));
+
+    // Fewer nights than the arrival day asks for.
+    Availability::query()->where('date', $this->checkIn->toDateString())->update(['min_stay' => 4]);
+
+    $this->postJson('/api/v1/bookings', ($this->payload)(), ($this->auth)(['Idempotency-Key' => 'r2']))
+        ->assertStatus(422);
+
+    // A stay that began yesterday.
+    $this->postJson('/api/v1/bookings', ($this->payload)([
+        'check_in' => CarbonImmutable::today()->subDay()->toDateString(),
+        'check_out' => CarbonImmutable::today()->addDay()->toDateString(),
+    ]), ($this->auth)(['Idempotency-Key' => 'r3']))->assertStatus(422);
+
+    expect(Booking::query()->count())->toBe(0);
+});
+
 it('returns validation errors as a problem document with a field map', function (): void {
     $response = $this->postJson('/api/v1/bookings', ['room_type' => 'NOPE'], ($this->auth)(['Idempotency-Key' => 'k2']))
         ->assertStatus(422);

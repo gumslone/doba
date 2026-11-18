@@ -7,6 +7,7 @@ use App\Domain\Booking\BookingService;
 use App\Domain\Invoicing\InvoiceBuilder;
 use App\Models\Availability;
 use App\Models\Booking;
+use App\Models\Extra;
 use App\Models\RoomType;
 use App\Models\Setting;
 use App\Models\User;
@@ -141,6 +142,43 @@ it('refunds the cleaning fee together with the rooms', function (): void {
 
     // No plan, so refundable: nobody cleans a flat that was never slept in.
     expect(app(BookingService::class)->refundableAmount($booking->fresh()))->toBe(30000 + 6000);
+});
+
+it('keeps the fee in the total when the guest adds an extra', function (): void {
+    // Ticking breakfast used to take the cleaning fee off the price: the
+    // guest was asked for 6000 less than the invoice said.
+    $booking = apartmentStay(seedApartment(cleaningFee: 6000));
+
+    $parking = Extra::create([
+        'code' => 'PARK', 'price' => 1200, 'applies_per' => 'night',
+        'tax_rate' => 1900, 'max_quantity' => 3, 'is_active' => true,
+    ]);
+
+    $booking = app(BookingService::class)->addExtras($booking, [$parking->id => 1]);
+
+    expect($booking->extras_total)->toBe(3600)
+        ->and($booking->total)->toBe(30000 + 6000 + 3600)
+        ->and($booking->balance_due)->toBe($booking->total);
+
+    // And the invoice agrees with the booking, to the cent.
+    $invoice = app(InvoiceBuilder::class)->issue($booking->fresh());
+
+    expect($invoice->gross_total)->toBe($booking->total);
+});
+
+it('collects extras up front where the hotel takes no deposits', function (): void {
+    config(['doba.features.deposit_only' => false]);
+
+    $booking = apartmentStay(seedApartment(cleaningFee: 6000));
+
+    $parking = Extra::create([
+        'code' => 'PARK', 'price' => 1200, 'applies_per' => 'night',
+        'tax_rate' => 1900, 'max_quantity' => 3, 'is_active' => true,
+    ]);
+
+    $booking = app(BookingService::class)->addExtras($booking, [$parking->id => 1]);
+
+    expect($booking->deposit_due)->toBe($booking->total);
 });
 
 it('keeps the fee when the desk moves the dates', function (): void {

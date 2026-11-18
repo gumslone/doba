@@ -145,7 +145,7 @@ class PromoCode extends Model
     public function rejectionReason(
         CarbonInterface $checkIn,
         int $nights,
-        int $subtotal,
+        ?int $subtotal,
         array $roomTypeIds,
         ?Guest $guest = null,
         ?CarbonInterface $at = null,
@@ -179,7 +179,11 @@ class PromoCode extends Model
             return 'promo.error_min_nights';
         }
 
-        if ($this->min_total !== null && $subtotal < $this->min_total) {
+        // null = "not priced yet": the checkout's early look at a code,
+        // before the stay has a subtotal. It used to pass 0 here, so any
+        // code with a minimum was turned away before it reached the place
+        // that knows the real figure.
+        if ($this->min_total !== null && $subtotal !== null && $subtotal < $this->min_total) {
             return 'promo.error_min_total';
         }
 

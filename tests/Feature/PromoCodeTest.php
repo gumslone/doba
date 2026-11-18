@@ -227,6 +227,35 @@ it('applies a code posted at checkout and shows what it took off', function (): 
         ->assertSee(__('promo.discount'));
 });
 
+it('accepts a code with a minimum total on a stay that reaches it', function (): void {
+    // The checkout's early look at a code passed a subtotal of 0, so a
+    // code with any minimum at all was refused on every stay.
+    promo(['code' => 'BIGSTAY', 'min_total' => 20000]);
+
+    $payload = [
+        'room_type' => $this->roomType->id,
+        'check_in' => $this->checkIn->toDateString(),
+        'adults' => 2, 'children' => 0,
+        'first_name' => 'Anna', 'last_name' => 'K', 'email' => 'anna@example.com',
+        'terms' => '1', 'promo_code' => 'BIGSTAY',
+    ];
+
+    // One night at 100.00 does not reach 200.00 — said by the place that
+    // knows the price, and with the right reason.
+    $this->post('/en/booking', $payload + ['check_out' => $this->checkIn->addDays(1)->toDateString()])
+        ->assertSessionHas('booking_error', __('promo.error_min_total'));
+
+    expect(Booking::query()->whereNot('status', 'cancelled')->count())->toBe(0);
+
+    // Three nights do.
+    $this->post('/en/booking', $payload + ['check_out' => $this->checkIn->addDays(3)->toDateString()])
+        ->assertSessionMissing('booking_error');
+
+    expect(Booking::query()->latest('id')->first())
+        ->discount_total->toBe(3000)
+        ->total->toBe(27000);
+});
+
 it('sends the guest back with the reason rather than silently ignoring a bad code', function (): void {
     promo(['code' => 'LONGSTAY', 'min_nights' => 7]);
 

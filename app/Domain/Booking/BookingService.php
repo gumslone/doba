@@ -317,11 +317,24 @@ class BookingService
                 // City tax belongs in the total because the invoice bills
                 // it: a booking whose total omits a line the invoice prints
                 // is a document that demands more than the guest agreed to.
-                'total' => $booking->subtotal + $extrasTotal + $booking->city_tax - $booking->discount_total,
+                //
+                // And the cleaning fee, for the same reason. It was missing
+                // here — and only here — so ticking breakfast on a holiday
+                // flat took the fee off the price while the invoice went
+                // on printing it.
+                'total' => $booking->subtotal + $extrasTotal + $booking->city_tax + $booking->cleaning_fee - $booking->discount_total,
             ]);
 
             $booking->balance_due = $booking->total - $booking->paid_amount;
-            $booking->deposit_due = min($booking->deposit_due ?: $booking->total, $booking->total);
+
+            // With deposits off the hotel collects everything at booking,
+            // and "everything" includes what was just added (§8); with
+            // them on the deposit secures the room and extras are settled
+            // with the stay, so the share already worked out stands.
+            $booking->deposit_due = (bool) config('doba.features.deposit_only', true)
+                ? min($booking->deposit_due ?: $booking->total, $booking->total)
+                : $booking->total;
+
             $booking->save();
 
             return $booking;

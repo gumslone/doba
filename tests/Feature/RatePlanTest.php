@@ -6,7 +6,6 @@ use App\Domain\Availability\AvailabilityService;
 use App\Domain\Booking\BookingService;
 use App\Models\Availability;
 use App\Models\Booking;
-use App\Models\Invoice;
 use App\Models\RatePlan;
 use App\Models\RoomType;
 use Carbon\CarbonImmutable;
@@ -266,21 +265,44 @@ it('books the plan the guest chose and refuses one the engine would not sell', f
 
     // The long-stay plan needs 7 nights; posting it for 2 must not buy a
     // 50% discount the engine would never have offered.
-    $this->post('/en/booking', $payload + ['rate_plan' => $long->id])->assertRedirect();
+    $this->post('/en/booking', $payload + ['rate_plan' => $long->id])
+        ->assertRedirect()
+        ->assertSessionHas('booking_error', __('booking.error_rate'));
 
-    expect(Booking::sole())
-        ->subtotal->toBe(20000)
-        ->and(Booking::sole()->rooms->first()->rate_plan_id)->toBeNull();
+    // And no plan at all is not a way round it: that used to book at the
+    // base price with no cancellation terms whatsoever.
+    $this->post('/en/booking', $payload)
+        ->assertSessionHas('booking_error', __('booking.error_rate'));
 
-    // The invoice goes first: the schema deliberately refuses to delete a
-    // booking that has one, so an issued tax document cannot be destroyed
-    // as a side effect of tidying up a stay.
-    Invoice::query()->delete();
-    Booking::query()->delete();
+    expect(Booking::query()->count())->toBe(0);
 
     $this->post('/en/booking', $payload + ['rate_plan' => $flex->id])->assertRedirect();
 
     expect(Booking::sole()->rooms->first()->rate_plan_id)->toBe($flex->id);
+});
+
+it('gives the checkout everything it needs to keep the total honest', function (): void {
+    makePlan('FLEX', ['priority' => 10]);
+    makePlan('SAVER', ['adjustment_value' => -1200, 'refundable' => false]);
+
+    $query = http_build_query([
+        'room_type' => $this->roomType->id,
+        'check_in' => $this->checkIn->toDateString(),
+        'check_out' => $this->checkIn->addDays(2)->toDateString(),
+        'adults' => 2, 'children' => 0,
+    ]);
+
+    // Each rate carries its own total for this stay, so the page can show
+    // what the chosen one costs instead of the cheapest one for ever —
+    // and the figure sits beside the button, not only in a column that a
+    // phone puts below it.
+    $html = $this->get('/en/booking/checkout?'.$query)->assertOk()->getContent();
+
+    expect($html)->toContain('data-plan-total="20000"')
+        ->toContain('data-plan-total="17600"')
+        ->toContain('data-checkout-summary')
+        ->and(substr_count($html, 'data-sum-total'))->toBe(2)
+        ->and(strpos($html, 'data-sum-total'))->toBeLessThan(strpos($html, __('booking.book').'</button>'));
 });
 
 it('shows the rates on the room page and the checkout', function (): void {

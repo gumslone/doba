@@ -61,6 +61,52 @@ class AvailabilityService
         ?int $adults = null,
         ?int $children = null,
     ): bool {
+        if (! $this->allowsStay($roomType, $checkIn, $checkOut, $units, $adults, $children)) {
+            return false;
+        }
+
+        $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
+        $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
+        $rows = $this->rows($roomType, $checkIn, $checkOut);
+
+        // Rows are pre-generated through the whole bookable window, so a
+        // missing row is always an error — never "assume available" (§5).
+        if ($rows->count() !== (int) $checkIn->diffInDays($checkOut) + 1) {
+            return false;
+        }
+
+        foreach ($rows as $date => $row) {
+            if ($date === $checkOut->toDateString()) {
+                continue; // boundary row — no inventory consumed
+            }
+
+            if ($row->closed || $row->unitsLeft() < $units) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * The hotel's RULES for a stay, without asking whether a unit is free.
+     *
+     * Everything a hand-written request can get wrong on purpose: more
+     * people than the room sleeps, fewer nights than the minimum, an
+     * arrival on a day closed to arrivals. Separate from isBookable()
+     * because the two failures deserve different answers — "that is not
+     * a stay we sell" and "that room was just taken" — and because the
+     * place where a booking is created must ask this one itself: a form
+     * that only offers valid stays is not a rule.
+     */
+    public function allowsStay(
+        RoomType $roomType,
+        CarbonInterface $checkIn,
+        CarbonInterface $checkOut,
+        int $units = 1,
+        ?int $adults = null,
+        ?int $children = null,
+    ): bool {
         $checkIn = CarbonImmutable::instance($checkIn)->startOfDay();
         $checkOut = CarbonImmutable::instance($checkOut)->startOfDay();
 
@@ -88,10 +134,11 @@ class AvailabilityService
 
         $rows = $this->rows($roomType, $checkIn, $checkOut);
 
-        // Rows are pre-generated through the whole bookable window, so a
-        // missing row is always an error — never "assume available" (§5).
+        // A night with no row breaks no rule — it simply is not for sale,
+        // and saying so (with the date) is isBookable()'s and place()'s
+        // answer, not this one's.
         if ($rows->count() !== $nights + 1) {
-            return false;
+            return true;
         }
 
         /** @var Availability $arrival */
@@ -119,11 +166,7 @@ class AvailabilityService
 
         foreach ($rows as $date => $row) {
             if ($date === $checkOut->toDateString()) {
-                continue; // boundary row — no inventory consumed
-            }
-
-            if ($row->closed || $row->unitsLeft() < $units) {
-                return false;
+                continue; // boundary row — the guest leaves that morning
             }
 
             if ($row->min_stay_through !== null && $nights < $row->min_stay_through) {
