@@ -10,8 +10,13 @@ use App\Support\Install\EnvWriter;
 use App\Support\Install\Installer;
 use App\Support\Install\Requirements;
 use App\Support\Install\RoomBuilder;
+use App\Support\Maintenance\HealthCheck;
+use App\Support\Security\DefaultAdmin;
+use Database\Seeders\DatabaseSeeder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 
 beforeEach(function (): void {
     $this->installer = app(Installer::class);
@@ -181,6 +186,69 @@ it('runs the whole wizard and lands on a working hotel', function (): void {
 
     // And the wizard is gone.
     $this->get('/install')->assertNotFound();
+});
+
+it('does not leave the published demo login behind on a hotel filled with demo content', function (): void {
+    // What "fill it with demo content" used to leave on a real hotel: the
+    // account whose password the README prints, created before the owner.
+    User::query()->create([
+        'name' => 'Admin',
+        'email' => DefaultAdmin::EMAIL,
+        'password' => Hash::make(DefaultAdmin::PASSWORD),
+    ]);
+
+    $this->withSession(['install_token_ok' => true]);
+    foreach (['language', 'requirements', 'database', 'hotel'] as $step) {
+        $this->installer->markComplete($step);
+    }
+
+    $this->post('/install/owner', [
+        'name' => 'Oleg',
+        'email' => 'owner@bergblick.example',
+        'password' => 'correct-horse-battery-7',
+        'password_confirmation' => 'correct-horse-battery-7',
+    ])->assertRedirect('/install/rooms');
+
+    expect(DefaultAdmin::find())->toBeNull()
+        ->and(Auth::attempt(['email' => DefaultAdmin::EMAIL, 'password' => DefaultAdmin::PASSWORD]))->toBeFalse();
+
+    $this->installer->markComplete('rooms');
+    $this->post('/install/finish', [])->assertRedirect('/admin/front-desk');
+
+    // Signed in as the person who just typed a password — not as "the
+    // oldest user", which was the demo admin.
+    expect(Auth::user()?->email)->toBe('owner@bergblick.example');
+});
+
+it('seeds demo content from the wizard without the demo admin', function (): void {
+    config(['doba.admin.seed' => false]);
+
+    $seeder = new class extends DatabaseSeeder
+    {
+        public function onlyAdmin(): void
+        {
+            $this->adminUser();
+        }
+    };
+    $seeder->onlyAdmin();
+
+    expect(User::query()->where('email', DefaultAdmin::EMAIL)->exists())->toBeFalse();
+});
+
+it('never locks the only account out, and says so on the health page instead', function (): void {
+    User::query()->create([
+        'name' => 'Admin',
+        'email' => DefaultAdmin::EMAIL,
+        'password' => Hash::make(DefaultAdmin::PASSWORD),
+    ]);
+
+    expect(DefaultAdmin::close())->toBeFalse()
+        ->and(DefaultAdmin::find())->not->toBeNull();
+
+    $check = collect(app(HealthCheck::class)->all(deep: false))->firstWhere('key', 'default_login');
+
+    expect($check['status'])->toBe(HealthCheck::WARNING)
+        ->and($check['detail'])->toContain('doba:admin:reset-password');
 });
 
 it('resumes where it left off rather than starting again', function (): void {

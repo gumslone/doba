@@ -58,6 +58,12 @@ class DatabaseSeeder extends Seeder
 
     protected function adminUser(): void
     {
+        // The wizard seeds demo content into a real hotel; the login below
+        // has a password the README prints, and must not come with it.
+        if (! (bool) config('doba.admin.seed', true)) {
+            return;
+        }
+
         // /admin login for the demo install. Override via env before
         // seeding anything reachable from the internet; the wizard (§16)
         // replaces this with a proper owner-account step.

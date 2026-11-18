@@ -13,6 +13,7 @@ use App\Support\Install\Installer;
 use App\Support\Install\Requirements;
 use App\Support\Install\RoomBuilder;
 use App\Support\Routing\Localization;
+use App\Support\Security\DefaultAdmin;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -219,6 +220,10 @@ class InstallController extends Controller
             // Opt-in, and clearly labelled: a hotelier who wanted an empty
             // site and got a demo hotel called Alpenhof has to work out
             // which rooms are theirs.
+            //
+            // Without the seeder's admin account: it has a password the
+            // README prints, and the owner step creates the real one.
+            config(['doba.admin.seed' => false]);
             Artisan::call('db:seed', ['--force' => true]);
         }
 
@@ -291,7 +296,7 @@ class InstallController extends Controller
             'password' => ['required', 'confirmed', Password::min(12)->letters()->numbers()->uncompromised()],
         ]);
 
-        User::updateOrCreate(
+        $owner = User::updateOrCreate(
             ['email' => mb_strtolower($validated['email'])],
             [
                 'name' => $validated['name'],
@@ -299,6 +304,13 @@ class InstallController extends Controller
                 'email_verified_at' => now(),
             ],
         );
+
+        $request->session()->put('install.owner_id', $owner->id);
+
+        // Belt and braces for a database that was seeded before the
+        // wizard ran: the published demo login does not survive a real
+        // owner being created.
+        DefaultAdmin::close();
 
         $this->remember('owner');
 
@@ -365,7 +377,11 @@ class InstallController extends Controller
         // Signed straight in: the owner account was created three steps
         // ago and asking them to type it again immediately is a password
         // reset waiting to happen.
-        $owner = User::query()->oldest('id')->first();
+        //
+        // The account from the owner step, by id — not "the oldest user",
+        // which on a seeded database was the demo admin.
+        $owner = User::query()->find($request->session()->pull('install.owner_id'))
+            ?? User::query()->oldest('id')->first();
 
         if ($owner !== null) {
             Auth::login($owner);

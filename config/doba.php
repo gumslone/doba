@@ -99,6 +99,9 @@ return [
     'admin' => [
         'email' => env('DOBA_ADMIN_EMAIL', 'admin@example.com'),
         'password' => env('DOBA_ADMIN_PASSWORD', 'password'),
+        // Switched off at runtime by the install wizard: demo content in
+        // a real hotel must not come with a login the README prints.
+        'seed' => true,
     ],
 
     'booking' => [

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Support\Maintenance;
 
+use App\Support\Demo\Demo;
 use App\Support\Scheduling\Heartbeat;
+use App\Support\Security\DefaultAdmin;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -59,6 +61,7 @@ class HealthCheck
             $this->writable(),
             $this->appKey(),
             $this->debugMode(),
+            $this->defaultLogin(),
             $this->https(),
             $this->database(),
             $this->schema(),
@@ -208,6 +211,27 @@ class HealthCheck
                 ? 'APP_DEBUG is true in production. Error pages print configuration to whoever triggers them — set APP_DEBUG=false.'
                 : ($debug ? 'On, outside production.' : 'Off.'),
         );
+    }
+
+    /**
+     * Does the login printed in the README still open this hotel?
+     *
+     * Not blocking — an update is how it gets closed where it can be —
+     * but on a public site it is the first thing to fix, and nothing in
+     * the admin would otherwise ever show it: there is no list of users.
+     *
+     * @return Check
+     */
+    protected function defaultLogin(): array
+    {
+        if (Demo::enabled() || DefaultAdmin::find() === null) {
+            return $this->result('default_login', self::OK, 'Default login', Demo::enabled()
+                ? 'Published on purpose: this is a demo.'
+                : 'The demo login is not usable here.');
+        }
+
+        return $this->result('default_login', self::WARNING, 'Default login',
+            'Anyone can log in as '.DefaultAdmin::EMAIL.' with the password "'.DefaultAdmin::PASSWORD.'" — it is printed in the documentation. Change it now: php artisan doba:admin:reset-password '.DefaultAdmin::EMAIL);
     }
 
     /**
