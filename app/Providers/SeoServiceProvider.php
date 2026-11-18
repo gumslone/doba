@@ -10,10 +10,10 @@ use App\Support\Maintenance\Backups;
 use App\Support\Seo\Seo;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -59,11 +59,10 @@ class SeoServiceProvider extends ServiceProvider
         });
 
         // The hotel's own mail configuration, pushed into the live config
-        // before anything sends. Applied on the queue too (MessageSending
-        // fires there as well) — a confirmation that goes out from a
-        // worker must use the same server the hotelier tested, not
-        // whatever .env happened to say when the worker booted.
-        Event::listen(MessageSending::class, function (): void {
+        // before the mail manager picks a mailer — not on MessageSending,
+        // by which time the mailer and its transport are already chosen
+        // and the first message of the request has left through `.env`.
+        $applyMailSettings = function (): void {
             try {
                 $this->app->make(MailSettings::class)->apply();
             } catch (Throwable) {
@@ -71,7 +70,18 @@ class SeoServiceProvider extends ServiceProvider
                 // Failing to read it must not stop the installer sending
                 // its own test message.
             }
-        });
+        };
+
+        $this->app->afterResolving('mail.manager', $applyMailSettings);
+
+        if ($this->app->resolved('mail.manager')) {
+            $applyMailSettings();
+        }
+
+        // And before every queued job: a worker lives for an hour, and a
+        // confirmation it sends must use the server the hotelier tested
+        // this morning, not the one configured when the worker booted.
+        Queue::before($applyMailSettings);
 
         View::composer('*', function ($view): void {
             $view->with([

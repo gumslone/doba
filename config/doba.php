@@ -341,6 +341,16 @@ return [
         'heartbeat_path' => env('DOBA_HEARTBEAT_PATH', storage_path('framework/scheduler-heartbeat.json')),
     ],
 
+    /*
+    | Mail and webhooks are queued. Where no worker runs — shared hosting —
+    | the request that queued the work does it after the response, and the
+    | scheduler picks up whatever is retried. Off only for an operator who
+    | runs a real worker and wants nothing else touching the queue.
+    */
+    'queue' => [
+        'drain_after_response' => (bool) env('DOBA_QUEUE_DRAIN', true),
+    ],
+
     'install' => [
         'lock_path' => env('DOBA_INSTALL_LOCK', storage_path('installed.lock')),
         'token_path' => env('DOBA_INSTALL_TOKEN', storage_path('install-token.txt')),

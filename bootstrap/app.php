@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\CaptureReferral;
+use App\Http\Middleware\DrainQueueAfterResponse;
 use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\RunSchedulerWhenIdle;
 use App\Http\Middleware\SecurityHeaders;
@@ -54,6 +55,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // The scheduler for a host with no cron: runs after the response,
         // and only when nothing else has run it for a few minutes (§15).
         $middleware->web(append: RunSchedulerWhenIdle::class);
+
+        // The queue worker for a host with no worker: the request that
+        // queued a mail sends it once the response has gone (§15). Global,
+        // because payment webhooks and the API queue mail too.
+        $middleware->append(DrainQueueAfterResponse::class);
 
         // Prepended, so an uninstalled copy answers the wizard rather than
         // whatever a half-configured route would have done — and so an

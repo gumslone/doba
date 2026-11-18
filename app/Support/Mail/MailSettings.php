@@ -101,14 +101,38 @@ class MailSettings
     }
 
     /**
+     * Has the hotelier ever saved this screen?
+     *
+     * Until they have, `.env` is the only word on the subject and stays
+     * in charge: an operator who configured SMTP there and never opened
+     * Admin → Mail must not have it overridden by a default nobody chose.
+     */
+    public function isConfigured(): bool
+    {
+        return Setting::query()->where('group', self::GROUP)->where('key', 'transport')->exists();
+    }
+
+    /**
      * Push the stored settings into the live mail config.
+     *
+     * Called when the mail manager is first resolved — BEFORE it picks a
+     * mailer — and again before every queued job. It used to run on
+     * MessageSending, which fires after the mailer and its transport are
+     * already chosen: the first message of every request went out through
+     * whatever `.env` said (the log, on a fresh install) and only the
+     * second one used the server the hotelier had tested.
      */
     public function apply(): void
     {
+        if (! $this->isConfigured()) {
+            return;
+        }
+
         $settings = $this->all();
 
         if ($settings['transport'] === 'log') {
             config(['mail.default' => 'log']);
+            $this->forgetMailersIfChanged('log');
 
             return;
         }
@@ -117,12 +141,14 @@ class MailSettings
             return;   // half-configured is not configured; leave the default
         }
 
+        $password = $this->password();
+
         config([
             'mail.default' => 'smtp',
             'mail.mailers.smtp.host' => $settings['host'],
             'mail.mailers.smtp.port' => (int) $settings['port'],
             'mail.mailers.smtp.username' => $settings['username'],
-            'mail.mailers.smtp.password' => $this->password(),
+            'mail.mailers.smtp.password' => $password,
             'mail.mailers.smtp.encryption' => $settings['encryption'] === 'none' ? null : $settings['encryption'],
         ]);
 
@@ -131,6 +157,30 @@ class MailSettings
                 'mail.from.address' => $settings['from_address'],
                 'mail.from.name' => $settings['from_name'] ?: config('app.name'),
             ]);
+        }
+
+        $this->forgetMailersIfChanged(hash('sha256', json_encode([$settings, $password]) ?: ''));
+    }
+
+    /** The configuration the resolved mailers were built from. */
+    protected static ?string $applied = null;
+
+    /**
+     * A mailer is built once and keeps its transport and From address. A
+     * long-lived worker that built one before the hotelier changed the
+     * server would go on using the old server until it restarted.
+     */
+    protected function forgetMailersIfChanged(string $fingerprint): void
+    {
+        if (self::$applied === $fingerprint) {
+            return;
+        }
+
+        $first = self::$applied === null;
+        self::$applied = $fingerprint;
+
+        if (! $first && app()->resolved('mail.manager')) {
+            app('mail.manager')->forgetMailers();
         }
     }
 

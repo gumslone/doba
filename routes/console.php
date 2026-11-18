@@ -60,3 +60,13 @@ Schedule::command('doba:guests:anonymise')->weeklyOn(1, '04:30')->withoutOverlap
 if (Demo::enabled()) {
     Schedule::command('doba:demo:reset')->dailyAt((string) config('doba.demo.reset_at', '04:00'))->withoutOverlapping();
 }
+
+// Last, so it sends what the entries above queued in this same minute.
+// The worker for a host that cannot keep one running (§15): retries,
+// delayed webhook deliveries, and anything a request did not get to.
+// Where a real worker runs, it finds the queue already empty.
+if (config('queue.default') === 'database') {
+    Schedule::command('queue:work --stop-when-empty --sleep=0 --max-time=50 --tries=3 --backoff=60')
+        ->everyMinute()
+        ->withoutOverlapping(5);
+}

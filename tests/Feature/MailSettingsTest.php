@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\Mail\MailSettings;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 
 beforeEach(function (): void {
     $this->mail = app(MailSettings::class);
@@ -126,6 +127,48 @@ it('pushes the stored settings into the live config before sending', function ()
         ->and(config('mail.mailers.smtp.host'))->toBe('smtp.example.com')
         ->and(config('mail.mailers.smtp.password'))->toBe('sekrit')
         ->and(config('mail.from.address'))->toBe('stay@alpenhof.example');
+});
+
+it('sends the very first message of a request through the hotel\'s own server', function (): void {
+    ($this->configure)();
+
+    // What a fresh install's .env says. The settings used to be applied
+    // on MessageSending — after the mailer was chosen — so the first
+    // message of every request (the booking confirmation) went here.
+    config(['mail.default' => 'log']);
+    app()->forgetInstance('mail.manager');
+    Mail::clearResolvedInstances();
+
+    $transport = Mail::mailer()->getSymfonyTransport();
+
+    expect($transport)->toBeInstanceOf(EsmtpTransport::class)
+        ->and((string) $transport)->toContain('smtp.example.com');
+});
+
+it('leaves .env in charge until the hotelier has saved the mail screen', function (): void {
+    // An operator who put SMTP in .env and never opened Admin → Mail must
+    // not have it replaced by a "log" default nobody chose.
+    config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => 'env.example']);
+
+    $this->mail->apply();
+
+    expect($this->mail->isConfigured())->toBeFalse()
+        ->and(config('mail.default'))->toBe('smtp')
+        ->and(config('mail.mailers.smtp.host'))->toBe('env.example');
+});
+
+it('rebuilds the mailer when the server changes under a long-lived worker', function (): void {
+    ($this->configure)();
+    $this->mail->apply();
+
+    app()->forgetInstance('mail.manager');
+    Mail::clearResolvedInstances();
+    expect((string) Mail::mailer()->getSymfonyTransport())->toContain('smtp.example.com');
+
+    ($this->configure)(['host' => 'smtp.new.example']);
+    $this->mail->apply();   // what Queue::before does ahead of the next job
+
+    expect((string) Mail::mailer()->getSymfonyTransport())->toContain('smtp.new.example');
 });
 
 it('does not half-apply an incomplete configuration', function (): void {

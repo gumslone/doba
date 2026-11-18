@@ -64,6 +64,7 @@ class HealthCheck
             $this->schema(),
             $this->diskSpace(),
             $this->scheduler(),
+            $this->queue(),
         ];
 
         if ($deep) {
@@ -263,6 +264,44 @@ class HealthCheck
 
         return $this->result('scheduler', self::WARNING, 'Scheduled tasks',
             'Nothing has run the scheduler recently. Holds are not expiring and guest mail is not being sent. Add this cron line on your host: '.$line);
+    }
+
+    /**
+     * Is queued work — which is to say, guest mail — actually leaving?
+     *
+     * A confirmation that sits in the jobs table looks, from every page
+     * in the admin, exactly like one that was sent. The age of the oldest
+     * waiting job is the only place the difference shows.
+     *
+     * @return Check
+     */
+    protected function queue(): array
+    {
+        if (config('queue.default') !== 'database') {
+            return $this->result('queue', self::OK, 'Mail queue', 'Handled by the '.config('queue.default').' queue driver.');
+        }
+
+        try {
+            $table = (string) config('queue.connections.database.table', 'jobs');
+            $oldest = DB::table($table)->where('available_at', '<=', time())->min('available_at');
+            $failed = DB::table((string) config('queue.failed.table', 'failed_jobs'))->count();
+        } catch (Throwable) {
+            return $this->result('queue', self::OK, 'Mail queue', 'Nothing queued yet.');
+        }
+
+        $waiting = $oldest === null ? 0 : time() - (int) $oldest;
+
+        if ($waiting > 900) {
+            return $this->result('queue', self::WARNING, 'Mail queue',
+                'Mail has been waiting '.(int) round($waiting / 60).' minutes to be sent. Nothing is working the queue: add the cron line above, or run `php artisan queue:work`.');
+        }
+
+        if ($failed > 0) {
+            return $this->result('queue', self::WARNING, 'Mail queue',
+                $failed.' queued '.($failed === 1 ? 'job has' : 'jobs have').' failed for good — usually mail the server refused. See them with `php artisan queue:failed`.');
+        }
+
+        return $this->result('queue', self::OK, 'Mail queue', 'Empty: queued mail is being sent.');
     }
 
     /**
