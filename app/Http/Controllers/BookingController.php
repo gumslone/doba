@@ -257,20 +257,23 @@ class BookingController extends Controller
         // initiated only after extras have been added.
         $payments->initiate(GatewayRegistry::default(), $booking->refresh());
 
-        return redirect(Localization::route('booking.pay', ['reference' => $booking->reference]));
+        return redirect(Localization::route('booking.pay', [
+            'reference' => $booking->reference,
+            'token' => $booking->manage_token,
+        ]));
     }
 
-    public function pay(string $reference, Seo $seo): View|RedirectResponse
+    public function pay(string $reference, string $token, Seo $seo): View|RedirectResponse
     {
-        $booking = $this->findByReference($reference);
+        $booking = $this->findByToken($reference, $token);
 
         $seo->title(__('booking.pay_title'))
             ->noindex()
-            ->alternates(Localization::alternates('booking.pay', compact('reference')));
+            ->alternates(Localization::alternates('booking.pay', compact('reference', 'token')));
 
         // Nothing left to pay — a refresh after payment lands here.
         if ($booking->status !== BookingStatus::Pending) {
-            return redirect(Localization::route('booking.confirmation', ['reference' => $reference]));
+            return redirect(Localization::route('booking.confirmation', compact('reference', 'token')));
         }
 
         $payment = $booking->payments()->latest('id')->first();
@@ -286,13 +289,19 @@ class BookingController extends Controller
         ]);
     }
 
-    public function confirmation(string $reference, Seo $seo): View
+    /**
+     * Authorised by the manage token, like every other page about one
+     * booking. It used to take the reference alone — and a reference is
+     * PREFIX-YEAR-0001, 0002, 0003: every guest's email address, dates
+     * and price, to anyone who could count.
+     */
+    public function confirmation(string $reference, string $token, Seo $seo): View
     {
-        $booking = $this->findByReference($reference);
+        $booking = $this->findByToken($reference, $token);
 
         $seo->title(__('booking.confirmation_title'))
             ->noindex()
-            ->alternates(Localization::alternates('booking.confirmation', compact('reference')));
+            ->alternates(Localization::alternates('booking.confirmation', compact('reference', 'token')));
 
         return view('booking.confirmation', [
             'booking' => $booking->load('rooms.roomType.translations', 'extras.extra.translations', 'guest', 'invoice', 'registration'),

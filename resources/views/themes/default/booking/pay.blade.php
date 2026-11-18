@@ -41,7 +41,7 @@
                 <div id="payment-element"
                      data-client-secret="{{ $payment?->payload['client_secret'] ?? '' }}"
                      data-publishable-key="{{ config('services.stripe.key') }}"
-                     data-return-url="{{ \App\Support\Routing\Localization::route('booking.confirmation', ['reference' => $booking->reference]) }}"></div>
+                     data-return-url="{{ \App\Support\Routing\Localization::route('booking.confirmation', ['reference' => $booking->reference, 'token' => $booking->manage_token]) }}"></div>
 
                 <p class="mt-4 text-sm text-neutral-500">
                     {{ __('booking.deposit') }}: <strong>{{ Money::format($booking->deposit_due) }}</strong>

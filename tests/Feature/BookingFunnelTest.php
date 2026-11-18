@@ -93,7 +93,7 @@ it('walks the whole funnel from search to a confirmed booking', function (): voi
     ]);
 
     $booking = Booking::sole();
-    $response->assertRedirect('/en/booking/pay/'.$booking->reference);
+    $response->assertRedirect('/en/booking/pay/'.$booking->reference.'/'.$booking->manage_token);
 
     expect($booking->guest_notes)->toBe('Arriving late.')
         ->and($booking->nights)->toBe(2)
@@ -109,14 +109,33 @@ it('walks the whole funnel from search to a confirmed booking', function (): voi
     Mail::assertQueued(BookingConfirmed::class, fn ($mail): bool => $mail->hasTo('anna@example.com'));
 
     // 4. Pay page redirects on: nothing left to pay
-    $this->get('/en/booking/pay/'.$booking->reference)
-        ->assertRedirect('/en/booking/confirmation/'.$booking->reference);
+    $this->get('/en/booking/pay/'.$booking->reference.'/'.$booking->manage_token)
+        ->assertRedirect('/en/booking/confirmation/'.$booking->reference.'/'.$booking->manage_token);
 
     // 5. Confirmation
-    $this->get('/en/booking/confirmation/'.$booking->reference)
+    $this->get('/en/booking/confirmation/'.$booking->reference.'/'.$booking->manage_token)
         ->assertOk()
         ->assertSee($booking->reference)
         ->assertSee(__('booking.confirmed_heading'));
+});
+
+it('does not show a booking to someone who only knows its number', function (): void {
+    $this->post('/en/booking', stayQuery($this->checkIn) + [
+        'room_type' => $this->roomType->id,
+        'first_name' => 'Anna',
+        'last_name' => 'Kowalska',
+        'email' => 'anna@example.com',
+        'terms' => '1',
+    ])->assertRedirect();
+
+    $booking = Booking::query()->sole();
+
+    // References count upwards. These pages used to open on the
+    // reference alone: every guest's address, dates and price.
+    $this->get('/en/booking/confirmation/'.$booking->reference)->assertNotFound();
+    $this->get('/en/booking/pay/'.$booking->reference)->assertNotFound();
+    $this->get('/en/booking/confirmation/'.$booking->reference.'/'.str_repeat('a', 40))->assertNotFound();
+    $this->get('/en/booking/pay/'.$booking->reference.'/'.str_repeat('a', 40))->assertNotFound();
 });
 
 it('reports each unusable date range instead of searching', function (string $query, string $key): void {
@@ -209,7 +228,7 @@ it('holds inventory but does not confirm when payment is pending', function (): 
         ->held->toBe(1)
         ->booked->toBe(0);
 
-    $this->get('/en/booking/pay/'.$booking->reference)->assertOk()->assertSee(__('booking.pay_title'));
+    $this->get('/en/booking/pay/'.$booking->reference.'/'.$booking->manage_token)->assertOk()->assertSee(__('booking.pay_title'));
 
     // No confirmation mail until the webhook says so (§8).
     Mail::assertNotQueued(BookingConfirmed::class);

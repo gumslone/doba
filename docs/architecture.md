@@ -497,8 +497,8 @@ GET  /{locale}/rooms/{slug}              room detail: gallery, amenities, rate p
 GET  /{locale}/booking/search            results for dates + guests
 GET  /{locale}/booking/checkout          guest details, extras, promo code, policy consent
 POST /{locale}/booking                   create hold + pending booking
-GET  /{locale}/booking/pay/{ref}         payment step
-GET  /{locale}/booking/confirmation/{ref}
+GET  /{locale}/booking/pay/{ref}/{token}           payment step
+GET  /{locale}/booking/confirmation/{ref}/{token}
 GET  /{locale}/booking/manage/{ref}/{token}   view / cancel own booking (no login)
 GET  /{locale}/{page-slug}               CMS pages: about, spa, restaurant, location, offers
 GET  /{locale}/contact  + POST           enquiry form (honeypot + rate limit)

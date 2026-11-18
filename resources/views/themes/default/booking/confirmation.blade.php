@@ -28,6 +28,11 @@
 
         <p class="mt-6 text-sm text-neutral-500">{{ __('booking.manage_link') }}</p>
 
+        <p class="mt-3">
+            <a href="{{ Localization::route('booking.manage', ['reference' => $booking->reference, 'token' => $booking->manage_token]) }}"
+               class="link-accent underline underline-offset-4">{{ __('booking.manage_title') }} →</a>
+        </p>
+
         <p class="mt-8">
             <a href="{{ Localization::route('home') }}" class="link-accent underline underline-offset-4">
                 {{ $hotel->name }} →

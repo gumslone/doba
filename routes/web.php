@@ -338,8 +338,11 @@ foreach ($locales as $locale) {
             Route::post($booking, [BookingController::class, 'store'])
                 ->middleware('throttle:booking')
                 ->name('booking.store');
-            Route::get($booking.'/pay/{reference}', [BookingController::class, 'pay'])->name('booking.pay');
-            Route::get($booking.'/confirmation/{reference}', [BookingController::class, 'confirmation'])->name('booking.confirmation');
+            // Both carry the manage token: a reference is a counter, and a
+            // page keyed on a counter is every guest's booking to anyone
+            // who can add one.
+            Route::get($booking.'/pay/{reference}/{token}', [BookingController::class, 'pay'])->name('booking.pay');
+            Route::get($booking.'/confirmation/{reference}/{token}', [BookingController::class, 'confirmation'])->name('booking.confirmation');
             Route::get($booking.'/manage/{reference}/{token}', [BookingController::class, 'manage'])->name('booking.manage');
             Route::get($booking.'/manage/{reference}/{token}/credit-note.pdf', [BookingController::class, 'creditNote'])
                 ->name('booking.credit-note');
