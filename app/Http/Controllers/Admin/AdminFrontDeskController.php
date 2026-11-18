@@ -171,7 +171,7 @@ class AdminFrontDeskController extends Controller
             ]));
         }
 
-        $bookings->transition($booking, $to, 'Front desk');
+        $bookings->transition($booking, $to, 'Front desk', request()->user()?->id);
 
         return back()->with('saved', $message);
     }

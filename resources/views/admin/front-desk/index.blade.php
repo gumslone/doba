@@ -45,12 +45,12 @@
                     <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
                         <div>
                             <strong>{{ $booking->guest?->last_name }}, {{ $booking->guest?->first_name }}</strong>
-                            @if (($booking->guest?->stays_count ?? 0) >= 2)
+                            @if (($booking->guest?->stays_count ?? 0) >= 1)
                                 {{-- The one fact that changes how the desk
-                                     says hello. The count includes this
-                                     stay: it was counted when confirmed. --}}
+                                     says hello. Stays are counted when the
+                                     guest leaves, so this one is the next. --}}
                                 <span class="ml-1 rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-800">
-                                    {{ trans_choice('admin.guest_nth_stay', $booking->guest->stays_count, ['count' => $booking->guest->stays_count]) }}
+                                    {{ trans_choice('admin.guest_nth_stay', $booking->guest->stays_count + 1, ['count' => $booking->guest->stays_count + 1]) }}
                                 </span>
                             @endif
                             <a href="/admin/bookings/{{ $booking->id }}/edit" class="ml-1 font-mono text-xs text-neutral-400 hover:underline">{{ $booking->reference }}</a>

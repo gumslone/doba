@@ -222,6 +222,11 @@ Route::prefix('admin')->middleware(SetAdminLocale::class)->group(function (): vo
         Route::post('bookings', [AdminBookingController::class, 'store'])->name('admin.bookings.store');
         Route::get('bookings/{booking}/edit', [AdminBookingController::class, 'edit'])->name('admin.bookings.edit');
         Route::put('bookings/{booking}', [AdminBookingController::class, 'update'])->name('admin.bookings.update');
+        Route::post('bookings/{booking}/payments', [AdminBookingController::class, 'recordPayment'])->name('admin.bookings.payments');
+        Route::post('bookings/{booking}/payments/{payment}/refund', [AdminBookingController::class, 'refund'])->name('admin.bookings.refund');
+        Route::post('bookings/{booking}/confirm', [AdminBookingController::class, 'confirm'])->name('admin.bookings.confirm');
+        Route::post('bookings/{booking}/cancel', [AdminBookingController::class, 'cancel'])->name('admin.bookings.cancel');
+        Route::post('bookings/{booking}/no-show', [AdminBookingController::class, 'noShow'])->name('admin.bookings.no-show');
 
         Route::get('front-desk', [AdminFrontDeskController::class, 'index'])->name('admin.front-desk');
         Route::post('front-desk/{booking}/check-in', [AdminFrontDeskController::class, 'checkIn'])->name('admin.front-desk.check-in');

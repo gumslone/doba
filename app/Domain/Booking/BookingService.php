@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Domain\Booking;
 
 use App\Domain\Invoicing\InvoiceBuilder;
+use App\Domain\Payments\PaymentService;
 use App\Domain\Pricing\RateResolver;
 use App\Enums\BookingStatus;
+use App\Mail\BookingCancelled;
 use App\Mail\BookingConfirmed;
+use App\Mail\BookingNotice;
 use App\Models\Availability;
 use App\Models\Booking;
 use App\Models\BookingHold;
@@ -25,6 +28,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * The §6 write path. Everything that changes a booking's status or touches
@@ -580,7 +584,9 @@ class BookingService
      */
     public function transition(Booking $booking, BookingStatus $to, ?string $reason = null, ?int $userId = null): Booking
     {
-        $booking = DB::transaction(function () use ($booking, $to, $reason, $userId): Booking {
+        $from = $booking->status;
+
+        $booking = DB::transaction(function () use ($booking, $to, $reason, $userId, &$from): Booking {
             // Re-read under the transaction so two staff members clicking
             // at once serialise instead of double-applying.
             $booking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
@@ -598,8 +604,6 @@ class BookingService
 
             if ($to === BookingStatus::Confirmed) {
                 $booking->confirmed_at = now();
-                $booking->guest?->increment('stays_count');
-                $booking->guest?->increment('total_spent', $booking->total);
             }
 
             // Stamped here rather than derived from the history: the desk
@@ -610,6 +614,13 @@ class BookingService
 
             if ($to === BookingStatus::CheckedOut) {
                 $booking->checked_out_at = CarbonImmutable::now();
+
+                // A stay counts once it has happened. It used to count on
+                // confirmation, and never stopped counting: booking a
+                // refundable night and cancelling it made a "returning
+                // guest", with the discount that goes with the name.
+                $booking->guest?->increment('stays_count');
+                $booking->guest?->increment('total_spent', $booking->total);
 
                 // The door goes on housekeeping's list the moment the
                 // guest leaves it. Only clean turns dirty: a door that is
@@ -623,6 +634,14 @@ class BookingService
             if ($to === BookingStatus::Cancelled) {
                 $booking->cancelled_at = now();
                 $booking->cancellation_reason = $reason;
+
+                // What the guest is owed back, fixed at the one moment it
+                // is not arguable. Every refund counts it down; until it
+                // reaches zero the admin shows it and the hotel has been
+                // told. And nothing further is owed TO the hotel.
+                $booking->load('rooms');
+                $booking->refund_due = $this->refundableAmount($booking);
+                $booking->balance_due = 0;
 
                 // Give the code's use back. An abandoned checkout must not
                 // burn a redemption: a hundred expired holds would retire a
@@ -663,18 +682,65 @@ class BookingService
             if ($invoice !== null) {
                 app(InvoiceBuilder::class)->creditNote($invoice);
             }
+
+            $this->afterCancellation($booking, $from, $userId);
         }
 
         if ($booking->status === BookingStatus::Confirmed) {
             // The invoice is issued first so the mail can carry it.
             app(InvoiceBuilder::class)->issue($booking);
 
-            if ($booking->guest?->email) {
+            if ($booking->guest?->isMailable()) {
                 Mail::to($booking->guest->email)->queue(new BookingConfirmed($booking));
+            }
+
+            // The hotel hears about a booking it did not take itself. A
+            // guest who books at eleven at night used to be discovered by
+            // whoever opened the front desk next morning — or by nobody.
+            if ($userId === null) {
+                BookingNotice::notify($booking, BookingNotice::BOOKED);
             }
         }
 
         return $booking;
+    }
+
+    /**
+     * Money back where it needs no decision, and word to both sides.
+     *
+     * After the commit, and each part on its own: a mail server that is
+     * down must not undo a cancellation the guest has already been shown.
+     */
+    protected function afterCancellation(Booking $booking, BookingStatus $from, ?int $userId): void
+    {
+        // An expired hold was never a stay: nothing was confirmed, so
+        // there is nothing to confirm the end of. (The guest gets the
+        // "finish your booking" reminder instead, where the hotel sends it.)
+        if ($from === BookingStatus::Pending) {
+            return;
+        }
+
+        $restored = 0;
+
+        try {
+            $restored = app(PaymentService::class)->settleCancellation($booking);
+            $booking = $booking->fresh() ?? $booking;
+        } catch (Throwable $e) {
+            report($e);
+        }
+
+        try {
+            if ($booking->guest?->isMailable()) {
+                Mail::to($booking->guest->email)->queue(new BookingCancelled($booking, $restored));
+            }
+
+            // Not when the desk did it: they know.
+            if ($userId === null) {
+                BookingNotice::notify($booking, BookingNotice::CANCELLED, $restored);
+            }
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     /**

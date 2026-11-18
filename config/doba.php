@@ -119,6 +119,9 @@ return [
 
     'booking' => [
         'hold_minutes' => (int) env('DOBA_HOLD_MINUTES', 20),
+        // A booking the desk takes "on hold" for a caller who will ring
+        // back keeps its room this long before it is released.
+        'desk_hold_hours' => (int) env('DOBA_DESK_HOLD_HOURS', 24),
         'max_nights' => (int) env('DOBA_MAX_NIGHTS', 30),
         'booking_window_days' => (int) env('DOBA_BOOKING_WINDOW_DAYS', 540),
         'cancellation_policy' => env('DOBA_CANCELLATION_POLICY', 'flexible'),
@@ -363,6 +366,15 @@ return [
     | scheduler picks up whatever is retried. Off only for an operator who
     | runs a real worker and wants nothing else touching the queue.
     */
+    /*
+    | The hotel's own copy of the news: a mail when a guest books or
+    | cancels. Goes to the contact-page address unless another is named.
+    */
+    'notify' => [
+        'bookings' => (bool) env('DOBA_NOTIFY_BOOKINGS', true),
+        'email' => env('DOBA_NOTIFY_EMAIL'),
+    ],
+
     'queue' => [
         'drain_after_response' => (bool) env('DOBA_QUEUE_DRAIN', true),
     ],

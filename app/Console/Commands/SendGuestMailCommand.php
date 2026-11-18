@@ -97,14 +97,11 @@ class SendGuestMailCommand extends Command
     {
         $email = $booking->guest?->email;
 
-        if ($email === null || $email === '') {
-            return 0;   // an iCal-imported stay may have no address at all
-        }
-
-        if ($booking->guest->isAnonymised()) {
-            // Checked out on Monday, erased on Tuesday: the thank-you run
-            // on Wednesday must find nobody. Mailing an anonymised
-            // address is the erasure not having happened.
+        // No inbox: an iCal-imported stay with no address, a walk-in whose
+        // address the desk never took, or a guest who has been erased —
+        // checked out on Monday, anonymised on Tuesday, and the thank-you
+        // run on Wednesday must find nobody.
+        if ($email === null || ! $booking->guest->isMailable()) {
             return 0;
         }
 

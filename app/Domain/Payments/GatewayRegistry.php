@@ -29,6 +29,7 @@ final class GatewayRegistry
      */
     public const INTERNAL = [
         'voucher' => VoucherGateway::class,
+        'desk' => DeskGateway::class,
     ];
 
     public static function make(string $name): PaymentGateway

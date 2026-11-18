@@ -140,7 +140,16 @@ it('confirms by converting held to booked and releasing the holds', function ():
 
     expect($booking->holds()->unreleased()->count())->toBe(0);
 
-    // Repeat guest history (§5).
+    // Repeat guest history (§5) is written when the stay has happened,
+    // not when it is promised — or booking and cancelling would make a
+    // regular out of anyone.
+    expect(Guest::first())
+        ->stays_count->toBe(0)
+        ->total_spent->toBe(0);
+
+    $this->service->transition($booking->fresh(), BookingStatus::CheckedIn);
+    $this->service->transition($booking->fresh(), BookingStatus::CheckedOut);
+
     expect(Guest::first())
         ->stays_count->toBe(1)
         ->total_spent->toBe(20000);

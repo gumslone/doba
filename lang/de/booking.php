@@ -41,6 +41,7 @@ return [
     'total' => 'Gesamt',
     'deposit' => 'Jetzt fällig',
     'balance' => 'Bei Anreise fällig',
+    'paid' => 'Bezahlt',
     'status' => 'Status',
     'dates' => 'Zeitraum',
     'reference' => 'Buchungsnummer',

@@ -41,6 +41,7 @@ return [
     'total' => 'Totaal',
     'deposit' => 'Nu te betalen',
     'balance' => 'Bij aankomst te betalen',
+    'paid' => 'Betaald',
     'status' => 'Status',
     'dates' => 'Data',
     'reference' => 'Boekingsnummer',

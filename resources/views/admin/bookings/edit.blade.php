@@ -92,7 +92,126 @@
                     <div class="flex justify-between"><dt class="text-neutral-500">{{ __('admin.paid') }}</dt><dd>{{ Money::format($booking->paid_amount) }}</dd></div>
                     <div class="flex justify-between font-medium"><dt>{{ __('admin.balance') }}</dt><dd>{{ Money::format($booking->balance_due) }}</dd></div>
                 </dl>
+
+                @if ($booking->refund_due > 0)
+                    {{-- The guest cancelled inside their free window and
+                         has not been paid back. Nothing else in the admin
+                         would ever say so. --}}
+                    <p class="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-amber-900" role="alert">
+                        {{ __('admin.booking_refund_owed', ['amount' => Money::format($booking->refund_due)]) }}
+                    </p>
+                @endif
+
+                @php $ledger = $booking->payments->reject(fn ($p) => $p->status->value === 'pending' && $p->gateway === 'manual')->sortBy('id'); @endphp
+                @if ($ledger->isNotEmpty())
+                    <h3 class="mt-5 text-xs font-semibold uppercase tracking-wide text-neutral-500">{{ __('admin.booking_payments') }}</h3>
+                    <ul class="mt-2 divide-y divide-neutral-100">
+                        @foreach ($ledger as $payment)
+                            <li class="py-2">
+                                <div class="flex justify-between gap-3">
+                                    <span>
+                                        {{ $payment->type === 'refund' ? __('admin.payment_refund') : __('admin.payment_via_'.$payment->gateway) }}
+                                        @if ($payment->gateway === 'desk' && ($method = $payment->payload['method'] ?? null))
+                                            · {{ __('admin.payment_method_'.$method) }}
+                                        @endif
+                                        <span class="block text-xs text-neutral-500">
+                                            {{ \App\Support\Hotel\Clock::local($payment->paid_at ?? $payment->refunded_at ?? $payment->created_at)?->format('Y-m-d H:i') }}
+                                            · {{ __('admin.payment_status_'.$payment->status->value) }}
+                                            @if ($note = $payment->payload['note'] ?? null) · {{ $note }} @endif
+                                        </span>
+                                    </span>
+                                    <span class="shrink-0 font-medium">{{ $payment->type === 'refund' ? '−' : '' }}{{ Money::format($payment->amount, $payment->currency) }}</span>
+                                </div>
+
+                                @if (($refundable[$payment->id] ?? 0) > 0)
+                                    <form method="POST" action="/admin/bookings/{{ $booking->id }}/payments/{{ $payment->id }}/refund"
+                                          data-confirm="{{ __('admin.booking_refund_confirm') }}"
+                                          class="mt-2 flex items-end gap-2">
+                                        @csrf
+                                        <label class="sr-only" for="refund_{{ $payment->id }}">{{ __('admin.booking_refund_amount') }}</label>
+                                        <input type="number" id="refund_{{ $payment->id }}" name="amount" step="0.01" min="0.01"
+                                               max="{{ number_format($refundable[$payment->id] / 100, 2, '.', '') }}"
+                                               value="{{ number_format(min($refundable[$payment->id], max($booking->refund_due, 0) ?: $refundable[$payment->id]) / 100, 2, '.', '') }}"
+                                               class="w-28 rounded border border-neutral-300 px-2 py-1">
+                                        <button type="submit" class="rounded border border-neutral-300 px-3 py-1 hover:bg-neutral-50">{{ __('admin.booking_refund') }}</button>
+                                    </form>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                    <p class="mt-2 text-xs text-neutral-500">{{ __('admin.booking_refund_hint') }}</p>
+                @endif
+
+                @if ($booking->balance_due > 0 && $booking->status->value !== 'cancelled')
+                    <form method="POST" action="/admin/bookings/{{ $booking->id }}/payments" class="mt-5 space-y-3 border-t border-neutral-200 pt-4">
+                        @csrf
+                        <h3 class="text-xs font-semibold uppercase tracking-wide text-neutral-500">{{ __('admin.booking_record_payment') }}</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="pay_amount" class="block text-xs font-medium">{{ __('admin.booking_payment_amount', ['currency' => $booking->currency]) }}</label>
+                                <input type="number" id="pay_amount" name="amount" step="0.01" min="0.01" required
+                                       max="{{ number_format($booking->balance_due / 100, 2, '.', '') }}"
+                                       value="{{ old('amount', number_format($booking->balance_due / 100, 2, '.', '')) }}"
+                                       class="mt-1 w-full rounded border border-neutral-300 px-2 py-1.5">
+                            </div>
+                            <div>
+                                <label for="pay_method" class="block text-xs font-medium">{{ __('admin.booking_payment_method') }}</label>
+                                <select id="pay_method" name="method" class="mt-1 w-full rounded border border-neutral-300 px-2 py-1.5">
+                                    @foreach ($methods as $method)
+                                        <option value="{{ $method }}" @selected(old('method') === $method)>{{ __('admin.payment_method_'.$method) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="pay_note" class="block text-xs font-medium">{{ __('admin.booking_payment_note') }}</label>
+                            <input type="text" id="pay_note" name="note" maxlength="200" value="{{ old('note') }}" class="mt-1 w-full rounded border border-neutral-300 px-2 py-1.5">
+                        </div>
+                        <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-white">{{ __('admin.booking_record_payment') }}</button>
+                    </form>
+                @endif
             </section>
+
+            @php
+                $status = $booking->status;
+                $canConfirm = $status->value === 'pending';
+                $canNoShow = $status->value === 'confirmed' && $booking->check_in->toDateString() <= $today->toDateString();
+                $canCancel = $status->canTransitionTo(\App\Enums\BookingStatus::Cancelled);
+            @endphp
+            @if ($canConfirm || $canNoShow || $canCancel)
+                <section class="space-y-4 rounded border border-neutral-200 bg-white p-5 text-sm">
+                    <h2 class="font-medium">{{ __('admin.booking_actions') }}</h2>
+
+                    @if ($canConfirm)
+                        <form method="POST" action="/admin/bookings/{{ $booking->id }}/confirm">
+                            @csrf
+                            @if ($holdExpiresAt)
+                                <p class="mb-2 text-xs text-neutral-500">
+                                    {{ __('admin.booking_pending_hint', ['time' => \App\Support\Hotel\Clock::local(\Carbon\CarbonImmutable::parse($holdExpiresAt))->translatedFormat('j M, H:i')]) }}
+                                </p>
+                            @endif
+                            <button type="submit" class="rounded bg-neutral-900 px-4 py-2 text-white">{{ __('admin.booking_confirm') }}</button>
+                        </form>
+                    @endif
+
+                    @if ($canNoShow)
+                        <form method="POST" action="/admin/bookings/{{ $booking->id }}/no-show" data-confirm="{{ __('admin.booking_no_show_hint') }}">
+                            @csrf
+                            <button type="submit" class="rounded border border-neutral-300 px-4 py-2 hover:bg-neutral-50">{{ __('admin.booking_no_show') }}</button>
+                            <p class="mt-1 text-xs text-neutral-500">{{ __('admin.booking_no_show_hint') }}</p>
+                        </form>
+                    @endif
+
+                    @if ($canCancel)
+                        <form method="POST" action="/admin/bookings/{{ $booking->id }}/cancel" data-confirm="{{ __('admin.booking_cancel_confirm') }}" class="space-y-2 border-t border-neutral-200 pt-4">
+                            @csrf
+                            <label for="cancel_reason" class="block text-xs font-medium">{{ __('admin.booking_cancel_reason') }}</label>
+                            <input type="text" id="cancel_reason" name="reason" maxlength="200" class="w-full rounded border border-neutral-300 px-2 py-1.5">
+                            <button type="submit" class="rounded border border-red-300 px-4 py-2 text-red-700 hover:bg-red-50">{{ __('admin.booking_cancel') }}</button>
+                        </form>
+                    @endif
+                </section>
+            @endif
 
             <section class="rounded border border-neutral-200 bg-white p-5 text-sm">
                 <h2 class="font-medium">{{ __('admin.booking_history') }}</h2>

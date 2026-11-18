@@ -41,6 +41,7 @@ return [
     'total' => 'Total',
     'deposit' => 'À payer maintenant',
     'balance' => 'À payer à l’arrivée',
+    'paid' => 'Réglé',
     'status' => 'Statut',
     'dates' => 'Dates',
     'reference' => 'Numéro de réservation',

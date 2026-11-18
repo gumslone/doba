@@ -41,6 +41,7 @@ return [
     'total' => 'Total',
     'deposit' => 'Due now',
     'balance' => 'Due on arrival',
+    'paid' => 'Paid',
     'status' => 'Status',
     'dates' => 'Dates',
     'reference' => 'Booking reference',

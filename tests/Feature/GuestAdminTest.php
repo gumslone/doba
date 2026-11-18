@@ -42,6 +42,12 @@ function guestStay(string $email, int $daysAgo = 0, string $status = 'confirmed'
 
     app(BookingService::class)->transition($booking, BookingStatus::Confirmed, 'test');
 
+    if ($status === 'checked_out') {
+        // Through the door and out again: that is what makes it a stay.
+        app(BookingService::class)->transition($booking->fresh(), BookingStatus::CheckedIn, 'test');
+        app(BookingService::class)->transition($booking->fresh(), BookingStatus::CheckedOut, 'test');
+    }
+
     if ($daysAgo > 0) {
         $booking->forceFill([
             'status' => $status,
@@ -67,8 +73,9 @@ it('keeps the guest book behind the admin session', function (): void {
 });
 
 it('builds one profile per address and shows the history on it', function (): void {
-    guestStay('anna@example.com');
+    guestStay('anna@example.com', daysAgo: 90, status: 'checked_out');
     guestStay('ANNA@example.com', daysAgo: 30, status: 'checked_out');
+    guestStay('anna@example.com');   // booked, not yet stayed: not counted
 
     $guest = Guest::sole();   // deduplicated by lowercased email
 

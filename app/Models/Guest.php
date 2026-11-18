@@ -35,6 +35,26 @@ class Guest extends Model
         return $this->anonymised_at !== null;
     }
 
+    /** The domain a desk booking's stand-in address lives on. */
+    public const NO_EMAIL_DOMAIN = 'no-email.invalid';
+
+    /**
+     * Is there an inbox behind this guest?
+     *
+     * A walk-in booked without an address gets a minted one, because the
+     * guest row is keyed on email. Nothing may be sent to it: a relay
+     * that refuses the recipient turned a finished desk booking into an
+     * error page, and the clerk booked the room a second time.
+     */
+    public function isMailable(): bool
+    {
+        $email = (string) $this->email;
+
+        return $email !== ''
+            && ! $this->isAnonymised()
+            && ! str_ends_with(mb_strtolower($email), '@'.self::NO_EMAIL_DOMAIN);
+    }
+
     /**
      * @return HasMany<Booking, $this>
      */

@@ -48,7 +48,11 @@ function priorStay(string $email): void
         adults: 2,
     );
 
-    app(BookingService::class)->transition($booking, BookingStatus::Confirmed, 'test');
+    // All the way out of the door: a stay counts once it has happened,
+    // not once it has been promised.
+    foreach ([BookingStatus::Confirmed, BookingStatus::CheckedIn, BookingStatus::CheckedOut] as $status) {
+        app(BookingService::class)->transition($booking->fresh(), $status, 'test');
+    }
 }
 
 function directBooking(string $email, ?PromoCode $promo = null, bool $direct = true): Booking
@@ -82,9 +86,9 @@ it('takes a percentage off for a guest who has stayed before', function (): void
 });
 
 it('gives a first-time guest nothing, even mid-checkout of their first stay', function (): void {
-    // stays_count moves on CONFIRMATION, so at placement it is exactly
-    // the stays completed before this one: a pending first booking has
-    // not made anyone a regular.
+    // stays_count moves on CHECK-OUT, so at placement it is exactly the
+    // stays completed before this one: a first booking, pending or
+    // confirmed, has not made anyone a regular.
     $booking = directBooking('new@example.com');
 
     expect($booking->loyalty_discount)->toBe(0)

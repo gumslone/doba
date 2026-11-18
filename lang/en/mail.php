@@ -45,4 +45,26 @@ return [
     // Online check-in (§12)
     'pre_arrival_checkin' => 'Save time at the desk: check in online from your booking page and you only need to sign when you arrive.',
     'post_stay_book_again' => 'Next time, book with us directly at :url — as a returning guest you get :percent% off.',
+
+    // Cancellation, to the guest; and the hotel's own copy of the news.
+    'cancelled_subject' => 'Your booking :reference at :hotel is cancelled',
+    'cancelled_heading' => 'Your booking is cancelled',
+    'cancelled_intro' => 'This confirms that your stay at :hotel has been cancelled. You do not need to do anything else.',
+    'cancelled_voucher' => ':amount has gone back onto your gift voucher and can be used again.',
+    'cancelled_refund' => 'You are due a refund of :amount under the terms of your rate. We will return it the way you paid; card refunds usually take a few working days to show.',
+    'cancelled_no_refund' => 'Under the terms of your rate, the :amount already paid is not refundable.',
+    'cancelled_nothing_paid' => 'Nothing had been paid, so there is nothing to refund.',
+    'cancelled_outro' => 'We are sorry not to see you this time, and hope to welcome you at :hotel another day.',
+    'notice_booked_subject' => 'New booking :reference — :name, arriving :date',
+    'notice_cancelled_subject' => 'Cancelled: :reference — :name, :date',
+    'notice_booked_heading' => 'A new booking',
+    'notice_cancelled_heading' => 'A booking was cancelled',
+    'notice_nights' => '{1} :count night|[2,*] :count nights',
+    'notice_guests' => '{1} :count guest|[2,*] :count guests',
+    'notice_paid' => 'paid so far: :amount',
+    'notice_requests' => 'The guest wrote:',
+    'notice_voucher_restored' => ':amount went back onto the gift voucher automatically.',
+    'notice_refund_owed' => 'A refund of :amount is owed. Open the booking to send it.',
+    'notice_no_refund' => 'Nothing is owed back: the :amount paid is not refundable under the rate that was booked.',
+    'notice_open' => 'Open the booking',
 ];

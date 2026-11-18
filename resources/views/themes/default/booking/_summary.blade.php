@@ -74,7 +74,9 @@
 
     @if ($booking->paid_amount > 0)
         <div class="flex justify-between gap-4">
-            <dt class="text-neutral-500">{{ __('booking.deposit') }}</dt>
+            {{-- "Paid", not the pay page's "Due now": this line is money
+                 the hotel already has. --}}
+            <dt class="text-neutral-500">{{ __('booking.paid') }}</dt>
             <dd class="text-right">{{ Money::format($booking->paid_amount) }}</dd>
         </div>
     @endif

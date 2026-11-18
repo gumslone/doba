@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Support\Webhooks\Webhooks;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
@@ -185,7 +186,9 @@ class PaymentService
             /** @var Payment $locked */
             $locked = Payment::query()->lockForUpdate()->findOrFail($payment->id);
 
-            if (in_array($locked->status, [PaymentStatus::Paid, PaymentStatus::Refunded], true)) {
+            // Partly refunded is paid: a redelivered success must not put
+            // the row back to "paid" and credit the whole amount again.
+            if (in_array($locked->status, [PaymentStatus::Paid, PaymentStatus::PartiallyRefunded, PaymentStatus::Refunded], true)) {
                 return null;
             }
 
@@ -263,8 +266,10 @@ class PaymentService
 
     protected function handleFailed(Payment $payment, WebhookEvent $event): void
     {
-        if ($payment->status === PaymentStatus::Paid) {
-            return; // out-of-order delivery after a success — success wins
+        if (in_array($payment->status, [PaymentStatus::Paid, PaymentStatus::PartiallyRefunded, PaymentStatus::Refunded], true)) {
+            // Out-of-order delivery after a success — success wins, and a
+            // late "failed" must not erase the record of a refund either.
+            return;
         }
 
         $payment->update([
@@ -289,7 +294,7 @@ class PaymentService
      *
      * @param  array<string,mixed>  $payload
      */
-    public function recordExternal(Booking $booking, string $gateway, int $amount, string $idempotencyKey, array $payload = []): Payment
+    public function recordExternal(Booking $booking, string $gateway, int $amount, string $idempotencyKey, array $payload = [], string $reason = 'Paid with a gift voucher'): Payment
     {
         $payment = Payment::query()->create([
             'booking_id' => $booking->id,
@@ -313,60 +318,180 @@ class PaymentService
 
         // A hold the voucher has paid the deposit of is a booking.
         if ($booking->status === BookingStatus::Pending && $booking->paid_amount >= $booking->deposit_due) {
-            $this->bookings->transition($booking, BookingStatus::Confirmed, 'Paid with a gift voucher');
+            $this->bookings->transition($booking, BookingStatus::Confirmed, $reason);
         }
 
         return $payment;
     }
 
     /**
-     * Staff-initiated refund, partial or full (§8).
+     * Money taken at the desk (§8): cash, the terminal, a transfer that
+     * arrived.
+     *
+     * Until this existed, a stay paid in cash showed its whole price as
+     * still owing for ever — on the guest's own booking page too, where
+     * it could be paid a second time online.
+     *
+     * @throws InvalidArgumentException when the amount is not owed
      */
-    public function refund(PaymentGateway $gateway, Payment $payment, ?int $amount = null): Payment
+    public function recordAtDesk(Booking $booking, int $amount, string $method, ?string $note = null, ?int $userId = null): Payment
     {
-        if ($payment->status !== PaymentStatus::Paid && $payment->status !== PaymentStatus::PartiallyRefunded) {
-            throw new InvalidArgumentException('Only captured payments can be refunded.');
+        if (! in_array($method, DeskGateway::METHODS, true)) {
+            throw new InvalidArgumentException("Unknown payment method [{$method}].");
         }
 
+        return DB::transaction(function () use ($booking, $amount, $method, $note, $userId): Payment {
+            /** @var Booking $locked */
+            $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
+
+            if ($locked->status === BookingStatus::Cancelled) {
+                throw new InvalidArgumentException('A cancelled booking takes no payment.');
+            }
+
+            if ($amount < 1 || $amount > $locked->balance_due) {
+                throw new InvalidArgumentException('The amount is more than is owed on this booking.');
+            }
+
+            return $this->recordExternal(
+                $locked,
+                'desk',
+                $amount,
+                'doba-desk-'.$locked->id.'-'.Str::lower(Str::random(12)),
+                array_filter(['method' => $method, 'note' => $note, 'user_id' => $userId], static fn ($v) => $v !== null && $v !== ''),
+                'Paid at the desk ('.$method.')',
+            );
+        }, attempts: 3);
+    }
+
+    /**
+     * What may still be refunded on a payment, in minor units.
+     */
+    public function refundable(Payment $payment): int
+    {
+        if (! in_array($payment->status, [PaymentStatus::Paid, PaymentStatus::PartiallyRefunded], true) || $payment->type === 'refund') {
+            return 0;
+        }
+
+        return max(0, $payment->amount - $this->alreadyRefunded($payment));
+    }
+
+    protected function alreadyRefunded(Payment $payment): int
+    {
         // Refund rows never carry the provider object id — the webhook
         // idempotency index (gateway, gateway_payment_id) reserves that
         // pair for the original. They link back through the key prefix.
-        $alreadyRefunded = (int) Payment::query()
+        return (int) Payment::query()
             ->where('type', 'refund')
             ->where('idempotency_key', 'like', "doba-refund-{$payment->id}-%")
             ->sum('amount');
+    }
 
-        $amount ??= $payment->amount - $alreadyRefunded;
+    /**
+     * Give back what a cancelled stay is owed, where no bank is involved.
+     *
+     * A gift voucher is the hotel's own ledger: putting the money back on
+     * it moves nothing outside the building, so it happens by itself the
+     * moment the guest cancels inside their free window. Card and cash
+     * refunds are a person's decision and stay one — the booking carries
+     * what is owed until somebody presses the button.
+     *
+     * @return int what went back onto vouchers, in minor units
+     */
+    public function settleCancellation(Booking $booking): int
+    {
+        $restored = 0;
 
-        if ($amount < 1 || $amount + $alreadyRefunded > $payment->amount) {
-            throw new InvalidArgumentException('Refund exceeds the refundable remainder.');
+        $payments = $booking->payments()
+            ->where('gateway', 'voucher')
+            ->whereIn('status', [PaymentStatus::Paid->value, PaymentStatus::PartiallyRefunded->value])
+            ->where('type', '!=', 'refund')
+            ->orderByDesc('id')
+            ->get();
+
+        foreach ($payments as $payment) {
+            $owed = (int) $booking->fresh()->refund_due;
+            $amount = min($owed, $this->refundable($payment));
+
+            if ($amount < 1) {
+                break;
+            }
+
+            try {
+                $this->refund(GatewayRegistry::make('voucher'), $payment, $amount);
+                $restored += $amount;
+            } catch (\Throwable $e) {
+                Log::error('Could not put a cancelled stay back on its gift voucher.', [
+                    'booking' => $booking->reference,
+                    'payment' => $payment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
-        $gateway->refund($payment, $amount);
+        return $restored;
+    }
 
-        $refund = Payment::query()->create([
-            'booking_id' => $payment->booking_id,
-            'gateway' => $payment->gateway,
-            'gateway_payment_id' => null,
-            'type' => 'refund',
-            'status' => PaymentStatus::Refunded,
-            'amount' => $amount,
-            'currency' => $payment->currency,
-            'refunded_at' => now(),
-            'idempotency_key' => "doba-refund-{$payment->id}-".($alreadyRefunded + $amount),
-        ]);
+    /**
+     * A refund, partial or full (§8).
+     *
+     * Under a lock on the payment row: two clerks pressing Refund at once
+     * used to both read "nothing refunded yet" and both reach the
+     * provider, leaving twice the money sent and half of it recorded.
+     */
+    public function refund(PaymentGateway $gateway, Payment $payment, ?int $amount = null): Payment
+    {
+        $refund = DB::transaction(function () use ($gateway, $payment, $amount): Payment {
+            /** @var Payment $payment */
+            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
 
-        $payment->update([
-            'status' => $alreadyRefunded + $amount >= $payment->amount
-                ? PaymentStatus::Refunded
-                : PaymentStatus::PartiallyRefunded,
-            'refunded_at' => now(),
-        ]);
+            if ($payment->status !== PaymentStatus::Paid && $payment->status !== PaymentStatus::PartiallyRefunded) {
+                throw new InvalidArgumentException('Only captured payments can be refunded.');
+            }
 
-        $payment->booking->decrement('paid_amount', $amount);
-        $payment->booking->increment('balance_due', $amount);
+            $alreadyRefunded = $this->alreadyRefunded($payment);
 
-        app(Webhooks::class)->emit('payment.refunded', $this->paymentPayload($refund, $payment->booking->fresh()));
+            $amount ??= $payment->amount - $alreadyRefunded;
+
+            if ($amount < 1 || $amount + $alreadyRefunded > $payment->amount) {
+                throw new InvalidArgumentException('Refund exceeds the refundable remainder.');
+            }
+
+            $gateway->refund($payment, $amount);
+
+            $refund = Payment::query()->create([
+                'booking_id' => $payment->booking_id,
+                'gateway' => $payment->gateway,
+                'gateway_payment_id' => null,
+                'type' => 'refund',
+                'status' => PaymentStatus::Refunded,
+                'amount' => $amount,
+                'currency' => $payment->currency,
+                'refunded_at' => now(),
+                'idempotency_key' => "doba-refund-{$payment->id}-".($alreadyRefunded + $amount),
+            ]);
+
+            $payment->update([
+                'status' => $alreadyRefunded + $amount >= $payment->amount
+                    ? PaymentStatus::Refunded
+                    : PaymentStatus::PartiallyRefunded,
+                'refunded_at' => now(),
+            ]);
+
+            /** @var Booking $booking */
+            $booking = Booking::query()->lockForUpdate()->findOrFail($payment->booking_id);
+
+            $booking->forceFill([
+                'paid_amount' => max(0, $booking->paid_amount - $amount),
+                // A cancelled stay owes the hotel nothing: giving the
+                // money back must not make it look unpaid.
+                'balance_due' => $booking->status === BookingStatus::Cancelled ? 0 : $booking->balance_due + $amount,
+                'refund_due' => max(0, $booking->refund_due - $amount),
+            ])->save();
+
+            return $refund;
+        }, attempts: 1);
+
+        app(Webhooks::class)->emit('payment.refunded', $this->paymentPayload($refund, $refund->booking()->firstOrFail()));
 
         return $refund;
     }

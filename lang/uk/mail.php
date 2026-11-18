@@ -45,4 +45,26 @@ return [
     // Online check-in (§12)
     'pre_arrival_checkin' => 'Заощадьте час на рецепції: зареєструйтеся онлайн на сторінці бронювання — після приїзду залишиться лише підписати.',
     'post_stay_book_again' => 'Наступного разу бронюйте безпосередньо в нас на :url — як постійний гість ви отримаєте знижку :percent%.',
+
+    // Cancellation, to the guest; and the hotel's own copy of the news.
+    'cancelled_subject' => 'Ваше бронювання :reference у :hotel скасовано',
+    'cancelled_heading' => 'Ваше бронювання скасовано',
+    'cancelled_intro' => 'Підтверджуємо, що ваше перебування у :hotel скасовано. Більше нічого робити не потрібно.',
+    'cancelled_voucher' => ':amount повернуто на ваш подарунковий сертифікат, і ними можна скористатися знову.',
+    'cancelled_refund' => 'За умовами вашого тарифу вам належить повернення :amount. Ми повернемо кошти тим самим способом, яким ви платили; на картці вони зазвичай з’являються за кілька робочих днів.',
+    'cancelled_no_refund' => 'За умовами вашого тарифу вже сплачені :amount не повертаються.',
+    'cancelled_nothing_paid' => 'Нічого не було сплачено, тож повертати нічого.',
+    'cancelled_outro' => 'Шкода, що цього разу не побачимося; сподіваємося прийняти вас у :hotel іншим разом.',
+    'notice_booked_subject' => 'Нове бронювання :reference — :name, заїзд :date',
+    'notice_cancelled_subject' => 'Скасовано: :reference — :name, :date',
+    'notice_booked_heading' => 'Нове бронювання',
+    'notice_cancelled_heading' => 'Бронювання скасовано',
+    'notice_nights' => '{1} :count ніч|[2,4] :count ночі|[5,*] :count ночей',
+    'notice_guests' => '{1} :count гість|[2,4] :count гості|[5,*] :count гостей',
+    'notice_paid' => 'сплачено на цей момент: :amount',
+    'notice_requests' => 'Гість написав:',
+    'notice_voucher_restored' => ':amount автоматично повернуто на подарунковий сертифікат.',
+    'notice_refund_owed' => 'Потрібно повернути :amount. Відкрийте бронювання, щоб зробити повернення.',
+    'notice_no_refund' => 'Повертати нічого не потрібно: сплачені :amount не повертаються за заброньованим тарифом.',
+    'notice_open' => 'Відкрити бронювання',
 ];

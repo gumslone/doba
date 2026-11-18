@@ -41,6 +41,7 @@ return [
     'total' => 'Razem',
     'deposit' => 'Do zapłaty teraz',
     'balance' => 'Do zapłaty przy przyjeździe',
+    'paid' => 'Zapłacono',
     'status' => 'Status',
     'dates' => 'Termin',
     'reference' => 'Numer rezerwacji',

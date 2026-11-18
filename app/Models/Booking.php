@@ -24,6 +24,7 @@ use Illuminate\Support\Str;
  * @property int $nights
  * @property int $subtotal
  * @property int $cleaning_fee
+ * @property int $refund_due
  * @property int $total
  * @property int $guest_id
  */
@@ -34,7 +35,7 @@ class Booking extends Model
         'check_in', 'check_out', 'nights', 'adults', 'children', 'children_ages',
         'arrival_time', 'requested_checkout_time', 'checkout_time',
         'currency', 'subtotal', 'extras_total', 'discount_total', 'loyalty_discount', 'tax_total',
-        'city_tax', 'cleaning_fee', 'total', 'deposit_due', 'paid_amount', 'balance_due',
+        'city_tax', 'cleaning_fee', 'total', 'deposit_due', 'paid_amount', 'balance_due', 'refund_due',
         'promo_code_id', 'locale', 'guest_id', 'guest_notes', 'internal_notes',
         'cancellation_reason', 'cancelled_at', 'confirmed_at',
         'checked_in_at', 'checked_out_at', 'recovery_sent_at',
@@ -62,6 +63,7 @@ class Booking extends Model
         'deposit_due' => 'integer',
         'paid_amount' => 'integer',
         'balance_due' => 'integer',
+        'refund_due' => 'integer',
         'cancelled_at' => 'datetime',
         'recovery_sent_at' => 'immutable_datetime',
         'confirmed_at' => 'datetime',

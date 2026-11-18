@@ -7,10 +7,16 @@ namespace App\Http\Controllers\Admin;
 use App\Domain\Booking\BookingService;
 use App\Domain\Booking\NoAvailabilityException;
 use App\Domain\Guests\RegistrationRenderer;
+use App\Domain\Payments\DeskGateway;
+use App\Domain\Payments\GatewayRegistry;
+use App\Domain\Payments\PaymentService;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\RoomType;
+use App\Support\Hotel\Clock;
+use App\Support\Money;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Bookings the desk makes and changes (§12).
@@ -98,19 +105,138 @@ class AdminBookingController extends Controller
             // A desk booking is a promise already made on the phone: it
             // holds nothing, it is booked. Pending is for a guest who has
             // not paid yet, and this guest will pay at the desk.
-            $bookings->transition($booking, BookingStatus::Confirmed, 'Taken at the desk ('.$validated['source'].')');
+            $bookings->transition($booking, BookingStatus::Confirmed, 'Taken at the desk ('.$validated['source'].')', $request->user()?->id);
+        } else {
+            // "Hold it for a caller who will ring back" means until
+            // tomorrow, not the twenty minutes a website checkout gets:
+            // the hold used to expire while the clerk was still on the
+            // phone, and nothing in the admin could confirm it afterwards.
+            $booking->holds()->whereNull('released_at')->update([
+                'expires_at' => now()->addHours((int) config('doba.booking.desk_hold_hours', 24)),
+            ]);
         }
 
         return redirect('/admin/bookings/'.$booking->id.'/edit')
             ->with('saved', __('admin.booking_created', ['reference' => $booking->reference]));
     }
 
-    public function edit(Booking $booking): View
+    public function edit(Booking $booking, PaymentService $payments): View
     {
+        $booking->load(['guest', 'rooms.roomType.translations', 'extras.extra.translations', 'payments', 'statusHistory']);
+
         return view('admin.bookings.edit', [
-            'booking' => $booking->load(['guest', 'rooms.roomType.translations', 'extras.extra.translations', 'payments', 'statusHistory']),
+            'booking' => $booking,
             'changeable' => $booking->status->inventorySide() !== 'none',
+            // What each payment can still give back, so the page offers a
+            // refund only where one is possible.
+            'refundable' => $booking->payments->mapWithKeys(
+                static fn (Payment $payment): array => [$payment->id => $payments->refundable($payment)]
+            ),
+            'holdExpiresAt' => $booking->status === BookingStatus::Pending
+                ? $booking->holds()->whereNull('released_at')->min('expires_at')
+                : null,
+            'methods' => DeskGateway::METHODS,
+            'today' => Clock::today(),
         ]);
+    }
+
+    /**
+     * Money taken at the desk: cash, the terminal, a transfer (§8).
+     */
+    public function recordPayment(Request $request, Booking $booking, PaymentService $payments): RedirectResponse
+    {
+        $validated = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:10000000'],
+            'method' => ['required', Rule::in(DeskGateway::METHODS)],
+            'note' => ['nullable', 'string', 'max:200'],
+        ]);
+
+        $amount = (int) round(((float) $validated['amount']) * 100);
+
+        try {
+            $payments->recordAtDesk($booking, $amount, $validated['method'], $validated['note'] ?? null, $request->user()?->id);
+        } catch (InvalidArgumentException) {
+            return back()->withInput()->withErrors(['amount' => __('admin.booking_payment_too_much')]);
+        }
+
+        return back()->with('saved', __('admin.booking_payment_recorded', ['amount' => Money::format($amount, $booking->currency)]));
+    }
+
+    /**
+     * Give money back, through whatever took it (§8).
+     */
+    public function refund(Request $request, Booking $booking, Payment $payment, PaymentService $payments): RedirectResponse
+    {
+        abort_unless($payment->booking_id === $booking->id, 404);
+
+        $validated = $request->validate([
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:10000000'],
+        ]);
+
+        $amount = (int) round(((float) $validated['amount']) * 100);
+
+        try {
+            $payments->refund(GatewayRegistry::make($payment->gateway), $payment, $amount);
+        } catch (InvalidArgumentException) {
+            return back()->withErrors(['amount' => __('admin.booking_refund_too_much')]);
+        } catch (Throwable $e) {
+            // The provider said no, or cannot refund at all (crypto). Said
+            // as it is: the money has not moved, and somebody must move it.
+            report($e);
+
+            return back()->withErrors(['amount' => __('admin.booking_refund_failed', ['error' => $e->getMessage()])]);
+        }
+
+        return back()->with('saved', __('admin.booking_refund_done', ['amount' => Money::format($amount, $booking->currency)]));
+    }
+
+    /**
+     * A held booking the caller rang back about.
+     */
+    public function confirm(Request $request, Booking $booking, BookingService $bookings): RedirectResponse
+    {
+        return $this->move($request, $booking, BookingStatus::Confirmed, $bookings, 'Confirmed at the desk', __('admin.booking_confirmed'));
+    }
+
+    public function cancel(Request $request, Booking $booking, BookingService $bookings): RedirectResponse
+    {
+        $validated = $request->validate(['reason' => ['nullable', 'string', 'max:200']]);
+
+        $reason = trim((string) ($validated['reason'] ?? ''));
+
+        return $this->move($request, $booking, BookingStatus::Cancelled, $bookings,
+            $reason !== '' ? 'Cancelled at the desk: '.$reason : 'Cancelled at the desk', __('admin.booking_cancelled'));
+    }
+
+    /**
+     * The guest never came. The room stays theirs on the books — that is
+     * what a no-show is — and nothing is refunded.
+     */
+    public function noShow(Request $request, Booking $booking, BookingService $bookings): RedirectResponse
+    {
+        if ($booking->check_in->toDateString() > Clock::today()->toDateString()) {
+            return back()->withErrors(['status' => __('admin.booking_no_show_early')]);
+        }
+
+        return $this->move($request, $booking, BookingStatus::NoShow, $bookings, 'No-show', __('admin.booking_no_show_done'));
+    }
+
+    protected function move(Request $request, Booking $booking, BookingStatus $to, BookingService $bookings, string $reason, string $message): RedirectResponse
+    {
+        if (! $booking->status->canTransitionTo($to)) {
+            return back()->withErrors(['status' => __('admin.cannot_move', [
+                'from' => __('booking.status_'.$booking->status->value),
+                'to' => __('booking.status_'.$to->value),
+            ])]);
+        }
+
+        try {
+            $bookings->transition($booking, $to, $reason, $request->user()?->id);
+        } catch (NoAvailabilityException $e) {
+            return back()->withErrors(['status' => __('admin.booking_no_availability', ['date' => $e->date])]);
+        }
+
+        return back()->with('saved', $message);
     }
 
     public function update(Request $request, Booking $booking, BookingService $bookings): RedirectResponse

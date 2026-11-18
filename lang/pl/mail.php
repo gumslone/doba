@@ -45,4 +45,26 @@ return [
     // Online check-in (§12)
     'pre_arrival_checkin' => 'Oszczędź czas w recepcji: zamelduj się online na stronie rezerwacji, a po przyjeździe wystarczy podpis.',
     'post_stay_book_again' => 'Następnym razem zarezerwuj bezpośrednio u nas na :url — jako stały gość otrzymasz :percent% zniżki.',
+
+    // Cancellation, to the guest; and the hotel's own copy of the news.
+    'cancelled_subject' => 'Rezerwacja :reference w :hotel została anulowana',
+    'cancelled_heading' => 'Rezerwacja została anulowana',
+    'cancelled_intro' => 'Potwierdzamy, że pobyt w :hotel został anulowany. Nie trzeba nic więcej robić.',
+    'cancelled_voucher' => 'Kwota :amount wróciła na voucher podarunkowy i można ją wykorzystać ponownie.',
+    'cancelled_refund' => 'Zgodnie z warunkami taryfy przysługuje Państwu zwrot :amount. Zwrócimy go tą samą drogą, którą dokonano płatności; zwrot na kartę zwykle pojawia się po kilku dniach roboczych.',
+    'cancelled_no_refund' => 'Zgodnie z warunkami taryfy wpłacona kwota :amount nie podlega zwrotowi.',
+    'cancelled_nothing_paid' => 'Nic nie zostało zapłacone, więc nie ma czego zwracać.',
+    'cancelled_outro' => 'Żałujemy, że tym razem się nie zobaczymy, i mamy nadzieję gościć Państwa w :hotel innym razem.',
+    'notice_booked_subject' => 'Nowa rezerwacja :reference — :name, przyjazd :date',
+    'notice_cancelled_subject' => 'Anulowano: :reference — :name, :date',
+    'notice_booked_heading' => 'Nowa rezerwacja',
+    'notice_cancelled_heading' => 'Rezerwacja została anulowana',
+    'notice_nights' => '{1} :count noc|[2,4] :count noce|[5,*] :count nocy',
+    'notice_guests' => '{1} :count gość|[2,*] :count gości',
+    'notice_paid' => 'dotychczas zapłacono: :amount',
+    'notice_requests' => 'Gość napisał:',
+    'notice_voucher_restored' => 'Kwota :amount automatycznie wróciła na voucher podarunkowy.',
+    'notice_refund_owed' => 'Należy zwrócić :amount. Otwórz rezerwację, aby wykonać zwrot.',
+    'notice_no_refund' => 'Nic nie trzeba zwracać: wpłacona kwota :amount jest bezzwrotna zgodnie z zarezerwowaną taryfą.',
+    'notice_open' => 'Otwórz rezerwację',
 ];
